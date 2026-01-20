@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles; // Spatie Permissions
 
 class User extends Authenticatable
 {
@@ -63,5 +64,11 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // Relación: Un usuario (staff) puede registrar muchas ventas
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
     }
 }
