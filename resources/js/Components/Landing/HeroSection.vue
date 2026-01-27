@@ -173,10 +173,10 @@ export default {
                 </p>
                 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start animate-fade-in-up delay-300">
-                    <n-button type="primary" size="large" round class="px-8 h-12 text-lg shadow-xl shadow-[#2f4b59]/20">
+                    <n-button @click="$inertia.visit(route('landing.contact'))" type="primary" size="large" round class="px-8 h-12 text-lg shadow-xl shadow-[#2f4b59]/20">
                         Iniciar Proyecto
                     </n-button>
-                    <n-button size="large" round ghost class="px-8 h-12 text-lg border-slate-300 text-slate-600 hover:text-[#2f4b59]">
+                    <n-button @click="$inertia.visit(route('landing.portfolio'))" size="large" round ghost class="px-8 h-12 text-lg border-slate-300 text-slate-600 hover:text-[#2f4b59]">
                         Ver Galería
                     </n-button>
                 </div>
@@ -194,7 +194,7 @@ export default {
                     <div class="absolute top-0 left-0 z-20 w-full h-1 bg-[#4cc9f0] shadow-[0_0_15px_rgba(76,201,240,0.8)] animate-scan-vertical pointer-events-none"></div>
                     
                     <!-- Canvas de Three.js -->
-                    <div ref="canvasContainer" class="w-full h-full absolute inset-0 z-10 cursor-move"></div>
+                    <div ref="canvasContainer" class="w-full h-full absolute inset-0 z-10"></div>
                 </div>
             </div>
         </div>

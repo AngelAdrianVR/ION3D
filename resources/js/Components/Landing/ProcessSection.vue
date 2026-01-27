@@ -138,7 +138,7 @@ const setActive = (index) => {
 
                 <!-- Botón de acción (Falso) -->
                 <div class="flex-shrink-0">
-                  <button class="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg text-sm font-bold transition-all flex items-center gap-2 group/btn">
+                  <button @click="$inertia.visit(route('landing.process'))" class="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg text-sm font-bold transition-all flex items-center gap-2 group/btn">
                     Ver Detalles
                     <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                   </button>

@@ -72,7 +72,7 @@ const portfolioItems = ref([
         </div>
         
         <!-- Botón con estilo -->
-        <n-button strong secondary round type="primary" class="mt-6 md:mt-0 group/btn">
+        <n-button @click="$inertia.visit(route('landing.portfolio'))" strong secondary round type="primary" class="mt-6 md:mt-0 group/btn">
           Explorar Galería Completa
           <template #icon>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
