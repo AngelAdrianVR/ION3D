@@ -5,3 +5,46 @@
 [x-cloak] {
     display: none;
 }
+
+/* --- Scrollbar Moderno Global --- */
+@layer base {
+    /* Firefox */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent; /* Oculto por defecto */
+        transition: scrollbar-color 0.3s ease;
+    }
+
+    /* Mostrar en hover para Firefox */
+    *:hover {
+        scrollbar-color: #cbd5e1 transparent; /* Thumb visible | Track transparente */
+    }
+
+    /* Webkit (Chrome, Edge, Safari) */
+    ::-webkit-scrollbar {
+        width: 6px;  /* Más delgado */
+        height: 6px; /* Para scroll horizontal */
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent; /* Fondo invisible */
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: transparent; /* Invisible por defecto */
+        border-radius: 20px;       /* Bordes totalmente redondeados */
+        border: 2px solid transparent; /* Truco para 'padding' visual si fuera más ancho */
+        background-clip: content-box;
+        transition: background-color 0.3s ease;
+    }
+
+    /* Cuando el mouse está sobre el elemento contenedor (el cuerpo de la página o un div) */
+    *:hover::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1; /* Aparece con un gris neutro suave */
+    }
+
+    /* Cuando el mouse está directamente sobre la barra de scroll */
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: #94a3b8; /* Se oscurece ligeramente para feedback */
+    }
+}

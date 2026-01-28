@@ -204,17 +204,15 @@ export default {
                             class="flex items-center gap-2 group relative shrink-0 transition-all duration-500"
                             :class="[isScrolled ? 'pl-2' : 'mr-auto']"
                         >
-                            <div class="relative w-9 h-9 bg-[#2f4b59] rounded-full flex items-center justify-center text-white overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-300">
+                            <div class="relative size-10 p-1 bg-[#2f4b59] rounded-full flex items-center justify-center text-white overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-300">
                                 <!-- Icono -->
-                                <svg class="w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2 1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-                                </svg>
+                                <img src="@/../../public/images/orion-logo-blanco.png" alt="">
                                 <!-- Brillo interno animado -->
                                 <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             </div>
                             <div class="flex flex-col leading-none transition-all duration-300" 
                                  :class="[isScrolled ? 'w-0 opacity-0 overflow-hidden' : 'w-auto opacity-100']">
-                                <span class="text-lg font-bold tracking-tight text-[#2f4b59]">
+                                <span class="text-xl     font-bold tracking-tight text-[#2f4b59]">
                                     ION<span class="text-slate-400">3D</span>
                                 </span>
                             </div>
@@ -424,7 +422,7 @@ export default {
                 <!-- ========================================== -->
                 <!-- CONTENIDO (SLOT)                           -->
                 <!-- ========================================== -->
-                <main class="flex-grow pt-32 relative z-10">
+                <main class="flex-grow pt-20 relative z-10">
                     <slot />
                 </main>
 
@@ -443,10 +441,14 @@ export default {
                             <!-- Columna 1: Marca (4 columnas) -->
                             <div class="md:col-span-4 space-y-6">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
-                                        <svg class="w-6 h-6 text-[#4cc9f0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                                    <div @click="$inertia.visit(route('login'))" class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                                        <img src="@/../../public/images/orion-logo-blanco.png" alt="">
                                     </div>
-                                    <span class="text-2xl font-bold tracking-tight">ION<span class="text-[#4cc9f0]">3D</span></span>
+                                    <div class="flex flex-col leading-none transition-all duration-300">
+                                        <span class="text-xl font-bold tracking-tight text-[#6a96ac]">
+                                            ION<span class="text-slate-200">3D</span>
+                                        </span>
+                                    </div>
                                 </div>
                                 <p class="text-slate-400 leading-relaxed">
                                     Redefiniendo los límites entre lo físico y lo digital. Tecnología de escaneo 3D de precisión milimétrica para preservación digital y manufactura aditiva.

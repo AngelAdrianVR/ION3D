@@ -1,23 +1,22 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { router, Head } from '@inertiajs/vue3'; // Importamos router para la redirección
+import { router, Head } from '@inertiajs/vue3';
 
-// --- THREE.JS IMPORTS (Vía ESM para evitar configuración compleja) ---
+// --- THREE.JS IMPORTS ---
 import * as THREE from 'https://esm.sh/three@0.160.0';
 import { GLTFLoader } from 'https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader';
 
-// Emitimos evento cuando la carga termina para que el padre pueda desmontar si quiere
 const emit = defineEmits(['finished']);
 
 // --- ESTADO ---
 const containerRef = ref(null);
 const loadingProgress = ref(0);
-const isLoaded = ref(false); // Cuando llega a 100%
-const isHidden = ref(false); // Para ocultar el DOM después del fade-out
+const isLoaded = ref(false);
+const isHidden = ref(false);
 
 // Configuración
-const MINIMUM_TIME = 3000; // Tiempo mínimo en pantalla (ms) para que se vea la animación
-const MODEL_URL = '/human_head.glb'; // Asegúrate que este archivo esté en /public
+const MINIMUM_TIME = 3000;
+const MODEL_URL = '/human_head.glb';
 
 // Variables Three.js
 let renderer, scene, camera, animationId;
@@ -27,73 +26,74 @@ let modelGroup;
 const initThreeJS = () => {
     if (!containerRef.value) return;
 
-    // 1. Escena (Transparente para ver el gradiente CSS de fondo)
+    // 1. Escena
     scene = new THREE.Scene();
+    // No seteamos color de fondo a la escena para que sea transparente y se vea el CSS
 
     // 2. Cámara
     const w = containerRef.value.clientWidth;
     const h = containerRef.value.clientHeight;
     camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    camera.position.set(0, 0, 4); // Ajustar distancia según tamaño de la cabeza
+    camera.position.set(0, 0, 4);
 
     // 3. Renderizador
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    
-    // Tone mapping para que se vea cinematográfico
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     
     containerRef.value.appendChild(renderer.domElement);
 
-    // 4. Luces (Estilo Cyberpunk/Tech)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2); // Luz base tenue
+    // 4. Luces (Ajustadas para fondo claro)
+    // Luz ambiental más fuerte para que no se vea negro el objeto sólido
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); 
     scene.add(ambientLight);
 
-    // Luz principal (Key Light)
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
     keyLight.position.set(2, 2, 5);
     scene.add(keyLight);
 
-    // Luz de borde (Rim Light) - Color Cyan de la marca
-    const rimLight = new THREE.SpotLight(0x4cc9f0, 5);
+    // Luz de borde azul suave
+    const rimLight = new THREE.SpotLight(0x3b82f6, 3); // Azul estándar de Tailwind (blue-500)
     rimLight.position.set(-2, 1, -2);
     rimLight.lookAt(0, 0, 0);
     scene.add(rimLight);
 
     // 5. Cargar Modelo
     const loader = new GLTFLoader();
-    const startTime = Date.now();
 
     loader.load(
         MODEL_URL,
         (gltf) => {
             const model = gltf.scene;
             
-            // --- ACTUALIZACIÓN: ESCALA 0.3 ---
-            model.scale.set(0.3, 0.3, 0.3);
+            // --- CAMBIO: ESCALA MÁS PEQUEÑA ---
+            model.scale.set(0.25, 0.25, 0.25);
 
-            // --- ACTUALIZACIÓN: CENTRADO ---
-            // Recalculamos el bounding box con la nueva escala
+            // Centrado
             const box = new THREE.Box3().setFromObject(model);
             const center = box.getCenter(new THREE.Vector3());
-            
-            // Movemos el modelo para que su centro visual quede en 0,0,0
             model.position.x += (model.position.x - center.x);
             model.position.y += (model.position.y - center.y);
             model.position.z += (model.position.z - center.z);
 
-            // --- ACTUALIZACIÓN: MALLA (WIREFRAME) ---
+            // --- MATERIALES / TEXTURA ---
             model.traverse((child) => {
                if (child.isMesh) {
-                   // Activamos el modo wireframe (malla de líneas)
-                   child.material.wireframe = true; 
-                   // Color cian para que combine con ION3D
-                   child.material.color.set(0x4cc9f0);
-                   // Hacemos que el material sea transparente para que se vea tecnológico
+                   // Para que se vea sólido y reaccione a la luz correctamente:
+                   child.material.needsUpdate = true;
+                   
+                   // OPCIONAL: Si el modelo original es muy oscuro, puedes forzar un color base claro:
+                   // child.material.color.set(0xe2e8f0); // Gris claro
+                   
+                   // --- MODO MALLA (WIREFRAME) ---
+                   // Descomenta el bloque de abajo para activar el modo "holograma/malla"
+                   /* child.material.wireframe = true; 
+                   child.material.color.set(0x3b82f6); // Azul
                    child.material.transparent = true;
-                   child.material.opacity = 0.3;
+                   child.material.opacity = 0.4;
+                   */
                }
             });
 
@@ -101,15 +101,12 @@ const initThreeJS = () => {
             modelGroup = model;
         },
         (xhr) => {
-            // Lógica de progreso híbrida (Real + Tiempo mínimo simulado)
             if (xhr.lengthComputable) {
-                const percentComplete = (xhr.loaded / xhr.total) * 100;
-                // No asignamos directamente para controlar la velocidad mínima en el watcher o loop
+                // Cálculo de carga real
             }
         },
         (error) => {
-            console.error('Error cargando human_head.glb', error);
-            // Forzar finalización en caso de error para no bloquear al usuario
+            console.error('Error cargando modelo', error);
             loadingProgress.value = 100;
         }
     );
@@ -117,17 +114,13 @@ const initThreeJS = () => {
     // 6. Animación Loop
     const animate = () => {
         animationId = requestAnimationFrame(animate);
-        
-        // Rotar modelo 360 grados
         if (modelGroup) {
-            modelGroup.rotation.y += 0.01; // Velocidad de giro
+            modelGroup.rotation.y += 0.005; // Rotación un poco más lenta y elegante
         }
-
         renderer.render(scene, camera);
     };
     animate();
 
-    // Resize handler
     window.addEventListener('resize', handleResize);
 };
 
@@ -144,8 +137,6 @@ const handleResize = () => {
 onMounted(() => {
     initThreeJS();
 
-    // Simulación de carga fluida para UX
-    // Incrementa el progreso suavemente hasta 100% respetando el tiempo mínimo
     const startTime = performance.now();
     const duration = MINIMUM_TIME; 
 
@@ -165,15 +156,12 @@ onMounted(() => {
 const finishLoading = () => {
     isLoaded.value = true;
     setTimeout(() => {
-        emit('finished'); // Avisar al padre
-        
-        // Esperar a que termine la transición CSS antes de redirigir
+        emit('finished');
         setTimeout(() => {
             isHidden.value = true;
-            // --- ACTUALIZACIÓN: REDIRECCIÓN ---
             router.visit('/inicio');
         }, 1000); 
-    }, 500); // Pequeña pausa al llegar a 100%
+    }, 500); 
 };
 
 onBeforeUnmount(() => {
@@ -184,77 +172,69 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-<Head title="ION3D cargando" />
-    <!-- Contenedor Principal (Fixed para cubrir todo) -->
+<Head title="Cargando..." />
+    <!-- 
+        Fondo cambiado a 'bg-slate-50' (blanco/gris muy claro) 
+        Texto cambiado a 'text-slate-800' (oscuro)
+    -->
     <div v-if="!isHidden"
-         class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-950 text-white transition-all duration-1000 overflow-hidden"
-         :class="{ 'opacity-0 pointer-events-none scale-110': isLoaded }">
+         class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-50 text-slate-800 transition-all duration-1000 overflow-hidden"
+         :class="{ 'opacity-0 pointer-events-none scale-105': isLoaded }">
 
-        <!-- Fondo Grid Tech -->
-        <div class="absolute inset-0 z-0 opacity-20"
-             style="background-image: linear-gradient(rgba(76, 201, 240, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(76, 201, 240, 0.1) 1px, transparent 1px); background-size: 40px 40px;">
+        <!-- Fondo Grid Tech (Azul muy tenue sobre blanco) -->
+        <div class="absolute inset-0 z-0 opacity-40"
+             style="background-image: linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px); background-size: 40px 40px;">
         </div>
 
-        <!-- Gradiente Radial Central (Vignette) -->
-        <div class="absolute inset-0 z-0 bg-radial-gradient"></div>
+        <!-- Gradiente Radial Central (Blanco brillante en el centro, gris suave en bordes) -->
+        <div class="absolute inset-0 z-0 bg-radial-gradient-light"></div>
 
-        <!-- --- COMPONENTE CENTRAL (ESCÁNER) --- -->
-        <div class="relative w-80 h-80 md:w-96 md:h-96 flex items-center justify-center z-10">
+        <!-- --- COMPONENTE CENTRAL --- -->
+        <!-- Reduje el tamaño del contenedor del canvas para que el objeto se vea más contenido -->
+        <div class="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center z-10">
             
-            <!-- Three.js Canvas Container -->
             <div ref="containerRef" class="absolute inset-0 w-full h-full z-10"></div>
 
-            <!-- Efecto de Haz de Luz de Escáner (Overlay CSS) -->
-            <div class="absolute w-full h-1 bg-[#3677d8] shadow-[0_0_20px_#4cc9f0] opacity-100 z-20 animate-scan"></div>
+            <!-- Escáner más sutil (azul transparente) -->
+            <div class="absolute w-full h-[2px] bg-blue-400 shadow-[0_0_15px_#60a5fa] opacity-0 z-20 animate-scan-subtle"></div>
             
-            <!-- Elementos HUD (Interfaz) -->
-            <!-- Esquinas -->
-            <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#4cc9f0]"></div>
-            <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#4cc9f0]"></div>
-            <div class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#4cc9f0]"></div>
-            <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#4cc9f0]"></div>
-
+            <!-- Esquinas HUD más sutiles y de color gris azulado -->
+            <div class="absolute top-0 left-0 w-6 h-6 border-t border-l border-slate-300"></div>
+            <div class="absolute top-0 right-0 w-6 h-6 border-t border-r border-slate-300"></div>
+            <div class="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-slate-300"></div>
+            <div class="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-slate-300"></div>
         </div>
 
-        <!-- --- TEXTO Y BARRA DE PROGRESO --- -->
-        <div class="relative z-20 mt-8 text-center w-64">
-            <!-- Logo / Nombre -->
-            <h1 class="text-3xl font-bold tracking-widest mb-2 font-mono">
-                ION<span class="text-[#4cc9f0]">3D</span>
+        <!-- --- TEXTO (Sin barra de progreso) --- -->
+        <div class="relative z-20 mt-4 text-center">
+            <h1 class="text-2xl font-bold tracking-widest mb-1 font-sans text-slate-900">
+                ION<span class="text-blue-500">3D</span>
             </h1>
             
-            <!-- Porcentaje -->
-            <div class="flex justify-between text-xs text-slate-400 font-mono mb-1">
-                <span>SYSTEM LOADING</span>
-                <span>{{ loadingProgress }}%</span>
-            </div>
-
-            <!-- Barra de Progreso -->
-            <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                <div class="h-full bg-[#4cc9f0] transition-all duration-100 ease-out shadow-[0_0_10px_#4cc9f0]"
-                     :style="{ width: `${loadingProgress}%` }">
-                </div>
-            </div>
+            <!-- Texto simple pulsante -->
+            <p class="text-sm text-blue-400 font-medium tracking-wide animate-pulse uppercase">
+                Cargando...
+            </p>
         </div>
 
     </div>
 </template>
 
 <style scoped>
-/* Fondo degradado estilo oscuro */
-.bg-radial-gradient {
-    background: radial-gradient(circle at center, rgba(76, 201, 240, 0.05) 0%, rgba(2, 6, 23, 1) 80%);
+/* Nuevo gradiente para modo claro: Blanco al centro, gris azulado muy tenue afuera */
+.bg-radial-gradient-light {
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0) 0%, rgba(241, 245, 249, 1) 90%);
 }
 
-/* Animación del haz de luz (Scanner Beam) */
-@keyframes scan {
+/* Animación de escaneo más suave para el tema claro */
+@keyframes scan-subtle {
     0% { top: 0%; opacity: 0; }
-    15% { opacity: 1; }
-    85% { opacity: 1; }
+    15% { opacity: 0.5; }
+    85% { opacity: 0.5; }
     100% { top: 100%; opacity: 0; }
 }
 
-.animate-scan {
-    animation: scan 3s ease-in-out infinite;
+.animate-scan-subtle {
+    animation: scan-subtle 4s ease-in-out infinite;
 }
 </style>

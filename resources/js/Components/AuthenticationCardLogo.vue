@@ -3,15 +3,17 @@ import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <Link :href="'/'">
-        <svg
-            class="size-16"
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            <path d="M11.395 44.428C4.557 40.198 0 32.632 0 24 0 10.745 10.745 0 24 0a23.891 23.891 0 0113.997 4.502c-.2 17.907-11.097 33.245-26.602 39.926z" fill="#6875F5" />
-            <path d="M14.134 45.885A23.914 23.914 0 0024 48c13.255 0 24-10.745 24-24 0-3.516-.756-6.856-2.115-9.866-4.659 15.143-16.608 27.092-31.75 31.751z" fill="#6875F5" />
-        </svg>
+    <Link :href="'/inicio'" class="flex space-x-2 w-full items-center group relative shrink-0 transition-all duration-500" >
+        <div class="relative size-16 p-1 bg-[#2f4b59] rounded-full flex items-center justify-center text-white overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-300">
+            <!-- Icono -->
+            <img src="@/../../public/images/orion-logo-blanco.png" alt="">
+            <!-- Brillo interno animado -->
+            <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+        <div class="flex flex-col leading-none transition-all duration-300">
+            <span class="text-2xl font-bold tracking-tight text-[#2f4b59]">
+                ION<span class="text-slate-400">3D</span>
+            </span>
+        </div>
     </Link>
 </template>
