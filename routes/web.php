@@ -3,6 +3,12 @@
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\LandingController;
+// Controladores para los módulos administrativos (Asegúrate de crearlos si no existen)
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\PosController;
+use App\Http\Controllers\PageManagementController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -29,7 +35,7 @@ Route::get('/servicios/{category?}', [LandingController::class, 'services'])->na
 Route::get('/portafolio/{category?}', [LandingController::class, 'portfolio'])->name('landing.portfolio'); // Parámetro opcional 'category'
 Route::get('/contacto', [LandingController::class, 'contact'])->name('landing.contact');
 
-// Rutas de Citas (Públicas para registro)
+// Rutas de Citas (Públicas para registro - Solo Store)
 Route::resource('appointments', AppointmentController::class)->only(['store']);
 
 // NUEVA RUTA: Guardar mensajes de contacto
@@ -37,14 +43,49 @@ Route::post('/contacto-mensaje', [ContactMessageController::class, 'store'])->na
 
 
 
-// INTRANET =======================================================================================
+// INTRANET (PANEL ADMINISTRATIVO) ================================================================
 // ================================================================================================
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
+    
+    // 0. Dashboard Principal
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard/Index');
     })->name('dashboard');
+
+    // ---------------------------- NUEVO: RUTAS DE CONFIGURACIÓN / ROLES ----------------------------
+    // Se recomienda proteger esto con un middleware tipo 'role:admin' o similar
+    Route::resource('roles', RoleController::class)->except(['show', 'create', 'edit']);
+    
+    // Rutas extra para CRUD de permisos (Solo Developer ID 1 validado en controlador)
+    Route::post('/permissions', [RoleController::class, 'storePermission'])->name('permissions.store');
+    Route::put('/permissions/{permission}', [RoleController::class, 'updatePermission'])->name('permissions.update');
+    Route::delete('/permissions/{permission}', [RoleController::class, 'destroyPermission'])->name('permissions.destroy');
+
+    // 1. Reportes
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+
+    // 2. Punto de Venta (POS)
+    Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
+
+    // 3. Gestión de Página (CMS)
+    Route::get('/cms', [LandingController::class, 'index'])->name('cms.index');
+
+    // 4. Usuarios (Gestión de usuarios del sistema)
+    Route::resource('users', UserController::class);
+
+    // 5. Citas (Gestión Administrativa: Ver lista, detalles, reagendar, cancelar)
+    // Usamos el mismo controlador pero accedemos a los métodos index, show, update, etc.
+    Route::resource('appointments-admin', AppointmentController::class)
+        ->parameters(['appointments-admin' => 'appointment']) // Para que el parámetro sea {appointment}
+        ->except(['store']) // El store ya es público, aunque aquí podrías incluirlo si el admin agenda manualmente
+        ->names('appointments'); // Nombra las rutas como appointments.index, appointments.show, etc.
+
+    // 6. Mensajes de Contacto (Buzón de entrada)
+    Route::resource('contact-messages', ContactMessageController::class)
+        ->only(['index', 'show', 'destroy'])
+        ->names('contact-messages');
 });
