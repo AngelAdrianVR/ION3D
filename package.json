@@ -11,6 +11,7 @@
         "@tailwindcss/forms": "^0.5.7",
         "@tailwindcss/typography": "^0.5.10",
         "@tailwindcss/vite": "^4.0.0",
+        "@vicons/ionicons5": "^0.13.0",
         "@vitejs/plugin-vue": "^6.0.1",
         "autoprefixer": "^10.4.16",
         "axios": "^1.11.0",

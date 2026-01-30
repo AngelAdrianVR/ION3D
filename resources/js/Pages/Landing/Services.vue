@@ -1,163 +1,320 @@
-<script>
+<script setup>
 import AppLayoutLanding from '@/Layouts/AppLayoutLanding.vue';
-import { Head, Link } from '@inertiajs/vue3';
-import { NTabs, NTabPane, NCard } from 'naive-ui';
+import { Head, router } from '@inertiajs/vue3';
+import { NTabs, NTabPane, NConfigProvider } from 'naive-ui';
+import { ref, watch, onMounted } from 'vue';
 
-export default {
-    name: 'ServicesView',
-    components: {
-        AppLayoutLanding,
-        Head,
-        Link,
-        NTabs,
-        NTabPane,
-        NCard
-    },
-    props: {
-        category: {
-            type: String,
-            default: 'escaneo-personas'
-        }
-    },
-    data() {
-        return {
-            activeTab: this.category || 'escaneo-personas',
-            services: {
-                'escaneo-personas': {
-                    title: 'Escaneo 3D de Personas',
-                    subtitle: 'Inmortaliza momentos con precisión milimétrica',
-                    content: 'Nuestra cabina de fotogrametría captura instantáneamente la geometría y textura de personas y mascotas. Ideal para figuras personalizadas, avatares digitales y recuerdos familiares.',
-                    features: ['Captura instantánea (1/60 seg)', 'Texturas 8K', 'Archivos listos para impresión 3D'],
-                    image: 'https://images.unsplash.com/photo-1555664424-778a69032054?auto=format&fit=crop&q=80&w=1000'
-                },
-                'impresion': {
-                    title: 'Impresión 3D Full Color',
-                    subtitle: 'Tu gemelo digital en el mundo real',
-                    content: 'Utilizamos tecnología PolyJet y Binder Jetting para crear figuras a todo color con un realismo impresionante. Desde miniaturas de 10cm hasta bustos a escala real.',
-                    features: ['Más de 10 millones de colores', 'Materiales duraderos', 'Acabado profesional'],
-                    image: 'https://images.unsplash.com/photo-1631541909061-71e349d1f203?auto=format&fit=crop&q=80&w=1000'
-                },
-                'modelado': {
-                    title: 'Modelado y Escultura Digital',
-                    subtitle: 'Arte digital sin límites',
-                    content: 'Nuestro equipo de artistas digitales puede reparar escaneos, modelar personajes desde cero o crear activos optimizados para videojuegos y metaversos.',
-                    features: ['Retopología', 'Rigging y Animación', 'Optimización para Web/AR'],
-                    image: 'https://images.unsplash.com/photo-1617791160505-6f00504e3519?auto=format&fit=crop&q=80&w=1000'
-                },
-                'eventos': {
-                    title: 'Eventos y Bodas',
-                    subtitle: 'Una experiencia tecnológica inolvidable',
-                    content: 'Llevamos nuestro escáner móvil a tu boda o evento corporativo. Los invitados pueden ser escaneados y verse en 3D al instante, recibiendo su avatar digital como recuerdo.',
-                    features: ['Escáner móvil', 'Visualización en tiempo real', 'Experiencia interactiva'],
-                    image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=1000'
-                }
-            }
-        }
-    },
-    watch: {
-        // Si el prop cambia (navegación por URL), actualizamos el tab activo
-        category(newVal) {
-            if (newVal && this.services[newVal]) {
-                this.activeTab = newVal;
-            }
-        },
-        // Si cambiamos el tab manualmente, actualizamos la URL sin recargar
-        activeTab(newVal) {
-            if (newVal !== this.category) {
-                this.$inertia.visit(`/servicios/${newVal}`, {
-                    preserveState: true,
-                    preserveScroll: true,
-                    replace: true
-                });
-            }
-        }
+const props = defineProps({
+    category: {
+        type: String,
+        default: 'impresion'
     }
-}
+});
+
+const activeTab = ref(props.category || 'impresion');
+const showContent = ref(false); // Control para animaciones de entrada
+
+// --- Datos Actualizados ---
+const services = {
+    'impresion': {
+        title: 'Paquete Impresión 3D',
+        subtitle: 'Tu gemelo digital en el mundo real',
+        description: 'Obtén una réplica digital exacta de ti, lista para convertirla en una miniatura personalizada, un regalo único o una pieza decorativa.',
+        includes: [
+            'Escaneo 3D de Cuerpo Completo (360°)',
+            'Modelo optimizado y limpio',
+            'Archivo digital (OBJ/STL)',
+            'Impresión física en resina/filamento'
+        ],
+        prices: [
+            { label: '10 cm', price: '$2,000.00' },
+            { label: '15 cm', price: '$3,000.00' },
+            { label: '20 cm', price: '$4,500.00' }
+        ],
+        image: 'https://images.unsplash.com/photo-1631541909061-71e349d1f203?auto=format&fit=crop&q=80&w=1000',
+        badge: 'Más Vendido'
+    },
+    'escaneo-personas': {
+        title: 'Paquete Escaneo 3D',
+        subtitle: 'Digitalización profesional',
+        description: 'Escaneo 3D de cuerpo completo con captura de proporciones, postura y detalles físicos. Ideal si solo necesitas el archivo digital.',
+        includes: [
+            'Captura de proporciones y detalles',
+            'Archivo digital estándar listo para usar',
+            'Ajuste básico (limpieza y mallado)',
+            'Entrega por enlace privado'
+        ],
+        prices: [
+            { label: 'Busto / Rostro', price: '$1,250.00' },
+            { label: 'Medio Cuerpo', price: '$1,500.00' },
+            { label: 'Cuerpo Completo', price: '$2,500.00' }
+        ],
+        image: 'https://images.unsplash.com/photo-1555664424-778a69032054?auto=format&fit=crop&q=80&w=1000'
+    },
+    'modelo': {
+        title: 'Paquete Modelo 3D (Personalizado)',
+        subtitle: 'Lleva tu figura al siguiente nivel',
+        description: 'Además de tu réplica, podrás personalizarla con nombre, fecha, base especial o accesorios únicos que reflejen tu estilo.',
+        includes: [
+            'Bases personalizadas (nombre/fecha)',
+            'Accesorios adicionales (lentes, balones, etc)',
+            'Escenarios temáticos (Navidad, Gamer, etc)',
+            'Opción de iluminación LED'
+        ],
+        prices: [
+            { label: 'Figura 10cm + Custom', price: '$2,500.00' },
+            { label: 'Figura 15cm + Custom', price: '$3,500.00' },
+            { label: 'Figura 20cm + Custom', price: '$5,000.00' }
+        ],
+        image: 'https://images.unsplash.com/photo-1617791160505-6f00504e3519?auto=format&fit=crop&q=80&w=1000'
+    },
+    'head-pro': {
+        title: 'Paquete Head Pro',
+        subtitle: 'Impresión Funcional',
+        description: 'Escaneo 3D de alta precisión del rostro convertido en un accesorio práctico (soporte para lentes, audífonos, gorras). Útil y original.',
+        includes: [
+            'Escaneo de alta precisión de cabeza',
+            'Archivo digital optimizado',
+            'Diseño funcional para soporte',
+            'Impresión resistente'
+        ],
+        prices: [
+            { label: 'Tamaño Real', price: '$2,500.00' }
+        ],
+        image: 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=1000'
+    },
+    'escenario': {
+        title: 'Paquete Escenarios',
+        subtitle: 'Ambientaciones Temáticas',
+        description: 'Complementa tu figura con escenarios 3D: Navidad, Halloween, Deportes, Gamer o cualquier concepto especial.',
+        includes: [
+            'Diseño de entorno temático',
+            'Integración con tu figura',
+            'Detalles pintados a mano (opcional)',
+            'Base ambientada'
+        ],
+        prices: [
+            { label: 'Set Completo', price: '$5,000.00' }
+        ],
+        image: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1000'
+    },
+    'eventos': {
+        title: 'Paquete Eventos',
+        subtitle: 'Experiencia en vivo',
+        description: 'Llevamos la estación de escaneo a tu evento. Los asistentes obtienen su modelo 3D de manera rápida y divertida.',
+        includes: [
+            'Estación profesional móvil',
+            'Recuerdos personalizados',
+            'Visualización en tiempo real',
+            'Opción de escaneos previos'
+        ],
+        prices: [
+            { label: 'Servicio por Evento', price: '$30,000.00' }
+        ],
+        image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=1000'
+    },
+    'recreacion': {
+        title: 'Diseño & Modelado (Sin Escáner)',
+        subtitle: 'Recreación 3D desde Foto',
+        description: '¿No puedes venir al estudio? Transformamos una fotografía clara en un modelo 3D detallado listo para imprimir.',
+        includes: [
+            'Modelado artístico desde referencia 2D',
+            'Optimización para impresión',
+            'Archivo digital',
+            'Impresión 3D opcional'
+        ],
+        prices: [
+            { label: 'Proyecto desde', price: '$20,000.00' }
+        ],
+        image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1000'
+    }
+};
+
+// --- Configuración de Tema (Corregido: Fondo Blanco, Texto Oscuro) ---
+const themeOverrides = {
+    Tabs: {
+        tabBorderRadius: '9999px',
+        railColorSegment: '#f1f5f9',
+        // Estado Activo: Fondo Blanco, Texto Azul Oscuro (Alto Contraste)
+        tabColorActiveSegment: '#ffffff',
+        tabTextColorActiveSegment: '#2f4b59',
+        // Estado Inactivo
+        tabTextColorSegment: '#64748b',
+        fontWeightStrong: '700',
+        fontSizeMedium: '14px'
+    }
+};
+
+// --- Ciclo de Vida ---
+onMounted(() => {
+    // Activar animaciones al montar
+    setTimeout(() => { showContent.value = true; }, 100);
+});
+
+// --- Lógica de Navegación ---
+watch(activeTab, (newVal) => {
+    if (newVal !== props.category) {
+        router.visit(`/servicios/${newVal}`, { preserveScroll: true, replace: true });
+    }
+});
+
+watch(() => props.category, (newVal) => {
+    if (newVal && services[newVal]) activeTab.value = newVal;
+});
 </script>
 
 <template>
     <AppLayoutLanding>
         <Head title="Nuestros Servicios" />
 
-        <div class="max-w-7xl mx-auto px-6 py-12 min-h-[80vh]">
-            <h1 class="text-4xl font-bold text-[#2f4b59] mb-8 text-center">Nuestros Servicios</h1>
+        <NConfigProvider :theme-overrides="themeOverrides">
+            <div class="min-h-screen bg-slate-50 py-12 md:py-20 relative overflow-hidden">
+                
+                <!-- Fondo Decorativo Sutil -->
+                <div class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40">
+                    <div class="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#4cc9f0]/10 blur-[100px] rounded-full"></div>
+                    <div class="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-[#2f4b59]/5 blur-[100px] rounded-full"></div>
+                </div>
 
-            <n-card :bordered="false" content-style="padding: 0;" class="bg-transparent shadow-none">
-                <n-tabs 
-                    v-model:value="activeTab" 
-                    type="segment" 
-                    animated
-                    class="custom-tabs"
-                    pane-style="padding-top: 40px;"
-                >
-                    <n-tab-pane name="escaneo-personas" tab="Escaneo de Personas" />
-                    <n-tab-pane name="impresion" tab="Impresión 3D" />
-                    <n-tab-pane name="modelado" tab="Modelado Digital" />
-                    <n-tab-pane name="eventos" tab="Eventos" />
-                </n-tabs>
-
-                <!-- Contenido Dinámico -->
-                <div class="mt-8 bg-white rounded-3xl p-8 md:p-12 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col md:flex-row gap-12 items-center">
+                <div class="max-w-7xl mx-auto px-4 md:px-6 relative z-10">
                     
-                    <!-- Texto -->
-                    <div class="flex-1 space-y-6">
-                        <div class="inline-block px-4 py-1 rounded-full bg-blue-50 text-[#4cc9f0] text-sm font-bold uppercase tracking-wider">
-                            {{ services[activeTab].title }}
-                        </div>
-                        <h2 class="text-3xl md:text-4xl font-bold text-[#2f4b59]">
-                            {{ services[activeTab].subtitle }}
-                        </h2>
-                        <p class="text-lg text-slate-600 leading-relaxed">
-                            {{ services[activeTab].content }}
-                        </p>
-                        
-                        <ul class="space-y-3 pt-4">
-                            <li v-for="feature in services[activeTab].features" :key="feature" class="flex items-center gap-3 text-slate-700">
-                                <svg class="w-5 h-5 text-[#4cc9f0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                                {{ feature }}
-                            </li>
-                        </ul>
-
-                        <div class="pt-6">
-                            <button class="bg-[#2f4b59] text-white px-8 py-3 rounded-xl hover:bg-[#3e6070] transition-colors shadow-lg shadow-[#2f4b59]/20">
-                                Cotizar Servicio
-                            </button>
-                        </div>
+                    <!-- ENCABEZADO: Animación de Entrada -->
+                    <div class="text-center transition-all duration-1000 ease-out transform"
+                         :class="showContent ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'">
+                        <h1 class="text-3xl md:text-5xl font-bold text-[#2f4b59] mb-8 tracking-tight">
+                            Soluciones <span class="text-[#4cc9f0]">ION3D</span>
+                        </h1>
                     </div>
 
-                    <!-- Imagen Decorativa -->
-                    <div class="flex-1 w-full relative group">
-                        <div class="absolute inset-0 bg-[#4cc9f0] rounded-3xl rotate-3 opacity-20 group-hover:rotate-6 transition-transform duration-500"></div>
-                        <div class="relative rounded-3xl overflow-hidden aspect-[4/3] shadow-lg">
-                            <img :src="services[activeTab].image" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" alt="Servicio">
-                            <!-- Overlay Gradiente -->
-                            <div class="absolute inset-0 bg-gradient-to-t from-[#2f4b59]/60 to-transparent"></div>
-                            <div class="absolute bottom-6 left-6 text-white font-medium">
-                                ION3D Studio
+                    <!-- TABS: Animación de Entrada (Delay) -->
+                    <div class="mb-10 overflow-x-auto pb-4 no-scrollbar flex justify-center transition-all duration-1000 delay-200 ease-out transform"
+                         :class="showContent ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'">
+                        <n-tabs 
+                            v-model:value="activeTab" 
+                            type="segment" 
+                            animated
+                            class="min-w-[700px] md:min-w-0 md:w-full md:max-w-4xl shadow-sm rounded-full p-1 bg-slate-100" 
+                        >
+                            <n-tab-pane name="impresion" tab="Impresión 3D" />
+                            <n-tab-pane name="escaneo-personas" tab="Escaneo" />
+                            <n-tab-pane name="modelo" tab="Personalizado" />
+                            <n-tab-pane name="head-pro" tab="Head Pro" />
+                            <n-tab-pane name="escenario" tab="Escenarios" />
+                            <n-tab-pane name="eventos" tab="Eventos" />
+                            <n-tab-pane name="recreacion" tab="Diseño 3D" />
+                        </n-tabs>
+                    </div>
+
+                    <!-- CONTENIDO DEL SERVICIO: Animación de Entrada (Delay Mayor) -->
+                    <div class="transition-all duration-1000 delay-300 ease-out transform"
+                         :class="showContent ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'">
+                        
+                        <transition 
+                            mode="out-in" 
+                            enter-active-class="transition duration-500 ease-out" 
+                            enter-from-class="opacity-0 translate-y-4" 
+                            enter-to-class="opacity-100 translate-y-0" 
+                            leave-active-class="transition duration-300 ease-in" 
+                            leave-from-class="opacity-100 translate-y-0" 
+                            leave-to-class="opacity-0 -translate-y-4"
+                        >
+                            <div :key="activeTab" class="bg-white rounded-[2rem] shadow-xl shadow-slate-200/60 overflow-hidden border border-slate-100">
+                                
+                                <div class="grid lg:grid-cols-2 gap-0">
+                                    
+                                    <!-- Columna Izquierda: Información -->
+                                    <div class="p-8 md:p-12 lg:p-16 flex flex-col justify-center order-2 lg:order-1">
+                                        
+                                        <div class="mb-6">
+                                            <div v-if="services[activeTab].badge" class="inline-block px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold uppercase tracking-wider rounded-full mb-3 animate-fade-in">
+                                                {{ services[activeTab].badge }}
+                                            </div>
+                                            <h2 class="text-3xl md:text-4xl font-extrabold text-[#2f4b59] mb-2 leading-tight">
+                                                {{ services[activeTab].title }}
+                                            </h2>
+                                            <p class="text-[#4cc9f0] font-medium text-lg">{{ services[activeTab].subtitle }}</p>
+                                        </div>
+
+                                        <p class="text-slate-600 text-lg leading-relaxed mb-8">
+                                            {{ services[activeTab].description }}
+                                        </p>
+
+                                        <!-- Lista de Incluidos -->
+                                        <div class="mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                            <h4 class="font-bold text-[#2f4b59] mb-4 text-sm uppercase tracking-wide">¿Qué incluye este paquete?</h4>
+                                            <ul class="space-y-3">
+                                                <li v-for="(feature, idx) in services[activeTab].includes" :key="idx" class="flex items-start gap-3 text-slate-700">
+                                                    <div class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+                                                        <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                                    </div>
+                                                    <span class="text-sm md:text-base">{{ feature }}</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <!-- TABLA DE PRECIOS -->
+                                        <div class="space-y-3">
+                                            <h4 class="font-bold text-[#2f4b59] mb-2 text-sm uppercase tracking-wide">Opciones y Precios</h4>
+                                            <div v-for="(priceItem, pIdx) in services[activeTab].prices" :key="pIdx" 
+                                                 class="flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-[#4cc9f0] hover:bg-blue-50/30 transition-colors group cursor-default">
+                                                <span class="font-medium text-slate-700">{{ priceItem.label }}</span>
+                                                <span class="font-bold text-[#2f4b59] text-lg">{{ priceItem.price }}</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Botón de Acción -->
+                                        <div class="mt-8 pt-4 border-t border-slate-100">
+                                            <button class="w-full md:w-auto bg-[#2f4b59] hover:bg-[#3e6070] text-white font-bold py-4 px-8 rounded-xl shadow-lg shadow-[#2f4b59]/20 transition-all active:scale-95 flex items-center justify-center gap-2">
+                                                <span>Solicitar Cotización</span>
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                            </button>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Columna Derecha: Imagen -->
+                                    <div class="relative min-h-[300px] lg:min-h-full order-1 lg:order-2 bg-slate-200 overflow-hidden group">
+                                        <img 
+                                            :src="services[activeTab].image" 
+                                            :alt="services[activeTab].title"
+                                            class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                        >
+                                        <!-- Gradiente Decorativo -->
+                                        <div class="absolute inset-0 bg-gradient-to-t from-[#2f4b59]/80 via-transparent to-transparent lg:bg-gradient-to-l lg:from-[#2f4b59]/50"></div>
+                                        
+                                        <!-- Texto Flotante en Imagen -->
+                                        <div class="absolute bottom-6 left-6 right-6 text-white lg:hidden">
+                                            <p class="text-sm font-medium opacity-90 uppercase tracking-widest mb-1">ION3D Studio</p>
+                                            <h3 class="text-2xl font-bold">{{ services[activeTab].title }}</h3>
+                                        </div>
+                                    </div>
+
+                                </div>
                             </div>
-                        </div>
+                        </transition>
                     </div>
 
                 </div>
-            </n-card>
-        </div>
+            </div>
+        </NConfigProvider>
     </AppLayoutLanding>
 </template>
 
 <style scoped>
-:deep(.n-tabs-rail) {
-    background-color: #f1f5f9;
-    border-radius: 9999px;
-    padding: 4px;
+/* Ocultar scrollbar en contenedor de tabs móvil */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
 }
-:deep(.n-tabs-tab) {
-    border-radius: 9999px;
-    font-weight: 600;
-    transition: all 0.3s;
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
-:deep(.n-tabs-tab--active) {
-    background-color: white !important;
-    color: #2f4b59 !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
 }
 </style>
