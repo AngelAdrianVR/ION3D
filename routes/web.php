@@ -3,6 +3,7 @@
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\NotificationController;
 // Controladores para los módulos administrativos (Asegúrate de crearlos si no existen)
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PosController;
@@ -85,7 +86,16 @@ Route::middleware([
         ->names('appointments'); // Nombra las rutas como appointments.index, appointments.show, etc.
 
     // 6. Mensajes de Contacto (Buzón de entrada)
-    Route::resource('contact-messages', ContactMessageController::class)
-        ->only(['index', 'show', 'destroy'])
-        ->names('contact-messages');
+    Route::resource('contact-messages', ContactMessageController::class)->only(['index', 'show', 'destroy'])->names('contact-messages');
+    Route::put('/contact-messages/{contact_message}/mark-as-read', [ContactMessageController::class, 'markAsRead'])->name('contact-messages.mark-as-read');
+
+    // Rutas de notificaciones
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::put('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
+        Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+        Route::post('/bulk-action', [NotificationController::class, 'bulkAction'])->name('bulk');
+    });
+
 });
