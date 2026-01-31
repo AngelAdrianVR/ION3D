@@ -10,11 +10,12 @@ import {
     NFormItem, 
     NInput, 
     NDatePicker, 
-    NTimePicker, 
     NSelect,
-    NMessageProvider, 
+    NMessageProvider,
+    NSpin,
     createDiscreteApi 
 } from 'naive-ui';
+import axios from 'axios'; // Aseguramos importar axios
 
 export default {
     name: 'AppLayoutLanding',
@@ -29,16 +30,16 @@ export default {
         NFormItem,
         NInput,
         NDatePicker,
-        NTimePicker,
         NSelect,
-        NMessageProvider
+        NMessageProvider,
+        NSpin
     },
     setup() {
         const form = useForm({
             guest_name: '',
             guest_phone: '',
             date: null,     
-            time: null,     
+            start_time: null, 
             service_type: null 
         });
 
@@ -53,6 +54,11 @@ export default {
             activeDropdown: null,
             showAppointmentModal: false,
             
+            // Lógica de horarios
+            selectedTimeSlot: null,
+            loadingSlots: false,
+            availableSlots: [], 
+
             serviceOptions: [
                 { label: 'Escaneo 3D de Personas', value: 'Escaneo 3D de Personas' },
                 { label: 'Impresión Full Color', value: 'Impresión Full Color' },
@@ -103,6 +109,17 @@ export default {
     beforeUnmount() {
         window.removeEventListener('scroll', this.handleScroll);
     },
+    watch: {
+        // Observar cambios en la fecha para recargar los horarios REALES
+        'form.date'(newDate) {
+            this.selectedTimeSlot = null;
+            if (newDate) {
+                this.generateTimeSlots(newDate);
+            } else {
+                this.availableSlots = [];
+            }
+        }
+    },
     methods: {
         handleScroll() {
             this.isScrolled = window.scrollY > 50;
@@ -119,38 +136,86 @@ export default {
         isActive(routePrefix) {
             return this.$page.url.startsWith(routePrefix);
         },
+        
+        disablePreviousDate(ts) {
+            // Deshabilitar solo fechas pasadas
+            // NOTA: No deshabilitamos fines de semana aquí visualmente 
+            // para que al dar click el backend nos diga que está "Cerrado" (lista vacía)
+            // o puedes deshabilitar ts.getDay() === 0 || ts.getDay() === 6 si prefieres que no den click.
+            return ts < Date.now() - 86400000;
+        },
+
+        async generateTimeSlots(dateTimestamp) {
+            this.loadingSlots = true;
+            this.availableSlots = []; // Limpiar slots anteriores
+
+            try {
+                // 1. Formatear fecha para el backend (YYYY-MM-DD)
+                const dateObj = new Date(dateTimestamp);
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const formattedDate = `${year}-${month}-${day}`;
+
+                // 2. Consulta Real a la API
+                const response = await axios.get(route('appointments.check'), {
+                    params: { date: formattedDate }
+                });
+
+                // 3. Asignar slots reales desde la BD
+                this.availableSlots = response.data;
+
+            } catch (error) {
+                console.error("Error al obtener disponibilidad:", error);
+                const { message } = createDiscreteApi(['message'], {
+                    configProviderProps: { themeOverrides: this.themeOverrides }
+                });
+                message.error('Error al verificar disponibilidad. Intente nuevamente.');
+            } finally {
+                this.loadingSlots = false;
+            }
+        },
+
+        selectSlot(slot) {
+            if (slot.status === 'busy') return;
+            this.selectedTimeSlot = slot.time;
+        },
+
         submitAppointment() {
-            // Validar que TODOS los campos estén llenos
             if (
                 !this.form.guest_name || 
                 !this.form.guest_phone || 
                 !this.form.date || 
-                !this.form.time || 
+                !this.selectedTimeSlot || 
                 !this.form.service_type
             ) {
                 const { message } = createDiscreteApi(['message'], {
                     configProviderProps: { themeOverrides: this.themeOverrides }
                 });
-                message.warning('Por favor completa todos los campos obligatorios (*).');
+                message.warning('Por favor completa todos los campos y selecciona un horario.');
                 return;
             }
 
+            // Combinar Fecha y Hora seleccionada
             const dateObj = new Date(this.form.date);
-            const timeObj = new Date(this.form.time);
-            
-            dateObj.setHours(timeObj.getHours());
-            dateObj.setMinutes(timeObj.getMinutes());
+            const [hours, minutes] = this.selectedTimeSlot.split(':');
+            dateObj.setHours(parseInt(hours));
+            dateObj.setMinutes(parseInt(minutes));
             dateObj.setSeconds(0);
 
+            // Ajuste manual de zona horaria si es necesario, pero ISO suele funcionar bien
+            // Inertia enviará esto al backend
             this.form.transform((data) => ({
                 guest_name: data.guest_name,
                 guest_phone: data.guest_phone,
-                start_time: dateObj.toISOString(),
+                start_time: dateObj.toISOString(), 
                 internal_notes: `Servicio solicitado: ${data.service_type}`
             })).post(route('appointments.store'), {
                 onSuccess: () => {
                     this.showAppointmentModal = false;
                     this.form.reset();
+                    this.selectedTimeSlot = null;
+                    this.availableSlots = [];
                     
                     const { message } = createDiscreteApi(['message'], {
                         configProviderProps: { themeOverrides: this.themeOverrides }
@@ -163,12 +228,14 @@ export default {
                     });
                     const firstError = Object.values(errors)[0];
                     message.error(firstError || 'Hubo un error al agendar.');
+                    
+                    // Si el error es de disponibilidad, recargamos los slots
+                    if (firstError.includes('horario')) {
+                        this.generateTimeSlots(this.form.date);
+                    }
                 }
             });
         },
-        disablePreviousDate(ts) {
-            return ts < Date.now() - 86400000;
-        }
     }
 }
 </script>
@@ -310,7 +377,7 @@ export default {
                 <!-- ========================================== -->
                 <n-modal v-model:show="showAppointmentModal">
                     <n-card
-                        style="width: 700px; max-width: 90vw;"
+                        style="width: 800px; max-width: 95vw;"
                         :bordered="false"
                         size="huge"
                         role="dialog"
@@ -332,13 +399,9 @@ export default {
                             </div>
                         </template>
                         
-                        <template #header-extra>
-                             <!-- Botón cerrar nativo del modal o custom -->
-                        </template>
-
-                        <div class="mt-2 pb-16">
+                        <div class="mt-2">
                             <p class="text-slate-600 mb-6 text-sm">
-                                Reserva un espacio con nuestros especialistas en escaneo 3D. Te confirmaremos la disponibilidad vía telefónica.
+                                Selecciona una fecha para ver la disponibilidad. Los horarios mostrados en rojo no están disponibles.
                             </p>
 
                             <n-form
@@ -347,6 +410,7 @@ export default {
                                 label-placement="top"
                                 size="large"
                             >
+                                <!-- PRIMERA FILA: DATOS PERSONALES -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <n-form-item label="Nombre Completo" path="guest_name" show-require-mark>
                                         <n-input v-model:value="form.guest_name" placeholder="Ej. Juan Pérez" />
@@ -356,24 +420,93 @@ export default {
                                     </n-form-item>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <n-form-item label="Fecha Preferida" path="date" show-require-mark>
-                                        <n-date-picker 
-                                            v-model:value="form.date" 
-                                            type="date" 
-                                            class="w-full" 
-                                            :is-date-disabled="disablePreviousDate"
-                                            placeholder="Selecciona fecha"
-                                        />
-                                    </n-form-item>
-                                    <n-form-item label="Hora Estimada" path="time" show-require-mark>
-                                        <n-time-picker 
-                                            v-model:value="form.time" 
-                                            format="HH:mm" 
-                                            class="w-full" 
-                                            placeholder="Selecciona hora"
-                                        />
-                                    </n-form-item>
+                                <!-- SEGUNDA FILA: SELECCIÓN DE FECHA Y HORARIOS (SEMÁFORO) -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-4">
+                                    
+                                    <!-- COLUMNA IZQUIERDA: CALENDARIO -->
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-[#2f4b59]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                            1. Selecciona Fecha
+                                        </span>
+                                        <n-form-item path="date" :show-label="false">
+                                            <n-date-picker 
+                                                v-model:value="form.date" 
+                                                panel
+                                                type="date" 
+                                                class="w-full shadow-sm rounded-xl overflow-hidden border border-slate-200"
+                                                :is-date-disabled="disablePreviousDate"
+                                                :actions="null"
+                                            />
+                                        </n-form-item>
+                                    </div>
+
+                                    <!-- COLUMNA DERECHA: SEMÁFORO DE HORARIOS -->
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-[#2f4b59]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            2. Selecciona Hora
+                                        </span>
+                                        
+                                        <div class="bg-white rounded-xl border border-slate-200 p-4 h-full flex flex-col">
+                                            
+                                            <!-- Estado Vacío -->
+                                            <div v-if="!form.date" class="flex-1 flex flex-col items-center justify-center text-slate-400 text-center p-4">
+                                                <svg class="w-10 h-10 mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                                <p class="text-xs">Elige un día para ver disponibilidad</p>
+                                            </div>
+
+                                            <!-- Loading -->
+                                            <div v-else-if="loadingSlots" class="flex-1 flex items-center justify-center">
+                                                <n-spin size="medium" />
+                                            </div>
+
+                                            <!-- Estado Cerrado (Lista Vacia) -->
+                                            <div v-else-if="availableSlots.length === 0" class="flex-1 flex flex-col items-center justify-center text-red-400 text-center p-4">
+                                                <svg class="w-10 h-10 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                <p class="text-xs font-bold">No hay horarios disponibles</p>
+                                                <p class="text-[10px] text-slate-400 mt-1">Es posible que estemos cerrados este día.</p>
+                                            </div>
+
+                                            <!-- Grid de Horarios -->
+                                            <div v-else class="space-y-4">
+                                                <div class="grid grid-cols-3 gap-2">
+                                                    <button 
+                                                        v-for="slot in availableSlots" 
+                                                        :key="slot.time"
+                                                        @click="selectSlot(slot)"
+                                                        :disabled="slot.status === 'busy'"
+                                                        class="px-2 py-2 rounded-lg text-sm font-medium transition-all duration-200 border text-center relative"
+                                                        :class="[
+                                                            slot.status === 'busy' 
+                                                                ? 'bg-red-50 text-red-300 border-red-100 cursor-not-allowed decoration-red-300' 
+                                                                : (selectedTimeSlot === slot.time 
+                                                                    ? 'bg-[#2f4b59] text-white border-[#2f4b59] shadow-md transform scale-105' 
+                                                                    : 'bg-white text-slate-600 border-slate-200 hover:border-[#2f4b59] hover:text-[#2f4b59]')
+                                                        ]"
+                                                    >
+                                                        {{ slot.time }}
+                                                        <!-- Indicador de punto ocupado -->
+                                                        <span v-if="slot.status === 'busy'" class="absolute top-1 right-1 w-1.5 h-1.5 bg-red-400 rounded-full"></span>
+                                                    </button>
+                                                </div>
+
+                                                <!-- Leyenda Semáforo -->
+                                                <div class="flex items-center justify-center gap-4 text-[10px] text-slate-500 border-t border-slate-100 pt-3">
+                                                    <div class="flex items-center gap-1">
+                                                        <span class="w-2 h-2 rounded-full border border-slate-300 bg-white"></span> Libre
+                                                    </div>
+                                                    <div class="flex items-center gap-1">
+                                                        <span class="w-2 h-2 rounded-full bg-[#2f4b59]"></span> Selección
+                                                    </div>
+                                                    <div class="flex items-center gap-1">
+                                                        <span class="w-2 h-2 rounded-full bg-red-400"></span> Ocupado
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <n-form-item label="Servicio de Interés" path="service_type" show-require-mark>
@@ -394,6 +527,7 @@ export default {
                                 <n-button 
                                     type="primary" 
                                     :loading="form.processing"
+                                    :disabled="!selectedTimeSlot"
                                     @click="submitAppointment"
                                     class="shadow-lg shadow-[#2f4b59]/30"
                                 >

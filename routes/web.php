@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\AvailabilityExceptionController;
+use App\Http\Controllers\BusinessHourController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\NotificationController;
@@ -84,6 +86,7 @@ Route::middleware([
         ->parameters(['appointments-admin' => 'appointment']) // Para que el parámetro sea {appointment}
         ->except(['store']) // El store ya es público, aunque aquí podrías incluirlo si el admin agenda manualmente
         ->names('appointments'); // Nombra las rutas como appointments.index, appointments.show, etc.
+    Route::get('/appointments/check-availability', [AppointmentController::class, 'checkAvailability'])->name('appointments.check');
 
     // 6. Mensajes de Contacto (Buzón de entrada)
     Route::resource('contact-messages', ContactMessageController::class)->only(['index', 'show', 'destroy'])->names('contact-messages');
@@ -97,5 +100,13 @@ Route::middleware([
         Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
         Route::post('/bulk-action', [NotificationController::class, 'bulkAction'])->name('bulk');
     });
+
+    // ---------------------------- CONFIGURACIÓN DE AGENDA ----------------------------
+    Route::get('/settings/calendar', [BusinessHourController::class, 'index'])->name('settings.calendar.index');
+    Route::put('/settings/business-hours', [BusinessHourController::class, 'update'])->name('business-hours.update');
+    
+    Route::post('/settings/availability-exceptions', [AvailabilityExceptionController::class, 'store'])->name('availability-exceptions.store');
+    Route::delete('/settings/availability-exceptions/{exception}', [AvailabilityExceptionController::class, 'destroy'])->name('availability-exceptions.destroy');
+    
 
 });

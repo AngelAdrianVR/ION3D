@@ -35,5 +35,8 @@ class DatabaseSeeder extends Seeder
         
         // Asignar rol al usuario creado
         $AdminUser->assignRole('Super admin');
+
+        // Ejecutar el seeder de horas y dias de calendario (citas)
+        $this->call(BusinessHourSeeder::class);
     }
 }
