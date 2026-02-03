@@ -24,7 +24,7 @@ return new class extends Migration
             $table->dateTime('start_time');
             $table->dateTime('end_time');
             
-            $table->enum('status', ['Pendiente', 'Confirmada', 'Completada', 'Cancelada'])->default('Pendiente');
+            $table->enum('status', ['Pendiente', 'Confirmada', 'Completada', 'Cancelada', 'No Asistió'])->default('Pendiente');
             
             // Relación opcional con paquete
             $table->foreignId('service_package_id')->nullable()->constrained()->nullOnDelete();

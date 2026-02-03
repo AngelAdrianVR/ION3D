@@ -15,6 +15,7 @@ use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 // PAGINAS PÚBLICAS ===============================================================================
 // ================================================================================================
@@ -75,7 +76,20 @@ Route::middleware([
     Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
 
     // 3. Gestión de Página (CMS)
-    Route::get('/cms', [LandingController::class, 'index'])->name('cms.index');
+    Route::prefix('cms')->name('cms.')->group(function () {
+        // Vista principal
+        Route::get('/', [PageManagementController::class, 'index'])->name('index');
+        
+        // Rutas para Paquetes
+        Route::post('/packages', [PageManagementController::class, 'storePackage'])->name('packages.store');
+        Route::put('/packages/{package}', [PageManagementController::class, 'updatePackage'])->name('packages.update');
+        Route::delete('/packages/{package}', [PageManagementController::class, 'destroyPackage'])->name('packages.destroy');
+
+        // Rutas para Portafolio
+        Route::post('/portfolio', [PageManagementController::class, 'storePortfolioItem'])->name('portfolio.store');
+        Route::post('/portfolio/{item}', [PageManagementController::class, 'updatePortfolioItem'])->name('portfolio.update'); // POST para manejar archivos con _method PUT
+        Route::delete('/portfolio/{item}', [PageManagementController::class, 'destroyPortfolioItem'])->name('portfolio.destroy');
+    });
 
     // 4. Usuarios (Gestión de usuarios del sistema)
     Route::resource('users', UserController::class);
@@ -86,6 +100,13 @@ Route::middleware([
         ->parameters(['appointments-admin' => 'appointment']) // Para que el parámetro sea {appointment}
         ->except(['store']) // El store ya es público, aunque aquí podrías incluirlo si el admin agenda manualmente
         ->names('appointments'); // Nombra las rutas como appointments.index, appointments.show, etc.
+    Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
+    Route::put('/appointments/{appointment}', [AppointmentController::class, 'update'])->name('appointments.update');
+    Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
+    
+    // Ruta específica para cambio de estatus rápido
+    Route::put('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus'])->name('appointments.update-status');
+
     Route::get('/appointments/check-availability', [AppointmentController::class, 'checkAvailability'])->name('appointments.check');
 
     // 6. Mensajes de Contacto (Buzón de entrada)
@@ -109,5 +130,16 @@ Route::middleware([
     Route::post('/settings/availability-exceptions', [AvailabilityExceptionController::class, 'store'])->name('availability-exceptions.store');
     Route::delete('/settings/availability-exceptions/{exception}', [AvailabilityExceptionController::class, 'destroy'])->name('availability-exceptions.destroy');
     
-
+    
 });
+
+// eliminacion de archivo, imagen o video global
+Route::delete('/media/{media}', function (Media $media) {
+    try {
+        $media->delete(); // Elimina el archivo y su registro
+
+        // return response()->json(['message' => 'Archivo eliminado correctamente.'], 200);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Error al eliminar el archivo.'], 500);
+    }
+})->name('media.delete-file');

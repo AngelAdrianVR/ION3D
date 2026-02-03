@@ -185,7 +185,7 @@
           <n-modal v-model:show="showDeleteModal" transform-origin="center">
             <div 
               class="bg-white/90 backdrop-blur-xl w-80 rounded-2xl p-6 text-center shadow-2xl"
-              style="position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0;"
+              style="position: fixed; left: 50%; top: 50%; transform: translate(-50%; -50%); margin: 0;"
             >
               <div class="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -314,7 +314,15 @@ const deleteMessage = () => {
   }
 };
 
-const handlePageChange = (page) => router.get(route('contact-messages.index'), { page, search: search.value }, { preserveState: true });
+const handlePageChange = (page) => {
+    // Igual que en citas: al hacer click, pedimos la página a Inertia
+    router.get(route('contact-messages.index'), { page, search: search.value }, { preserveState: true });
+};
+
+// --- FIX: Sincronizar currentPage con las props entrantes de Inertia (Igual que en Citas) ---
+watch(() => props.messages.current_page, (newPage) => {
+    currentPage.value = newPage;
+});
 
 watch(search, debounce((value) => {
   router.get(route('contact-messages.index'), { search: value }, { preserveState: true, replace: true });

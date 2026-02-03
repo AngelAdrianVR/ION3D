@@ -24,7 +24,7 @@ class ContactMessageController extends Controller
             })
             ->orderBy('is_read', 'asc') // Primero los no leídos
             ->orderBy('created_at', 'desc') // Luego los más recientes
-            ->paginate(10)
+            ->paginate(20)
             ->withQueryString();
 
         return Inertia::render('ContactMessages/Index', [

@@ -1,56 +1,53 @@
 <script setup>
 import AppLayoutLanding from '@/Layouts/AppLayoutLanding.vue';
-import { Head, router } from '@inertiajs/vue3';
-import { NTabs, NTabPane, NModal, NConfigProvider } from 'naive-ui';
-import { ref, onMounted, watch } from 'vue';
+import { Head } from '@inertiajs/vue3';
+import { NConfigProvider } from 'naive-ui';
+import { ref, onMounted, computed, watch } from 'vue';
 
 const props = defineProps({
-    category: {
+    dbItems: {
+        type: Object,
+        default: () => ({})
+    },
+    initialCategory: {
         type: String,
-        default: 'comercial'
+        default: ''
     }
 });
 
 // --- Estado ---
-const activeTab = ref(props.category || 'comercial');
+const activeTab = ref(props.initialCategory);
 const showModal = ref(false);
 const selectedItem = ref(null);
-const showContent = ref(false); // Control para animaciones de entrada
+const showContent = ref(false);
 
-// --- Datos de Galería ---
-const galleryItems = {
-    'comercial': [
-        { id: 1, title: 'Campaña Nike Air', category: 'Publicidad', img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=800' },
-        { id: 2, title: 'Botella Eco 360', category: 'Producto', img: 'https://images.unsplash.com/photo-1602143407151-11115cd4e69b?auto=format&fit=crop&q=80&w=800' },
-        { id: 3, title: 'Joyería Virtual', category: 'E-commerce', img: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80&w=800' },
-        { id: 31, title: 'Cosméticos Luxury', category: 'CGI', img: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=800' }
-    ],
-    'arte': [
-        { id: 4, title: 'El Pensador Digital', category: 'Escultura', img: 'https://images.unsplash.com/photo-1558865869-c93f6f8482af?auto=format&fit=crop&q=80&w=800' },
-        { id: 5, title: 'Cyberpunk Figure', category: 'Coleccionable', img: 'https://images.unsplash.com/photo-1606041011872-596597976b25?auto=format&fit=crop&q=80&w=800' },
-        { id: 6, title: 'Busto Clásico', category: 'Restauración', img: 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&q=80&w=800' },
-        { id: 61, title: 'Neon Abstract', category: 'Arte 3D', img: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=800' }
-    ],
-    'casos': [
-        { id: 7, title: 'Prótesis Biomimética', category: 'Medicina', img: 'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&q=80&w=800' },
-        { id: 8, title: 'Templo Maya', category: 'Patrimonio', img: 'https://images.unsplash.com/photo-1599593256050-13f570087c53?auto=format&fit=crop&q=80&w=800' },
-        { id: 9, title: 'Ingeniería Inversa', category: 'Industrial', img: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800' }
-    ]
-};
+// Obtener las categorías disponibles (keys del objeto agrupado)
+const categories = computed(() => Object.keys(props.dbItems));
 
-// --- Configuración de Tema (Simplificado para Tabs) ---
-const themeOverrides = {
-    Tabs: {
-        // Personalización sutil solo para colores y radios
-        tabBorderRadius: '9999px',
-        railColorSegment: '#f1f5f9',
-        tabColorActiveSegment: '#ffffff',
-        tabTextColorActiveSegment: '#2f4b59',
-        fontWeightStrong: '700'
-    }
+// Items de la pestaña activa
+const currentItems = computed(() => {
+    return props.dbItems[activeTab.value] || [];
+});
+
+// Etiquetas legibles para las pestañas
+const getTabLabel = (slug) => {
+    const map = {
+        'impresion': 'Impresión 3D',
+        'escaneo': 'Escaneo Digital',
+        'modelado': 'Modelado & Diseño'
+    };
+    // Si no está en el mapa, capitalizar el slug
+    return map[slug] || slug.charAt(0).toUpperCase() + slug.slice(1);
 };
 
 // --- Métodos ---
+const selectTab = (slug) => {
+    activeTab.value = slug;
+    // Actualizar URL sin recargar
+    const url = `/portafolio/${slug}`;
+    window.history.replaceState({ path: url }, '', url);
+};
+
 const openLightbox = (item) => {
     selectedItem.value = item;
     showModal.value = true;
@@ -61,16 +58,10 @@ onMounted(() => {
     setTimeout(() => { showContent.value = true; }, 100);
 });
 
-// Sincronizar tabs con URL
-watch(activeTab, (newVal) => {
-    if (newVal !== props.category) {
-        router.visit(`/portafolio/${newVal}`, { preserveState: true, replace: true });
-    }
-});
-
-watch(() => props.category, (newVal) => {
-    if (newVal) activeTab.value = newVal;
-});
+// Tema Clean Tech (Coincide con Servicios)
+const themeOverrides = {
+    common: { primaryColor: '#0ea5e9' }
+};
 </script>
 
 <template>
@@ -78,120 +69,123 @@ watch(() => props.category, (newVal) => {
         <Head title="Portafolio" />
 
         <NConfigProvider :theme-overrides="themeOverrides">
-            <div class="min-h-screen bg-slate-50 relative overflow-hidden">
+            <div class="min-h-screen bg-slate-50 relative overflow-hidden font-sans">
                 
-                <!-- Fondo Decorativo -->
-                <div class="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-[#e0f2fe] to-slate-50 opacity-60 pointer-events-none"></div>
-                <div class="absolute -top-40 -right-40 w-[600px] h-[600px] bg-[#4cc9f0] opacity-10 blur-[120px] rounded-full pointer-events-none animate-pulse-slow"></div>
-                <div class="absolute top-40 -left-20 w-[400px] h-[400px] bg-[#2f4b59] opacity-5 blur-[100px] rounded-full pointer-events-none"></div>
+                <!-- Fondo Decorativo Clean Tech -->
+                <div class="absolute inset-0 pointer-events-none">
+                     <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-multiply"></div>
+                     <div class="absolute -top-40 -right-40 w-[600px] h-[600px] bg-sky-200/40 opacity-50 blur-[100px] rounded-full animate-pulse-slow"></div>
+                     <div class="absolute top-40 -left-20 w-[400px] h-[400px] bg-cyan-200/30 opacity-50 blur-[100px] rounded-full"></div>
+                </div>
 
-                <div class="relative z-10 max-w-7xl mx-auto px-6 py-20">
+                <div class="relative z-10 max-w-7xl mx-auto px-6 py-16 md:py-24">
                     
                     <!-- 1. Encabezado Animado -->
-                    <div class="text-center mb-12 transition-all duration-1000 transform"
+                    <div class="text-center mb-16 transition-all duration-1000 transform"
                          :class="showContent ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'">
-                        <h2 class="text-[#4cc9f0] font-bold tracking-[0.2em] uppercase text-xs md:text-sm mb-3">Galería Visual</h2>
-                        <h1 class="text-4xl md:text-6xl font-extrabold text-[#2f4b59] mb-6 tracking-tight">
-                            Nuestro Portafolio
+                        <h2 class="text-cyan-600 font-bold tracking-[0.2em] uppercase text-xs md:text-sm mb-3">Galería Visual</h2>
+                        <h1 class="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight">
+                            NUESTRO <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">PORTAFOLIO</span>
                         </h1>
-                        <p class="text-slate-500 text-lg max-w-2xl mx-auto leading-relaxed">
+                        <p class="text-slate-500 text-lg max-w-2xl mx-auto leading-relaxed font-light">
                             Una muestra de precisión, arte y tecnología. Descubre cómo transformamos lo físico en digital.
                         </p>
                     </div>
 
-                    <!-- 2. Tabs Estilizados (Simplificados) -->
-                    <div class="flex justify-center mb-12 transition-all duration-1000 delay-200 transform"
+                    <!-- 2. Tabs Estilizados (Pills Tech) -->
+                    <div class="flex flex-wrap justify-center gap-3 mb-12 transition-all duration-1000 delay-200 transform"
                          :class="showContent ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'">
-                        <!-- Contenedor simple sin estilos extra, confiando en NTabs -->
-                        <n-tabs 
-                            v-model:value="activeTab" 
-                            type="segment" 
-                            animated 
-                            class="w-full max-w-md"
-                            :pane-style="{ display: 'none' }" 
+                        
+                        <button 
+                            v-for="slug in categories" 
+                            :key="slug"
+                            @click="selectTab(slug)"
+                            class="px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 border backdrop-blur-md shadow-sm"
+                            :class="activeTab === slug 
+                                ? 'bg-slate-800 text-white border-slate-800 shadow-lg scale-105' 
+                                : 'bg-white text-slate-500 border-slate-200 hover:border-cyan-400 hover:text-cyan-600'"
                         >
-                            <n-tab-pane name="comercial" tab="Comercial" />
-                            <n-tab-pane name="arte" tab="Arte & Figuras" />
-                            <n-tab-pane name="casos" tab="Casos de Éxito" />
-                        </n-tabs>
+                            {{ getTabLabel(slug) }}
+                        </button>
                     </div>
 
-                    <!-- 3. Grid de Imágenes -->
-                    <!-- Cambiado: grid-cols-2 por defecto para móvil -->
-                    <transition-group 
-                        tag="div" 
-                        class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8"
-                        enter-active-class="transition duration-700 ease-[cubic-bezier(0.25,0.8,0.25,1)]"
-                        enter-from-class="opacity-0 translate-y-20 scale-95"
-                        enter-to-class="opacity-100 translate-y-0 scale-100"
-                        leave-active-class="absolute opacity-0 scale-90"
-                        move-class="transition duration-500"
-                    >
-                        <div v-for="(item, index) in galleryItems[activeTab]" 
-                             :key="item.id" 
-                             class="group relative rounded-2xl overflow-hidden aspect-[3/4] shadow-md hover:shadow-xl cursor-pointer bg-slate-200"
-                             @click="openLightbox(item)"
-                             :style="{ transitionDelay: `${index * 50}ms` }"
+                    <!-- 3. Grid de Imágenes con Transición Suave -->
+                    <div class="min-h-[400px]"> <!-- Contenedor con altura mínima para evitar colapsos -->
+                        <transition mode="out-in" 
+                            enter-active-class="transition duration-500 ease-out" 
+                            enter-from-class="opacity-0 translate-y-4 scale-95" 
+                            enter-to-class="opacity-100 translate-y-0 scale-100" 
+                            leave-active-class="transition duration-300 ease-in" 
+                            leave-from-class="opacity-100 translate-y-0 scale-100" 
+                            leave-to-class="opacity-0 translate-y-4 scale-95"
                         >
-                            <!-- Imagen con transición suave -->
-                            <img 
-                                :src="item.img" 
-                                :alt="item.title" 
-                                class="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110 group-hover:brightness-110"
-                            >
-                            
-                            <!-- Overlay Gradiente -->
-                            <div class="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-4 md:p-6">
+                            <!-- Key es activeTab para forzar re-render completo del grid -->
+                            <div :key="activeTab" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                                 
-                                <span class="text-[#4cc9f0] text-[10px] md:text-xs font-bold uppercase tracking-wider translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75">
-                                    {{ item.category }}
-                                </span>
-                                
-                                <h3 class="text-white text-lg md:text-xl font-bold mt-1 translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-100 leading-tight">
-                                    {{ item.title }}
-                                </h3>
-                                
-                                <div class="mt-3 flex items-center gap-2 text-white/90 translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-150 group-active:scale-95 origin-left">
-                                    <div class="w-6 h-6 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                    </div>
-                                    <span class="text-xs font-medium">Ver imagen</span>
-                                </div>
-                            </div>
-                        </div>
-                    </transition-group>
+                                <div v-for="(item, index) in currentItems" 
+                                     :key="item.id" 
+                                     class="group relative rounded-2xl overflow-hidden aspect-[4/5] shadow-sm hover:shadow-2xl hover:shadow-cyan-900/10 cursor-zoom-in bg-white border border-slate-100 transition-all duration-500 hover:-translate-y-1"
+                                     @click="openLightbox(item)"
+                                >
+                                    <!-- Imagen -->
+                                    <img 
+                                        :src="item.img" 
+                                        :alt="item.title" 
+                                        class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                                        loading="lazy"
+                                    >
+                                    
+                                    <!-- Overlay Info -->
+                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-6">
+                                        
+                                        <div class="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100">
+                                            <span class="inline-block px-2 py-1 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-[10px] font-bold uppercase tracking-wider rounded mb-2 backdrop-blur-md">
+                                                {{ item.category }}
+                                            </span>
+                                            
+                                            <h3 class="text-white text-xl font-bold leading-tight mb-2">
+                                                {{ item.title }}
+                                            </h3>
 
-                    <!-- Mensaje si no hay items -->
-                    <div v-if="galleryItems[activeTab].length === 0" class="text-center py-20 text-slate-400">
-                        <p>No hay proyectos en esta categoría aún.</p>
+                                            <div v-if="item.is_featured" class="flex items-center gap-1 text-amber-400 text-xs font-medium">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                                Proyecto Destacado
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Mensaje Vacío -->
+                                <div v-if="currentItems.length === 0" class="col-span-full flex flex-col items-center justify-center py-20 text-slate-400 border-2 border-dashed border-slate-200 rounded-3xl">
+                                    <svg class="w-12 h-12 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                    <p class="font-medium">No hay proyectos en esta categoría aún.</p>
+                                </div>
+
+                            </div>
+                        </transition>
                     </div>
 
                 </div>
 
                 <!-- 4. MODAL LIGHTBOX (Imagen Grande) -->
-                <n-modal v-model:show="showModal" class="bg-transparent shadow-none w-full max-w-6xl mx-auto p-4 outline-none" transform-origin="center">
-                    <div class="relative w-full flex flex-col items-center justify-center outline-none" @click.stop>
+                <transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl" @click="showModal = false">
                         
-                        <!-- Botón cerrar flotante -->
-                        <button 
-                            @click="showModal = false" 
-                            class="absolute -top-12 right-0 md:right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md text-white flex items-center justify-center transition-all z-50 focus:outline-none"
-                        >
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        <!-- Botón cerrar -->
+                        <button class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors p-2 z-50">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
 
-                        <div v-if="selectedItem" class="relative rounded-xl overflow-hidden shadow-2xl animate-fade-in-scale max-h-[85vh]">
-                            <img :src="selectedItem.img" :alt="selectedItem.title" class="w-auto h-auto max-h-[85vh] max-w-full object-contain bg-black/50" />
+                        <div v-if="selectedItem" class="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center" @click.stop>
+                            <img :src="selectedItem.img" :alt="selectedItem.title" class="max-h-[80vh] w-auto rounded-lg shadow-2xl" />
                             
-                            <!-- Caption opcional en el modal -->
-                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 text-white backdrop-blur-[2px]">
-                                <h3 class="text-xl font-bold">{{ selectedItem.title }}</h3>
-                                <p class="text-sm text-slate-300">{{ selectedItem.category }}</p>
+                            <div class="mt-6 text-center">
+                                <h3 class="text-2xl font-bold text-white">{{ selectedItem.title }}</h3>
+                                <p class="text-cyan-400 font-mono text-sm uppercase tracking-widest mt-1">{{ selectedItem.category }}</p>
                             </div>
                         </div>
-
                     </div>
-                </n-modal>
+                </transition>
 
             </div>
         </NConfigProvider>
@@ -203,15 +197,7 @@ watch(() => props.category, (newVal) => {
     animation: pulse-slow 6s infinite ease-in-out;
 }
 @keyframes pulse-slow {
-    0%, 100% { opacity: 0.1; transform: scale(1); }
-    50% { opacity: 0.2; transform: scale(1.1); }
-}
-/* Animación simple para el modal */
-@keyframes fadeInScale {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-}
-.animate-fade-in-scale {
-    animation: fadeInScale 0.3s ease-out forwards;
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.1); }
 }
 </style>
