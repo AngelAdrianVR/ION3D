@@ -104,6 +104,7 @@ Route::middleware([
     // ---------------------------- CONFIGURACIÓN DE AGENDA ----------------------------
     Route::get('/settings/calendar', [BusinessHourController::class, 'index'])->name('settings.calendar.index');
     Route::put('/settings/business-hours', [BusinessHourController::class, 'update'])->name('business-hours.update');
+    Route::get('/appointments/disabled-days', [AppointmentController::class, 'disabledDays'])->name('appointments.disabled-days');
     
     Route::post('/settings/availability-exceptions', [AvailabilityExceptionController::class, 'store'])->name('availability-exceptions.store');
     Route::delete('/settings/availability-exceptions/{exception}', [AvailabilityExceptionController::class, 'destroy'])->name('availability-exceptions.destroy');

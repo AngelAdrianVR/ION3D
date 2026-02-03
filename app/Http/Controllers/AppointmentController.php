@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\User;
+use App\Models\BusinessHour;       // Importante
+use App\Models\AvailabilityException; // Importante
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Notification;
@@ -18,8 +20,32 @@ class AppointmentController extends Controller
     }
 
     /**
-     * Verifica la disponibilidad de horarios para una fecha específica.
-     * Retorna un JSON con los slots y su estado (available/busy).
+     * Retorna los días bloqueados (Cerrados por semana o Excepciones/Festivos)
+     */
+    public function disabledDays()
+    {
+        // 1. Días de la semana que siempre están cerrados (Ej: [0, 6] para Domingo y Sábado)
+        $closedWeekDays = BusinessHour::where('is_closed', true)
+            ->pluck('day_of_week')
+            ->toArray();
+
+        // 2. Fechas específicas cerradas (Excepciones futuras)
+        $closedDates = AvailabilityException::where('date', '>=', now()->startOfDay())
+            ->where('is_closed', true)
+            ->pluck('date')
+            ->map(function ($date) {
+                return $date->format('Y-m-d');
+            })
+            ->toArray();
+
+        return response()->json([
+            'week_days' => $closedWeekDays,
+            'dates' => $closedDates
+        ]);
+    }
+
+    /**
+     * Verifica la disponibilidad de horarios basándose en la configuración de la BD.
      */
     public function checkAvailability(Request $request)
     {
@@ -28,32 +54,47 @@ class AppointmentController extends Controller
         ]);
 
         $date = Carbon::parse($request->date);
-        $dayOfWeek = $date->dayOfWeek; // 0 (Domingo) - 6 (Sábado)
+        
+        // Variables iniciales
+        $isOpen = false;
+        $openTime = null;
+        $closeTime = null;
 
-        // --- REGLAS DE NEGOCIO ---
+        // 1. Revisar Excepciones (Prioridad Alta: Festivos, días especiales)
+        $exception = AvailabilityException::where('date', $date->format('Y-m-d'))->first();
 
-        // 1. Días Cerrados (Sábado y Domingo)
-        // Carbon::SATURDAY es 6, SUNDAY es 0
-        if ($dayOfWeek === Carbon::SATURDAY || $dayOfWeek === Carbon::SUNDAY) {
-            return response()->json([]); // Retorna lista vacía (Cerrado)
+        if ($exception) {
+            if (!$exception->is_closed) {
+                $isOpen = true;
+                $openTime = Carbon::parse($exception->open_time);
+                $closeTime = Carbon::parse($exception->close_time);
+            }
+            // Si $exception->is_closed es true, $isOpen se mantiene en false
+        } else {
+            // 2. Revisar Horario Semanal (Si no hay excepción)
+            // Carbon dayOfWeek: 0 (Domingo) - 6 (Sábado)
+            $dayOfWeek = $date->dayOfWeek; 
+            
+            $businessHour = BusinessHour::where('day_of_week', $dayOfWeek)->first();
+
+            if ($businessHour && !$businessHour->is_closed) {
+                $isOpen = true;
+                $openTime = Carbon::parse($businessHour->open_time);
+                $closeTime = Carbon::parse($businessHour->close_time);
+            }
         }
 
-        // 2. Horarios de Apertura y Cierre
-        $startHour = 9; // Abre a las 9:00 AM todos los días hábiles
-        $endHour = 17;  // Cierra a las 5:00 PM por defecto (Martes - Viernes)
-
-        // Regla específica: Lunes cierra a las 2:00 PM (14:00)
-        if ($dayOfWeek === Carbon::MONDAY) {
-            $endHour = 14; 
+        // Si está cerrado, retornamos array vacío
+        if (!$isOpen || !$openTime || !$closeTime) {
+            return response()->json([]);
         }
 
         // --- CONSULTA DE OCUPACIÓN REAL ---
 
-        // Buscamos citas existentes en esa fecha
+        // Buscamos citas existentes en esa fecha para bloquear esos horarios
         $existingAppointments = Appointment::whereDate('start_time', $date->format('Y-m-d'))
-            ->pluck('start_time') // Obtenemos solo la columna de hora inicio
+            ->pluck('start_time')
             ->map(function ($time) {
-                // Formateamos a 'HH:mm' para comparar fácilmente (Ej: "09:00")
                 return Carbon::parse($time)->format('H:i');
             })
             ->toArray();
@@ -61,53 +102,58 @@ class AppointmentController extends Controller
         // --- GENERACIÓN DE SLOTS ---
         
         $slots = [];
+        $currentSlot = $openTime->copy();
         
-        // Iteramos hora por hora desde apertura hasta cierre
-        for ($hour = $startHour; $hour < $endHour; $hour++) {
-            // Formato de hora "09:00", "10:00"...
-            $timeString = str_pad($hour, 2, '0', STR_PAD_LEFT) . ':00';
+        // Generamos slots de 1 hora.
+        // El bucle corre mientras la hora de inicio del slot sea MENOR a la hora de cierre.
+        // Ejemplo: Si cierra a las 17:00, la última cita permitida es de 16:00 a 17:00.
+        while ($currentSlot->format('H:i') < $closeTime->format('H:i')) {
             
-            // Verificamos si esta hora ya existe en la base de datos
+            $timeString = $currentSlot->format('H:i');
+            
+            // Verificamos colisión con citas existentes
             $status = in_array($timeString, $existingAppointments) ? 'busy' : 'available';
+
+            // Verificación extra: Si es el día de HOY, bloquear horas pasadas
+            if ($date->isToday() && $currentSlot->lt(now())) {
+                $status = 'busy'; 
+            }
 
             $slots[] = [
                 'time' => $timeString,
                 'status' => $status
             ];
+
+            // Incremento de 1 hora
+            $currentSlot->addHour();
         }
 
         return response()->json($slots);
     }
 
-    public function create()
-    {
-        //
-    }
-
     /**
-     * Almacena una nueva cita desde el formulario público.
+     * Almacena una nueva cita.
      */
     public function store(Request $request)
     {
-        // Validación básica
         $validated = $request->validate([
             'guest_name' => 'required|string|max:255',
             'guest_phone' => 'required|string|max:20',
-            'start_time' => 'required|date|after:now',
+            'start_time' => 'required|date|after:now', // after:now evita citas en el pasado
             'internal_notes' => 'nullable|string',
         ]);
 
-        // Verificación doble en backend para evitar colisiones simultáneas
+        // Verificación doble de concurrencia
         $exists = Appointment::where('start_time', $validated['start_time'])->exists();
+        
         if ($exists) {
-            return redirect()->back()->withErrors(['date' => 'Lo sentimos, este horario acaba de ser ocupado. Por favor selecciona otro.']);
+            // Si Inertia maneja errores, esto aparecerá en el form
+            return redirect()->back()->withErrors(['start_time' => 'Lo sentimos, este horario acaba de ser reservado por otro usuario.']);
         }
 
-        // Lógica de fechas (Asumimos 1 hora de duración por defecto)
         $startTime = Carbon::parse($validated['start_time']);
         $endTime = $startTime->copy()->addHour();
 
-        // 1. Crear la cita
         $appointment = Appointment::create([
             'guest_name' => $validated['guest_name'],
             'guest_phone' => $validated['guest_phone'],
@@ -116,37 +162,16 @@ class AppointmentController extends Controller
             'internal_notes' => $validated['internal_notes'] ?? null,
         ]);
 
-        // 2. Notificar a los usuarios con rol "Super admin"
+        // Notificar admins
         try {
             $admins = User::role('Super admin')->get();
-            
             if ($admins->count() > 0) {
                 Notification::sendNow($admins, new NewAppointmentNotification($appointment));
             }
         } catch (\Exception $e) {
-            Log::error('Error enviando notificación de cita: ' . $e->getMessage());
+            Log::error('Error enviando notificación: ' . $e->getMessage());
         }
 
-        return redirect()->back()->with('success', '¡Cita agendada correctamente! Nos pondremos en contacto contigo.');
-    }
-
-    public function show(Appointment $appointment)
-    {
-        //
-    }
-
-    public function edit(Appointment $appointment)
-    {
-        //
-    }
-
-    public function update(Request $request, Appointment $appointment)
-    {
-        //
-    }
-
-    public function destroy(Appointment $appointment)
-    {
-        //
+        return redirect()->back()->with('success', '¡Cita agendada correctamente!');
     }
 }
