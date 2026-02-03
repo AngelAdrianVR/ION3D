@@ -30,6 +30,10 @@ return new class extends Migration
             $table->foreignId('service_package_id')->nullable()->constrained()->nullOnDelete();
             
             $table->text('internal_notes')->nullable();
+
+            // Índice compuesto para buscar citas en rangos de fechas rápidamente
+            $table->index(['start_time', 'end_time', 'status']);
+            
             $table->timestamps();
         });
     }
