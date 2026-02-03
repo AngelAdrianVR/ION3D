@@ -23,10 +23,10 @@ class PortfolioItem extends Model implements HasMedia
         'sort_order' => 'integer',
     ];
     
-    // Opcional: Definir colecciones de medios si quieres tamaños específicos
+    // Opcional: Registrar colecciones para optimizar conversiones
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('portfolio')
-             ->singleFile(); // Solo una imagen principal por item, o quita esto para galería
+        $this->addMediaCollection('portfolio_image')
+            ->singleFile(); // Solo permite una imagen por ítem
     }
 }

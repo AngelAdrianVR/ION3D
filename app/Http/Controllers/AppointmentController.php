@@ -11,12 +11,96 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\NewAppointmentNotification;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class AppointmentController extends Controller
 {
-    public function index()
+    /**
+     * Listado principal de citas (Admin Panel).
+     */
+    public function index(Request $request)
     {
-        //
+        $search = $request->input('search');
+        
+        $appointments = Appointment::with('client') // Eager load si usas clientes registrados
+            ->when($search, function ($query, $search) {
+                $query->where('guest_name', 'like', "%{$search}%")
+                      ->orWhere('guest_phone', 'like', "%{$search}%")
+                      ->orWhere('internal_notes', 'like', "%{$search}%")
+                      ->orWhereHas('client', function ($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+            })
+            ->orderBy('start_time', 'desc') // Las más recientes primero
+            ->paginate(20)
+            ->withQueryString();
+
+        return Inertia::render('Appointments/Index', [ // Ajusta la ruta de tu carpeta si es necesario
+            'appointments' => $appointments,
+            'filters' => $request->only(['search']),
+        ]);
+    }
+
+    /**
+     * Muestra el detalle de una cita (Puede usarse para una página dedicada o API).
+     */
+    public function show(Appointment $appointment)
+    {
+        return response()->json($appointment->load('client'));
+    }
+
+    /**
+     * Actualiza la información general de la cita (Fecha, notas, etc).
+     */
+    public function update(Request $request, Appointment $appointment)
+    {
+        $validated = $request->validate([
+            'guest_name' => 'required|string|max:255',
+            'guest_phone' => 'required|string|max:20',
+            'start_time' => 'required|date',
+            'internal_notes' => 'nullable|string',
+            // Si permites cambiar la hora, deberías validar disponibilidad aquí también, 
+            // pero para admin a veces se permite sobreescribir (force).
+        ]);
+
+        // Recalcular end_time si cambia el start_time (Asumiendo 1 hora de duración)
+        $startTime = Carbon::parse($validated['start_time']);
+        $endTime = $startTime->copy()->addHour();
+
+        $appointment->update([
+            'guest_name' => $validated['guest_name'],
+            'guest_phone' => $validated['guest_phone'],
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'internal_notes' => $validated['internal_notes'],
+        ]);
+
+        return redirect()->back()->with('success', 'Cita actualizada correctamente.');
+    }
+
+    /**
+     * Método específico para cambiar el estatus rápidamente.
+     * Corregido para coincidir con el ENUM de la BD.
+     */
+    public function updateStatus(Request $request, Appointment $appointment)
+    {
+        // Validamos solo los valores permitidos por tu ENUM
+        $validated = $request->validate([
+            'status' => 'required|in:Pendiente,Confirmada,Completada,Cancelada,No Asistió',
+        ]);
+
+        $appointment->update(['status' => $validated['status']]);
+
+        return redirect()->back()->with('success', 'Estatus actualizado.');
+    }
+
+    /**
+     * Elimina una cita.
+     */
+    public function destroy(Appointment $appointment)
+    {
+        $appointment->delete();
+        return redirect()->back()->with('success', 'Cita eliminada correctamente.');
     }
 
     /**
