@@ -17,6 +17,7 @@
               <!-- ================= TAB 1: PAQUETES ================= -->
               <n-tab-pane name="packages" tab="Paquetes">
                 <div class="flex justify-end mb-6">
+                  <!-- FIX: Asegurar paréntesis explícitos para no pasar el evento click -->
                   <button @click="openPackageModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2 text-sm md:text-base">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                     <span class="hidden md:inline">Nuevo Paquete</span>
@@ -400,7 +401,9 @@ const openPackageModal = (pkg = null) => {
   packageForm.clearErrors();
   packageForm.images = []; 
 
-  if (pkg) {
+  // FIX: Verificación robusta. Asegurarnos que 'pkg' sea un objeto válido y no un Evento del mouse.
+  // Esto previene que al hacer clic en "Nuevo", entre en modo edición erróneamente.
+  if (pkg && typeof pkg === 'object' && pkg.id) {
     isEditingPackage.value = true;
     packageForm.id = pkg.id;
     packageForm.title = pkg.title;
@@ -427,7 +430,9 @@ const openPackageModal = (pkg = null) => {
     packageForm.is_promo = Boolean(pkg.is_promo);
     packageForm.existing_images = pkg.images || []; 
   } else {
+    // MODO CREACIÓN
     isEditingPackage.value = false;
+    packageForm.id = null; // IMPORTANTE: Resetear ID explícitamente
     packageForm.features = [''];
     packageForm.pricing_options = [{ label: '', price: 0 }];
     packageForm.existing_images = [];
@@ -436,19 +441,25 @@ const openPackageModal = (pkg = null) => {
 };
 
 const submitPackage = () => {
-  if (isEditingPackage.value) {
-    // FIX IMPORTANTE: Usamos .transform para añadir _method: 'PUT'
-    // Esto es necesario porque Inertia no puede enviar archivos via PUT directamente,
-    // así que enviamos un POST con el spoofing del método.
+  // FIX: Verificación doble de ID para evitar error 405 (PUT a url sin ID)
+  if (isEditingPackage.value && packageForm.id) {
+    // EDITAR: Usamos POST con _method: PUT para soportar archivos
     packageForm.transform((data) => ({
       ...data,
       _method: 'PUT',
     })).post(route('cms.packages.update', packageForm.id), {
       onSuccess: () => showPackageModal.value = false,
+      preserveScroll: true
     });
   } else {
-    packageForm.post(route('cms.packages.store'), {
+    // CREAR: Usamos POST normal.
+    // Transform opcional para asegurar que no se envíe ID basura
+    packageForm.transform((data) => {
+        const { id, ...rest } = data;
+        return rest;
+    }).post(route('cms.packages.store'), {
       onSuccess: () => showPackageModal.value = false,
+      preserveScroll: true
     });
   }
 };
@@ -505,7 +516,7 @@ const openPortfolioModal = (item = null) => {
   portfolioForm.clearErrors();
   portfolioFilePreview.value = null;
   
-  if (item) {
+  if (item && item.id) {
     isEditingPortfolio.value = true;
     portfolioForm.id = item.id;
     portfolioForm.title = item.title;
@@ -515,21 +526,26 @@ const openPortfolioModal = (item = null) => {
     portfolioForm.current_image_url = item.image_url;
   } else {
     isEditingPortfolio.value = false;
+    portfolioForm.id = null;
     portfolioForm.sort_order = 0;
   }
   showPortfolioModal.value = true;
 };
 
 const submitPortfolio = () => {
-  if (isEditingPortfolio.value) {
-    // FIX: Usamos POST con el método spoofed para portafolio también por consistencia, 
-    // aunque aquí tu código original usaba POST directo, si la ruta es resource, esto es más seguro.
+  if (isEditingPortfolio.value && portfolioForm.id) {
+    // CORRECCIÓN: Eliminamos el transform con _method: 'PUT'
+    // El error 405 indica que la ruta espera POST, no PUT.
+    // Como estamos enviando FormData (archivos), Inertia usa POST automáticamente,
+    // y Laravel recibirá la petición correctamente sin necesidad de spoofing si la ruta es POST.
     portfolioForm.post(route('cms.portfolio.update', portfolioForm.id), {
       onSuccess: () => showPortfolioModal.value = false,
+      preserveScroll: true
     });
   } else {
     portfolioForm.post(route('cms.portfolio.store'), {
       onSuccess: () => showPortfolioModal.value = false,
+      preserveScroll: true
     });
   }
 };

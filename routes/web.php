@@ -25,14 +25,7 @@ Route::get('/', function () {
     return Inertia::render('Loading');
 });
 
-Route::get('/inicio', function () {
-    return Inertia::render('Landing/Index', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+Route::get('/inicio', [LandingController::class, 'index'])->name('landing.index');
 
 Route::get('/proceso', [LandingController::class, 'process'])->name('landing.process');
 Route::get('/servicios/{category?}', [LandingController::class, 'services'])->name('landing.services'); // Parámetro opcional 'category'

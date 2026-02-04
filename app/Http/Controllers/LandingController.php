@@ -4,12 +4,66 @@ namespace App\Http\Controllers;
 
 use App\Models\PortfolioItem;
 use App\Models\ServicePackage;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 
 class LandingController extends Controller
 {
+    /**
+     * Muestra la página de inicio (Index).
+     * Reemplaza la ruta closure que tenías en web.php.
+     */
+    public function index()
+    {
+        // 1. Obtener Servicios Destacados (Últimos 3 o marcados como promo)
+        $services = ServicePackage::where('is_active', true)
+            ->with('media')
+            ->orderBy('is_promo', 'desc') // Prioridad a promos
+            ->take(3) // Solo mostramos 3 en el home
+            ->get()
+            ->map(function ($pkg) {
+                return [
+                    'id' => $pkg->id,
+                    'title' => $pkg->title,
+                    'slug' => $pkg->slug ?? Str::slug($pkg->title),
+                    'desc' => Str::limit($pkg->description, 120), // Truncar descripción
+                    // Usamos la primera imagen como "ícono" o miniatura
+                    'image' => $pkg->getFirstMediaUrl('package_images') ?: null, 
+                ];
+            });
+
+        // 2. Obtener Portafolio para el Carrusel (Destacados o Recientes)
+        $portfolio = PortfolioItem::with('media')
+            ->where('is_featured', true) // Solo los destacados para el home
+            ->orderBy('created_at', 'desc')
+            ->take(8)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'category' => $item->category,
+                    'date' => $item->created_at->format('Y.m.d'),
+                    'image' => $item->getFirstMediaUrl('portfolio_image'),
+                    // Generamos un ID visual tipo 'SCN-001'
+                    'scanId' => 'SCN-' . str_pad($item->id, 4, '0', STR_PAD_LEFT)
+                ];
+            });
+
+        return Inertia::render('Landing/Index', [
+            'canLogin' => Route::has('login'),
+            'canRegister' => Route::has('register'),
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+            // Datos dinámicos
+            'services' => $services,
+            'portfolio' => $portfolio
+        ]);
+    }
+
     /**
      * Muestra la vista de Proceso.
      */
