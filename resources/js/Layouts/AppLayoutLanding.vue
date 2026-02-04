@@ -278,7 +278,7 @@ export default {
                 <footer class="bg-[#0f172a] text-white pt-20 pb-10 relative overflow-hidden mt-auto border-t-0">
                     
                     <!-- LUZ DE BORDE (Running Light) -->
-                    <div class="absolute top-0 left-0 right-0 h-[2px] w-full bg-[#1e293b] overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 h-[4px] w-full bg-[#1e293b] overflow-hidden">
                         <div class="absolute inset-0 w-[30%] bg-gradient-to-r from-transparent via-[#4cc9f0] to-transparent animate-scanline h-full blur-[2px]"></div>
                     </div>
 
@@ -354,6 +354,12 @@ export default {
                                         <span>+52 (33) 1234 5678</span>
                                     </li>
                                 </ul>
+                            <figure class="mt-4 cursor-pointer">
+                                <a class="flex justify-end items-center" href="https://app.dtw.com.mx/" target="_blank">
+                                    <p class="text-white text-xl">BY</p>
+                                    <img class="w-20 lg:w-[30%]" src="@/../../public/images/DTW_logo_blanco.png" alt="">
+                                </a>
+                            </figure>
                             </div>
                         </div>
 

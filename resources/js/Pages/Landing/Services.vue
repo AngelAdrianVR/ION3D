@@ -232,7 +232,7 @@ const themeOverrides = {
                                     </transition>
                                     
                                     <!-- Overlay Degradado Lateral (Blanco para mezclar con la card) -->
-                                    <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent lg:bg-gradient-to-l lg:from-white lg:via-white/10 lg:to-transparent"></div>
+                                    <div class="absolute inset-0 bg-gradient-to-t from-white/30 via-transparent to-transparent lg:bg-gradient-to-l lg:from-white/30 lg:via-white/10 lg:to-transparent"></div>
                                     
                                     <!-- Indicadores de Carrusel -->
                                     <div v-if="currentPackage.images && currentPackage.images.length > 1" class="absolute bottom-6 right-6 flex gap-2 z-20">
