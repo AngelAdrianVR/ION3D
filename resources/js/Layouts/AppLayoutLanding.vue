@@ -295,7 +295,7 @@ export default {
                             <!-- Columna 1: Marca -->
                             <div class="md:col-span-4 space-y-6">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10 shadow-[0_0_15px_rgba(76,201,240,0.2)]">
+                                    <div @click="$inertia.visit(route('login'))" class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10 shadow-[0_0_15px_rgba(76,201,240,0.2)]">
                                         <img src="@/../../public/images/orion-logo-blanco.png" alt="" class="w-6 h-6">
                                     </div>
                                     <span class="text-2xl font-bold tracking-tight text-white">

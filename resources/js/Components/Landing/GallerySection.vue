@@ -1,56 +1,15 @@
 <script setup>
 import { NButton, NCarousel, NCarouselItem } from 'naive-ui';
-import { ref } from 'vue';
+import { Link } from '@inertiajs/vue3';
 
-// En el futuro, estos datos vendrán de tu API/Base de Datos.
-// La estructura está lista para recibir { id, title, image, category, date }
-const portfolioItems = ref([
-  { 
-    id: 1, 
-    title: 'Figura Coleccionable', 
-    category: 'Escaneo Personas',
-    date: '2023.10.15',
-    image: 'https://images.unsplash.com/photo-1616440347437-b1c73916bf12?q=80&w=2070&auto=format&fit=crop', // Figura de acción/arte
-    scanId: 'SCN-0042'
-  },
-  { 
-    id: 2, 
-    title: 'Componente Mecánico', 
-    category: 'Ingeniería Inversa',
-    date: '2023.11.02',
-    image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2070&auto=format&fit=crop', // Pieza mecánica
-    scanId: 'ENG-8821'
-  },
-  { 
-    id: 3, 
-    title: 'Cosplay Armor Detail', 
-    category: 'Accesorios',
-    date: '2023.09.20',
-    image: 'https://images.unsplash.com/photo-1535581652167-3d66930034e7?q=80&w=2070&auto=format&fit=crop', // Textura compleja
-    scanId: 'ART-3391'
-  },
-  { 
-    id: 4, 
-    title: 'Escultura Histórica', 
-    category: 'Preservación',
-    date: '2023.12.05',
-    image: 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?q=80&w=2070&auto=format&fit=crop', // Estatua
-    scanId: 'HST-1102'
-  },
-  { 
-    id: 5, 
-    title: 'Prototipo Automotriz', 
-    category: 'Industrial',
-    date: '2024.01.10',
-    image: 'https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=2070&auto=format&fit=crop', // Coche/pieza
-    scanId: 'IND-5540'
-  },
-]);
+// Recibimos los items del portafolio directamente de la BD
+const props = defineProps({
+    portfolioItems: {
+        type: Array,
+        default: () => []
+    }
+});
 
-// Configuración responsiva para el carrusel
-// "auto" permite que Naive UI calcule cuántos caben, pero para controlar
-// exactamente el "pedacito" visible en móvil, usaremos CSS o 'slidesPerView' dinámico si fuera necesario.
-// Naive UI maneja 'slides-per-view' con número o 'auto'.
 </script>
 
 <template>
@@ -71,23 +30,23 @@ const portfolioItems = ref([
           <h3 class="text-3xl md:text-4xl font-bold text-slate-900">Portafolio de Escaneos</h3>
         </div>
         
-        <!-- Botón con estilo -->
-        <n-button @click="$inertia.visit(route('landing.portfolio'))" strong secondary round type="primary" class="mt-6 md:mt-0 group/btn">
-          Explorar Galería Completa
-          <template #icon>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </template>
-        </n-button>
+        <!-- Botón con Inertia Link -->
+        <Link :href="route('landing.portfolio')" class="mt-6 md:mt-0 group/btn inline-flex">
+            <n-button strong secondary round type="primary">
+            Explorar Galería Completa
+            <template #icon>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+            </template>
+            </n-button>
+        </Link>
       </div>
     </div>
 
-    <!-- Carrusel Infinito 
-         Nota: Hemos eliminado space-between y lo manejamos con padding CSS 
-         para garantizar que las columnas (25% y 50%) sean exactas.
-    -->
+    <!-- Carrusel -->
     <n-carousel
+      v-if="portfolioItems.length > 0"
       autoplay
       draggable
       loop
@@ -100,7 +59,7 @@ const portfolioItems = ref([
       <n-carousel-item v-for="item in portfolioItems" :key="item.id" 
                        class="carousel-item-width">
         
-        <!-- Wrapper con Padding para crear el espacio entre slides -->
+        <!-- Wrapper con Padding -->
         <div class="p-3 h-full">
             <div class="group relative h-[400px] w-full rounded-2xl overflow-hidden bg-slate-900 shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl border border-slate-200 hover:border-[#4cc9f0]">
               
@@ -108,7 +67,7 @@ const portfolioItems = ref([
               <img :src="item.image" :alt="item.title" 
                   class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-60" />
               
-              <!-- Gradiente Overlay (Siempre visible pero sutil, fuerte en hover) -->
+              <!-- Gradiente Overlay -->
               <div class="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-transparent to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-300"></div>
 
               <!-- Contenido Informativo (Tech Style) -->
@@ -141,6 +100,11 @@ const portfolioItems = ref([
 
       </n-carousel-item>
     </n-carousel>
+    
+    <!-- Estado vacío si no hay datos -->
+    <div v-else class="text-center py-12 text-slate-400">
+        <p>No hay proyectos destacados por el momento.</p>
+    </div>
 
   </section>
 </template>

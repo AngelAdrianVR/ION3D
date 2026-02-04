@@ -83,7 +83,8 @@ class PageManagementController extends Controller
             'images.*' => 'image|max:10240',
         ]);
 
-        $validated['slug'] = Str::slug($validated['title']);
+        // CORRECCIÓN: Usar función para generar slug único y evitar error 1062
+        $validated['slug'] = $this->createUniqueSlug($validated['title']);
         $validated['price'] = 0; // Valor por defecto si usas opciones
 
         $package = ServicePackage::create($validated);
@@ -111,7 +112,8 @@ class PageManagementController extends Controller
         ]);
 
         if ($package->title !== $validated['title']) {
-            $validated['slug'] = Str::slug($validated['title']);
+            // CORRECCIÓN: Al actualizar, verificar unicidad ignorando el ID actual
+            $validated['slug'] = $this->createUniqueSlug($validated['title'], $package->id);
         }
 
         $package->update($validated);
@@ -123,6 +125,34 @@ class PageManagementController extends Controller
         }
 
         return redirect()->back()->with('success', 'Paquete actualizado.');
+    }
+
+    /**
+     * Helper para generar slugs únicos
+     * Verifica incluso en registros eliminados (SoftDeletes) para evitar choques
+     */
+    private function createUniqueSlug($title, $ignoreId = null)
+    {
+        $slug = Str::slug($title);
+        $originalSlug = $slug;
+        $count = 1;
+
+        // while: Mientras exista un paquete con ese slug...
+        // withTrashed(): Importante porque tu migración tiene softDeletes, 
+        // así evitamos error si el slug existe en la papelera.
+        while (ServicePackage::withTrashed()
+            ->where('slug', $slug)
+            ->when($ignoreId, function ($query) use ($ignoreId) {
+                return $query->where('id', '!=', $ignoreId);
+            })
+            ->exists()) {
+            
+            // ... agregamos un contador (ej: impresion-3d-1)
+            $slug = $originalSlug . '-' . $count;
+            $count++;
+        }
+
+        return $slug;
     }
 
     public function destroyPackage(ServicePackage $package)
