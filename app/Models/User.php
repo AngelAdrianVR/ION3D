@@ -67,9 +67,17 @@ class User extends Authenticatable
         ];
     }
 
-    // Relación: Un usuario (staff) puede registrar muchas ventas
+    // --- Relaciones POS ---
+
+    // Ventas realizadas por el usuario
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    // Turnos de caja abiertos por el usuario
+    public function sessions()
+    {
+        return $this->hasMany(CashRegisterSession::class);
     }
 }

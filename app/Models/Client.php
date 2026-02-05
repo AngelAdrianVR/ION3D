@@ -2,31 +2,40 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Client extends Model
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
 
-    protected $fillable = [
-        'name',
-        'email',
-        'phone',
-        'origin',
-        'notes',
+    protected $guarded = ['id'];
+
+    protected $casts = [
+        'credit_limit' => 'decimal:2',
+        'current_balance' => 'decimal:2',
     ];
 
-    // Relación: Un cliente tiene muchas citas
-    public function appointments()
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
     }
 
-    // Relación: Un cliente tiene muchas compras
-    public function orders()
+    // Historial de movimientos de saldo
+    public function ledger(): HasMany
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(ClientLedger::class);
+    }
+    
+    // Helper para verificar crédito disponible
+    public function getAvailableCreditAttribute()
+    {
+        return $this->credit_limit - $this->current_balance;
     }
 }

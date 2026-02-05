@@ -2,39 +2,36 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Product extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use SoftDeletes, InteractsWithMedia;
 
-    protected $fillable = [
-        'sku',
-        'name',
-        'description',
-        'cost_price',
-        'sale_price',
-        'stock_quantity',
-        'alert_threshold',
-    ];
+    protected $guarded = ['id'];
 
     protected $casts = [
-        'cost_price' => 'decimal:2',
         'sale_price' => 'decimal:2',
-        'stock_quantity' => 'integer',
-        'alert_threshold' => 'integer',
+        'cost_price' => 'decimal:2',
     ];
 
-    // Relación Polimórfica: Un producto puede estar en muchas ordenes
-    public function orderItems()
+    // Relación polimórfica inversa con Order Items
+    public function orderItems(): MorphMany
     {
         return $this->morphMany(OrderItem::class, 'purchasable');
     }
-    
+
+    // Historial de movimientos de inventario de este producto
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class);
+    }
+
     // Colección para la foto del producto
     public function registerMediaCollections(): void
     {

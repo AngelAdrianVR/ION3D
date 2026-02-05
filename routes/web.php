@@ -3,14 +3,18 @@
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AvailabilityExceptionController;
 use App\Http\Controllers\BusinessHourController;
+use App\Http\Controllers\CashRegisterController; // [NUEVO]
+use App\Http\Controllers\ClientController;       // [NUEVO]
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\NotificationController;
-// Controladores para los módulos administrativos (Asegúrate de crearlos si no existen)
+// Controladores para los módulos administrativos
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PosController;
+use App\Http\Controllers\ProductController;      // [NUEVO]
 use App\Http\Controllers\PageManagementController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SupplierController;     // [NUEVO]
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -53,11 +57,9 @@ Route::middleware([
         return Inertia::render('Dashboard/Index');
     })->name('dashboard');
 
-    // ---------------------------- NUEVO: RUTAS DE CONFIGURACIÓN / ROLES ----------------------------
-    // Se recomienda proteger esto con un middleware tipo 'role:admin' o similar
+    // ---------------------------- CONFIGURACIÓN / ROLES ----------------------------
     Route::resource('roles', RoleController::class)->except(['show', 'create', 'edit']);
     
-    // Rutas extra para CRUD de permisos (Solo Developer ID 1 validado en controlador)
     Route::post('/permissions', [RoleController::class, 'storePermission'])->name('permissions.store');
     Route::put('/permissions/{permission}', [RoleController::class, 'updatePermission'])->name('permissions.update');
     Route::delete('/permissions/{permission}', [RoleController::class, 'destroyPermission'])->name('permissions.destroy');
@@ -67,6 +69,22 @@ Route::middleware([
 
     // 2. Punto de Venta (POS)
     Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
+
+    // ---------------- [NUEVOS MÓDULOS DE GESTIÓN] ---------------- //
+    
+    // Clientes
+    Route::resource('clients', ClientController::class);
+
+    // Inventario (Productos)
+    Route::resource('products', ProductController::class);
+
+    // Proveedores
+    Route::resource('suppliers', SupplierController::class);
+
+    // Cajas Registradoras
+    Route::resource('cash-registers', CashRegisterController::class);
+
+    // ------------------------------------------------------------- //
 
     // 3. Gestión de Página (CMS)
     Route::prefix('cms')->name('cms.')->group(function () {
@@ -87,12 +105,12 @@ Route::middleware([
     // 4. Usuarios (Gestión de usuarios del sistema)
     Route::resource('users', UserController::class);
 
-    // 5. Citas (Gestión Administrativa: Ver lista, detalles, reagendar, cancelar)
-    // Usamos el mismo controlador pero accedemos a los métodos index, show, update, etc.
+    // 5. Citas (Gestión Administrativa)
     Route::resource('appointments-admin', AppointmentController::class)
-        ->parameters(['appointments-admin' => 'appointment']) // Para que el parámetro sea {appointment}
-        ->except(['store']) // El store ya es público, aunque aquí podrías incluirlo si el admin agenda manualmente
-        ->names('appointments'); // Nombra las rutas como appointments.index, appointments.show, etc.
+        ->parameters(['appointments-admin' => 'appointment'])
+        ->except(['store'])
+        ->names('appointments');
+        
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::put('/appointments/{appointment}', [AppointmentController::class, 'update'])->name('appointments.update');
     Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
@@ -123,13 +141,12 @@ Route::middleware([
     Route::post('/settings/availability-exceptions', [AvailabilityExceptionController::class, 'store'])->name('availability-exceptions.store');
     Route::delete('/settings/availability-exceptions/{exception}', [AvailabilityExceptionController::class, 'destroy'])->name('availability-exceptions.destroy');
     
-    
 });
 
 // eliminacion de archivo, imagen o video global
 Route::delete('/media/{media}', function (Media $media) {
     try {
-        $media->delete(); // Elimina el archivo y su registro
+        $media->delete(); 
 
         // return response()->json(['message' => 'Archivo eliminado correctamente.'], 200);
     } catch (\Exception $e) {

@@ -13,6 +13,19 @@ return new class extends Migration
     {
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
+            
+            // Datos de facturación / crédito
+            $table->string('tax_id')->nullable(); // RFC/NIT
+            $table->decimal('credit_limit', 12, 2)->default(0); // Límite de crédito
+            $table->decimal('current_balance', 12, 2)->default(0); // Cuánto debe actualmente
+
+            // Dirección Principal (Para autocompletar en el POS)
+            $table->string('address')->nullable();
+            $table->string('city')->nullable();
+            $table->string('state')->nullable();
+            $table->string('zip_code')->nullable();
+
+            // personales
             $table->string('name');
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
