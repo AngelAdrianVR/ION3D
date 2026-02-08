@@ -51,12 +51,9 @@ export default {
             blockedWeekDays: [], // Ej: [0, 6] (Domingo, Sábado)
             blockedDates: [],    // Ej: ['2023-12-25']
 
-            serviceOptions: [
-                { label: 'Escaneo 3D de Personas', value: 'Escaneo 3D de Personas' },
-                { label: 'Impresión Full Color', value: 'Impresión Full Color' },
-                { label: 'Modelado Digital', value: 'Modelado Digital' },
-                { label: 'Consultoría para Eventos', value: 'Consultoría para Eventos' }
-            ]
+            // Servicios dinámicos
+            loadingServices: false,
+            serviceOptions: [] // Se llena desde la BD
         };
     },
     computed: {
@@ -74,18 +71,44 @@ export default {
                 this.availableSlots = [];
             }
         },
-        // Cuando se abre el modal, cargamos la configuración de días cerrados
+        // Cuando se abre el modal, cargamos la configuración y los servicios
         internalShow(val) {
             if (val) {
                 this.fetchDisabledDays();
+                this.fetchServices(); // [NUEVO] Cargar servicios
             }
         }
     },
     methods: {
+        // [NUEVO] Método para cargar servicios desde la DB
+        async fetchServices() {
+            // Si ya tenemos servicios cargados, no volver a pedir (opcional)
+            if (this.serviceOptions.length > 0) return;
+
+            this.loadingServices = true;
+            try {
+                // Llamamos a la nueva ruta API definida en web.php
+                const response = await axios.get(route('api.services.list'));
+                
+                // Mapeamos el array simple de strings a objetos { label, value }
+                this.serviceOptions = response.data.map(serviceName => ({
+                    label: serviceName,
+                    value: serviceName // Usamos el nombre como valor como solicitado
+                }));
+            } catch (error) {
+                console.error("Error cargando servicios:", error);
+                // Fallback por si falla la API
+                this.serviceOptions = [
+                    { label: 'Servicio General', value: 'Servicio General' }
+                ];
+            } finally {
+                this.loadingServices = false;
+            }
+        },
+
         async fetchDisabledDays() {
             this.loadingConfig = true;
             try {
-                // Asegúrate de tener esta ruta definida en tu backend
                 const response = await axios.get(route('appointments.disabled-days'));
                 this.blockedWeekDays = response.data.week_days || [];
                 this.blockedDates = response.data.dates || [];
@@ -248,6 +271,15 @@ export default {
                         </n-form-item>
                     </div>
 
+                    <n-form-item label="Servicio de Interés" path="service_type" show-require-mark>
+                        <n-select 
+                            v-model:value="form.service_type" 
+                            :options="serviceOptions" 
+                            :loading="loadingServices"
+                            placeholder="Selecciona una opción" 
+                        />
+                    </n-form-item>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-4">
                         <!-- Calendario -->
                         <div class="flex flex-col">
@@ -322,10 +354,6 @@ export default {
                             </div>
                         </div>
                     </div>
-
-                    <n-form-item label="Servicio de Interés" path="service_type" show-require-mark>
-                        <n-select v-model:value="form.service_type" :options="serviceOptions" placeholder="Selecciona una opción" />
-                    </n-form-item>
                 </n-form>
             </div>
 

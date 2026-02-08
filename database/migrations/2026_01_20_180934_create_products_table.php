@@ -22,6 +22,8 @@ return new class extends Migration
             
             $table->integer('stock_quantity')->default(0);
             $table->integer('alert_threshold')->default(5); // Alerta de stock bajo
+
+            $table->boolean('is_active')->default(true); // para mostrar o no en landingpage publica y punto de venta
             
             $table->timestamps();
             $table->softDeletes();

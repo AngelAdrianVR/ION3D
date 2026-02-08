@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -14,20 +14,36 @@ const user = computed(() => page.props.auth.user);
 // Estado local (Colapsado / Expandido)
 const isCollapsed = ref(false);
 
-onMounted(() => {
-    // Verificamos si existe una preferencia guardada al montar el componente
-    const storedState = localStorage.getItem('sidebar_collapsed');
-    
-    // Solo aplicamos el colapso si la pantalla es grande (Desktop). 
-    // En móvil siempre queremos ver el menú completo por defecto.
-    if (window.innerWidth >= 768 && storedState !== null) {
-        isCollapsed.value = storedState === 'true';
-    } else {
+const checkScreenSize = () => {
+    // Si la pantalla es menor a 768px (Móvil/Tablet vertical), 
+    // FORZAMOS a que NO esté colapsado.
+    if (window.innerWidth < 768) {
         isCollapsed.value = false;
+    } else {
+        // Si es escritorio, recuperamos la preferencia del usuario
+        const storedState = localStorage.getItem('sidebar_collapsed');
+        if (storedState !== null) {
+            isCollapsed.value = storedState === 'true';
+        }
     }
+};
+
+onMounted(() => {
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', checkScreenSize);
 });
 
 const toggleCollapse = () => {
+    // No permitir colapsar si estamos en móvil (aunque el botón suele estar oculto)
+    if (window.innerWidth < 768) {
+        isCollapsed.value = false;
+        return;
+    }
+
     isCollapsed.value = !isCollapsed.value;
     
     // Guardamos la preferencia en localStorage
@@ -35,27 +51,26 @@ const toggleCollapse = () => {
 
     // Si colapsamos, cerramos los acordeones para evitar bugs visuales al re-expandir
     if (isCollapsed.value) {
+        posOpen.value = false;
         settingsOpen.value = false;
         webManagementOpen.value = false;
     }
 };
 
-// Función auxiliar para detectar rutas activas (incluyendo create, edit, show)
+// Función auxiliar para detectar rutas activas
 const isActiveRoute = (routeKey) => {
     if (!routeKey) return false;
-    // 1. Coincidencia exacta
     if (route().current(routeKey)) return true;
-    // 2. Coincidencia de recurso (ej: 'users.index' -> 'users.*')
     const resourceBase = routeKey.replace('.index', '');
     return route().current(`${resourceBase}.*`);
 };
 
-// Estados para submenús
+// Estados para submenús (Acordeones)
+const posOpen = ref(false);
 const settingsOpen = ref(false);
 const webManagementOpen = ref(false);
 
-// --- MENÚ PRINCIPAL (Módulos Operativos) ---
-// Se han retirado Citas, Mensajes y CMS de aquí para moverlos al grupo
+// --- MENÚ PRINCIPAL (Módulos individuales) ---
 const menuItems = [
     { 
         name: 'Dashboard', 
@@ -63,10 +78,11 @@ const menuItems = [
         icon: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z', 
         show: true 
     },
+    // Productos se agrega aquí como módulo individual
     { 
-        name: 'Punto de Venta', 
-        route: 'pos.index', 
-        icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z', 
+        name: 'Productos', 
+        route: 'products.index', 
+        icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', 
         show: true 
     },
     { 
@@ -76,23 +92,11 @@ const menuItems = [
         show: true 
     },
     // { 
-    //     name: 'Inventario', 
-    //     route: 'products.index', 
-    //     icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', 
-    //     show: true 
-    // },
-    // { 
     //     name: 'Proveedores', 
     //     route: 'suppliers.index', 
     //     icon: 'M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z', 
     //     show: true 
     // },
-    { 
-        name: 'Cajas', 
-        route: 'cash-registers.index', 
-        icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 
-        show: true 
-    },
     { 
         name: 'Reportes', 
         route: 'reports.index', 
@@ -106,6 +110,16 @@ const menuItems = [
         show: true 
     },
 ];
+
+// --- GRUPO: PUNTO DE VENTA ---
+const posItems = [
+    { name: 'Terminal PV', route: 'pos.index', show: true },
+    { name: 'Cajas', route: 'cash-registers.index', show: true },
+];
+
+const isPosActive = computed(() => {
+    return posItems.some(item => isActiveRoute(item.route));
+});
 
 // --- GRUPO: GESTIÓN WEB ---
 const webManagementItems = [
@@ -161,7 +175,8 @@ const logout = () => {
                 <!-- Texto Logo -->
                 <div :class="isCollapsed ? 'md:hidden' : ''" class="flex flex-col leading-none transition-all duration-300">
                     <span class="text-2xl font-bold tracking-tight text-[#2f4b59]">
-                        ION<span class="text-slate-400">3D</span>
+                        ORION
+                        <!-- <span class="text-slate-400">3D</span> -->
                     </span>
                 </div>
             </div>
@@ -249,8 +264,80 @@ const logout = () => {
                 </Link>
             </template>
 
+             <!-- 
+                NUEVO GRUPO: PUNTO DE VENTA 
+            -->
+            <div class="group relative">
+                <button 
+                    @click="(!isCollapsed || window.innerWidth < 768) ? (posOpen = !posOpen) : null"
+                    class="w-full flex items-center rounded-xl transition-all duration-300"
+                    :class="[
+                        isCollapsed ? 'justify-center p-3' : 'justify-between px-3 py-3',
+                        isPosActive 
+                            ? 'bg-gradient-to-r from-[#2f4b59] to-[#507588] text-white shadow-lg shadow-[#2f4b59]/25' 
+                            : (posOpen && (!isCollapsed || window.innerWidth < 768) ? 'bg-slate-50 text-[#2f4b59]' : 'text-slate-500 hover:bg-gradient-to-r hover:from-slate-200 hover:to-slate-50 hover:text-[#2f4b59]')
+                    ]"
+                >
+                    <div class="flex items-center gap-3">
+                        <!-- Icono Store/POS -->
+                        <svg xmlns="http://www.w3.org/2000/svg" 
+                             :class="isCollapsed ? 'h-6 w-6' : 'h-[22px] w-[22px] min-w-[22px]'"
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                             <!-- Icono de Tienda/POS -->
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span :class="isCollapsed ? 'md:hidden' : ''" class="font-medium whitespace-nowrap text-sm">Punto de Venta</span>
+                    </div>
+                </button>
+
+                <!-- Submenú Expandido -->
+                <div v-show="posOpen && (!isCollapsed || window.innerWidth < 768)" class="mt-1 space-y-1 overflow-hidden transition-all duration-300">
+                    <Link 
+                        v-for="(subItem, subIndex) in posItems" 
+                        :key="subIndex"
+                        :href="route(subItem.route)"
+                        class="block pl-12 py-2 text-sm font-medium transition-all duration-200 border-r-2"
+                        :class="[
+                             isActiveRoute(subItem.route)
+                                ? 'text-[#2f4b59] bg-slate-50 border-[#2f4b59]' 
+                                : 'text-slate-400 hover:text-[#2f4b59] hover:translate-x-1 border-transparent'
+                        ]"
+                    >
+                        {{ subItem.name }}
+                    </Link>
+                </div>
+
+                <!-- Submenú Colapsado (Solo Desktop) -->
+                <div v-if="isCollapsed" 
+                     class="hidden md:block absolute top-0 left-full ml-4 w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-x-[-10px] group-hover:translate-x-0 z-50">
+                    <div class="px-3 py-2 text-xs font-bold text-slate-400 uppercase border-b border-slate-100 mb-1">
+                        Punto de Venta
+                    </div>
+                    <Link 
+                        v-for="(subItem, subIndex) in posItems" 
+                        :key="subIndex"
+                        :href="route(subItem.route)"
+                        class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors"
+                        :class="[
+                            isActiveRoute(subItem.route)
+                                ? 'bg-slate-100 text-[#2f4b59] font-bold'
+                                : 'text-slate-600 hover:text-[#2f4b59] hover:bg-slate-50'
+                        ]"
+                    >
+                        <span class="w-1.5 h-1.5 rounded-full" 
+                              :class="isActiveRoute(subItem.route) ? 'bg-[#2f4b59]' : 'bg-slate-300'">
+                        </span>
+                        {{ subItem.name }}
+                    </Link>
+                    <div class="absolute left-0 top-6 -translate-x-1.5 w-3 h-3 bg-white border-l border-b border-slate-100 rotate-45"></div>
+                </div>
+            </div>
+
+            <!-- Separador -->
+            <div class="my-4 border-t border-slate-100 mx-2"></div>
+
             <!-- 
-                NUEVO GRUPO: GESTIÓN WEB 
+                GRUPO: GESTIÓN WEB 
             -->
             <div class="group relative">
                 <button 
@@ -317,13 +404,10 @@ const logout = () => {
                 </div>
             </div>
 
-            <!-- Separador -->
-            <div class="my-4 border-t border-slate-100 mx-2"></div>
-
             <!-- 
                 GRUPO: CONFIGURACIÓN
             -->
-            <div class="group relative">
+            <div class="group relative mt-2">
                 <button 
                     @click="(!isCollapsed || window.innerWidth < 768) ? (settingsOpen = !settingsOpen) : null"
                     class="w-full flex items-center rounded-xl transition-all duration-300"

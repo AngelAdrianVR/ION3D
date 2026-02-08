@@ -3,23 +3,23 @@
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AvailabilityExceptionController;
 use App\Http\Controllers\BusinessHourController;
-use App\Http\Controllers\CashRegisterController; // [NUEVO]
-use App\Http\Controllers\ClientController;       // [NUEVO]
+use App\Http\Controllers\CashRegisterController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\NotificationController;
-// Controladores para los módulos administrativos
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PosController;
-use App\Http\Controllers\ProductController;      // [NUEVO]
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PageManagementController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\SupplierController;     // [NUEVO]
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Models\ServicePackage; 
 
 // PAGINAS PÚBLICAS ===============================================================================
 // ================================================================================================
@@ -32,16 +32,28 @@ Route::get('/', function () {
 Route::get('/inicio', [LandingController::class, 'index'])->name('landing.index');
 
 Route::get('/proceso', [LandingController::class, 'process'])->name('landing.process');
-Route::get('/servicios/{category?}', [LandingController::class, 'services'])->name('landing.services'); // Parámetro opcional 'category'
-Route::get('/portafolio/{category?}', [LandingController::class, 'portfolio'])->name('landing.portfolio'); // Parámetro opcional 'category'
+Route::get('/servicios/{category?}', [LandingController::class, 'services'])->name('landing.services');
+Route::get('/portafolio/{category?}', [LandingController::class, 'portfolio'])->name('landing.portfolio'); 
 Route::get('/contacto', [LandingController::class, 'contact'])->name('landing.contact');
 
-// Rutas de Citas (Públicas para registro - Solo Store)
+// Rutas de Citas (Públicas)
+// 1. Guardar cita
 Route::resource('appointments', AppointmentController::class)->only(['store']);
+// 2. [MOVIDO AQUÍ] Consultar días deshabilitados (público para el calendario)
+Route::get('/appointments/disabled-days', [AppointmentController::class, 'disabledDays'])->name('appointments.disabled-days');
+// 3. [MOVIDO AQUÍ] Checar disponibilidad de horas (público para el calendario)
+Route::get('/appointments/check-availability', [AppointmentController::class, 'checkAvailability'])->name('appointments.check');
+
 
 // NUEVA RUTA: Guardar mensajes de contacto
 Route::post('/contacto-mensaje', [ContactMessageController::class, 'store'])->name('contact.store');
 
+// Endpoint ligero para obtener lista de servicios en el Modal de Citas
+Route::get('/api/services-list', function () {
+    return ServicePackage::where('is_active', true)
+        ->orderBy('title', 'asc')
+        ->pluck('title');
+})->name('api.services.list');
 
 
 // INTRANET (PANEL ADMINISTRATIVO) ================================================================
@@ -76,6 +88,7 @@ Route::middleware([
     Route::resource('clients', ClientController::class);
 
     // Inventario (Productos)
+    Route::put('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
     Route::resource('products', ProductController::class);
 
     // Proveedores
@@ -98,7 +111,7 @@ Route::middleware([
 
         // Rutas para Portafolio
         Route::post('/portfolio', [PageManagementController::class, 'storePortfolioItem'])->name('portfolio.store');
-        Route::post('/portfolio/{item}', [PageManagementController::class, 'updatePortfolioItem'])->name('portfolio.update'); // POST para manejar archivos con _method PUT
+        Route::post('/portfolio/{item}', [PageManagementController::class, 'updatePortfolioItem'])->name('portfolio.update'); 
         Route::delete('/portfolio/{item}', [PageManagementController::class, 'destroyPortfolioItem'])->name('portfolio.destroy');
     });
 
@@ -117,8 +130,9 @@ Route::middleware([
     
     // Ruta específica para cambio de estatus rápido
     Route::put('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus'])->name('appointments.update-status');
-
-    Route::get('/appointments/check-availability', [AppointmentController::class, 'checkAvailability'])->name('appointments.check');
+    
+    // NOTA: Se movió 'check-availability' arriba para que sea pública
+    // NOTA: Se movió 'disabled-days' arriba para que sea pública
 
     // 6. Mensajes de Contacto (Buzón de entrada)
     Route::resource('contact-messages', ContactMessageController::class)->only(['index', 'show', 'destroy'])->names('contact-messages');
@@ -136,7 +150,6 @@ Route::middleware([
     // ---------------------------- CONFIGURACIÓN DE AGENDA ----------------------------
     Route::get('/settings/calendar', [BusinessHourController::class, 'index'])->name('settings.calendar.index');
     Route::put('/settings/business-hours', [BusinessHourController::class, 'update'])->name('business-hours.update');
-    Route::get('/appointments/disabled-days', [AppointmentController::class, 'disabledDays'])->name('appointments.disabled-days');
     
     Route::post('/settings/availability-exceptions', [AvailabilityExceptionController::class, 'store'])->name('availability-exceptions.store');
     Route::delete('/settings/availability-exceptions/{exception}', [AvailabilityExceptionController::class, 'destroy'])->name('availability-exceptions.destroy');
@@ -147,7 +160,6 @@ Route::middleware([
 Route::delete('/media/{media}', function (Media $media) {
     try {
         $media->delete(); 
-
         // return response()->json(['message' => 'Archivo eliminado correctamente.'], 200);
     } catch (\Exception $e) {
         return response()->json(['error' => 'Error al eliminar el archivo.'], 500);

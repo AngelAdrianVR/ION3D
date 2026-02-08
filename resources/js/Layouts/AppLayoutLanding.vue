@@ -125,7 +125,8 @@ export default {
                             <div class="flex flex-col leading-none transition-all duration-300" 
                                  :class="[isScrolled ? 'hidden lg:flex' : 'flex']">
                                 <span class="text-xl font-bold tracking-tight text-[#2f4b59]">
-                                    ION<span class="text-slate-400">3D</span>
+                                    ORION
+                                    <!-- <span class="text-slate-400">3D</span> -->
                                 </span>
                             </div>
                         </Link>
@@ -299,7 +300,8 @@ export default {
                                         <img src="@/../../public/images/orion-logo-blanco.png" alt="" class="w-6 h-6">
                                     </div>
                                     <span class="text-2xl font-bold tracking-tight text-white">
-                                        ION<span class="text-[#4cc9f0]">3D</span>
+                                        ORION
+                                        <!-- <span class="text-[#4cc9f0]">3D</span> -->
                                     </span>
                                 </div>
                                 <p class="text-slate-400 text-sm leading-relaxed max-w-sm">
@@ -365,7 +367,7 @@ export default {
 
                         <!-- Bottom Footer -->
                         <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500 font-mono">
-                            <p>&copy; 2026 ION3D Studio. Todos los derechos reservados.</p>
+                            <p>&copy; 2026 ORION Studio. Todos los derechos reservados.</p>
                             <div class="flex gap-6">
                                 <a href="#" class="hover:text-white transition-colors">Política de privacidad</a>
                                 <a href="#" class="hover:text-white transition-colors">Términos de servicio</a>
