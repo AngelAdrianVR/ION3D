@@ -21,7 +21,7 @@ return new class extends Migration
             
             $table->decimal('total_amount', 10, 2);
             
-            $table->enum('payment_method', ['Efectivo', 'Tarjeta', 'Transferencia', 'Mixto']);
+            $table->enum('payment_method', ['Efectivo', 'Tarjeta', 'Transferencia', 'Mixto', 'Crédito'])->default('Efectivo');
             $table->enum('payment_status', ['Pagado', 'Pendiente', 'Parcial'])->default('Pagado');
             
             $table->text('notes')->nullable();

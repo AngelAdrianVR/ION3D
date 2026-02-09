@@ -81,7 +81,20 @@ Route::middleware([
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 
     // 2. Punto de Venta (POS)
-    Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
+    // RUTAS DEL PUNTO DE VENTA (POS)
+    Route::prefix('pos')->name('pos.')->group(function () {
+        Route::get('/', [PosController::class, 'index'])->name('index');
+        Route::post('/store', [PosController::class, 'store'])->name('store');
+        
+        // Endpoints para funcionalidades AJAX/Inertia dentro del POS
+        Route::get('/search-clients', [PosController::class, 'searchClients'])->name('search-clients');
+        Route::post('/quick-client', [PosController::class, 'storeQuickClient'])->name('quick-client');
+        Route::get('/check-stock/{product}', [PosController::class, 'checkStock'])->name('check-stock');
+        
+        // Control de Caja desde el POS
+        Route::post('/open-register', [PosController::class, 'openRegister'])->name('open-register');
+        Route::post('/close-register', [PosController::class, 'closeRegister'])->name('close-register');
+    });
 
     // ---------------- [NUEVOS MÓDULOS DE GESTIÓN] ---------------- //
     
@@ -99,7 +112,7 @@ Route::middleware([
     // Proveedores
     Route::resource('suppliers', SupplierController::class);
 
-    
+
     // Cajas Registradoras
     Route::resource('cash-registers', CashRegisterController::class);
 
