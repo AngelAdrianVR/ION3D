@@ -326,4 +326,63 @@ class PosController extends Controller
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
+
+    /**
+     * Cierre de Caja (Corte)
+     */
+    public function closeRegister(Request $request)
+    {
+        $validated = $request->validate([
+            'cash_register_session_id' => 'required|exists:cash_register_sessions,id',
+            'closing_amount' => 'required|numeric|min:0', // Dinero contado físicamente
+            'notes' => 'nullable|string'
+        ]);
+
+        $session = CashRegisterSession::find($validated['cash_register_session_id']);
+
+        if ($session->status !== 'Abierta') {
+            return back()->withErrors(['error' => 'Esta sesión ya está cerrada.']);
+        }
+
+        try {
+            DB::transaction(function () use ($session, $validated) {
+                
+                // 1. Calcular Ventas en Efectivo
+                $cashSales = Order::where('cash_register_session_id', $session->id)
+                    ->where('payment_method', 'Efectivo') // Ojo: Si implementas pagos mixtos, esto debe ser más complejo
+                    ->sum('total_amount');
+
+                // 2. Calcular Ingresos/Retiros manuales de caja
+                $movements = CashMovement::where('cash_register_session_id', $session->id)->get();
+                $manualIncomes = $movements->where('type', 'Ingreso')->sum('amount'); // Si usas esto para ventas manuales
+                $manualExpenses = $movements->where('type', 'Gasto')->sum('amount');
+                $withdrawals = $movements->where('type', 'Retiro')->sum('amount');
+
+                // NOTA: En tu store() actual, creas un CashMovement tipo 'Ingreso' por cada venta Efectivo.
+                // Si haces eso, NO sumes $cashSales aquí para no duplicar, O suma $cashSales y filtra los movimientos que NO sean ventas.
+                // Asumiremos que el CashMovement es la fuente de la verdad para el efectivo en cajón:
+                
+                $totalCashIn = $movements->where('type', 'Ingreso')->sum('amount');
+                
+                // 3. Calcular Saldo Esperado (Calculated Amount)
+                // Apertura + Entradas - Salidas
+                $calculatedAmount = $session->opening_amount + $totalCashIn - $manualExpenses - $withdrawals;
+
+                // 4. Actualizar Sesión
+                $session->update([
+                    'closing_amount' => $validated['closing_amount'],
+                    'calculated_amount' => $calculatedAmount,
+                    'closed_at' => now(),
+                    'status' => 'Cerrada', // O 'Error' si hay mucha diferencia, según tu regla de negocio
+                    'notes' => $validated['notes']
+                ]);
+
+            });
+
+            return redirect()->route('dashboard')->with('success', 'Corte de caja realizado correctamente.');
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
 }

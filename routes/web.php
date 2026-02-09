@@ -115,9 +115,13 @@ Route::middleware([
 
     // Cajas Registradoras
     Route::resource('cash-registers', CashRegisterController::class);
+    // La ruta para cierre de caja (si no la tenías ya)
+    Route::post('/pos/close-register', [PosController::class, 'closeRegister'])->name('pos.close-register');
+
 
     // ------------------------------------------------------------- //
 
+    
     // 3. Gestión de Página (CMS)
     Route::prefix('cms')->name('cms.')->group(function () {
         // Vista principal

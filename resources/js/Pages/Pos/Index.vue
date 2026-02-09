@@ -10,17 +10,26 @@
                 <span v-if="activeSession" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold border border-green-200 flex items-center gap-2">
                     <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                     Caja Abierta: {{ activeSession.id }}
+                    
+                    <!-- Botón de Cierre de Caja -->
+                    <button 
+                        @click="showCloseRegisterModal = true"
+                        class="ml-2 px-2 py-0.5 bg-red-500 text-white rounded text-[10px] hover:bg-red-600 transition-colors"
+                        title="Realizar Corte de Caja"
+                    >
+                        Cerrar Turno
+                    </button>
                 </span>
                 <span v-else class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold border border-red-200">
                     Caja Cerrada
                 </span>
             </div>
         </div>
-            <!-- Información del Vendedor -->
-            <div class="hidden md:block">
-                <p class="text-xs text-gray-400 font-bold uppercase">Atendiendo</p>
-                <p class="text-sm font-bold text-gray-700">{{ user.name }}</p>
-            </div>
+        <!-- Información del Vendedor -->
+        <div class=" hidden md:block">
+            <p class="text-xs text-gray-400 font-bold uppercase">Atendiendo</p>
+            <p class="text-sm font-bold text-gray-700">{{ user.name }}</p>
+        </div>
     </template>
     <n-config-provider :theme-overrides="iosThemeOverrides">
         
@@ -98,7 +107,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 </div>
                                 
-                                <!-- Badge de Opciones -->
+                                <!-- Badge de Opciones (Si tiene precios múltiples) -->
                                 <div v-if="item.pricing_options && item.pricing_options.length > 0" class="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] text-center py-1 backdrop-blur-sm">
                                     {{ item.pricing_options.length }} Opciones Disp.
                                 </div>
@@ -111,10 +120,7 @@
 
                              <div class="mt-auto pt-2 border-t border-gray-50">
                                 <div class="flex justify-between items-center">
-                                    <!-- Si tiene opciones, mostrar el rango o texto 'Ver opciones' si es 0, si no, precio normal -->
-                                    <span class="font-bold text-lg text-gray-900">
-                                        {{ formatCurrency(item.sale_price) }}
-                                    </span>
+                                    <span class="font-bold text-lg text-gray-900">{{ formatCurrency(item.sale_price) }}</span>
                                     <span v-if="item.type === 'product'" class="text-[10px] px-1.5 py-0.5 bg-gray-100 rounded text-gray-500 font-mono border border-gray-200">
                                         Stock: {{ item.stock_quantity }}
                                     </span>
@@ -272,10 +278,11 @@
 
         <!-- 3. MODAL COBRO (CHECKOUT) -->
         <n-modal v-model:show="showCheckoutModal" transform-origin="center">
-            <div class="bg-white rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[85vh] md:h-auto">
+            <!-- CORRECCIÓN MOVIL: scroll en el contenedor principal en móvil -->
+            <div class="bg-white rounded-3xl w-full max-w-4xl shadow-2xl flex flex-col md:flex-row h-[90vh] md:h-auto overflow-y-auto md:overflow-hidden">
                 
                 <!-- Columna Izq: Datos Venta -->
-                <div class="w-full md:w-1/2 p-6 md:p-8 bg-gray-50 flex flex-col overflow-y-auto">
+                <div class="w-full md:w-1/2 p-6 md:p-8 bg-gray-50 flex flex-col md:overflow-y-auto shrink-0">
                     <h3 class="font-bold text-xl text-gray-900 mb-6">Detalles de Venta</h3>
                     
                     <!-- Selección de Cliente -->
@@ -347,7 +354,7 @@
                 </div>
 
                 <!-- Columna Der: Totales y Pago -->
-                <div class="w-full md:w-1/2 p-6 md:p-8 bg-white flex flex-col justify-between">
+                <div class="w-full md:w-1/2 p-6 md:p-8 bg-white flex flex-col justify-between shrink-0">
                     <div>
                         <h3 class="font-bold text-xl text-gray-900 mb-6">Pago</h3>
 
@@ -440,6 +447,55 @@
             </div>
         </n-modal>
 
+        <!-- 5. MODAL CIERRE DE CAJA -->
+        <n-modal v-model:show="showCloseRegisterModal" :mask-closable="false">
+             <div class="bg-white rounded-3xl p-8 w-full max-w-md text-center shadow-2xl">
+                 <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                 </div>
+                 <h2 class="text-2xl font-bold text-gray-900 mb-2">Corte de Caja</h2>
+                 <p class="text-gray-500 mb-6">Ingresa el efectivo contado para cerrar el turno.</p>
+
+                 <div class="text-left space-y-4">
+                     <div>
+                         <label class="block text-sm font-bold text-gray-700 mb-1">Efectivo en Caja (Real)</label>
+                         <n-input-number 
+                            v-model:value="closeRegisterForm.closing_amount" 
+                            :show-button="false"
+                            placeholder="0.00"
+                            class="text-lg"
+                         >
+                            <template #prefix>$</template>
+                         </n-input-number>
+                     </div>
+                     <div>
+                         <label class="block text-sm font-bold text-gray-700 mb-1">Notas / Observaciones</label>
+                         <textarea 
+                            v-model="closeRegisterForm.notes" 
+                            class="w-full rounded-xl border-gray-200 text-sm p-3" 
+                            rows="3" 
+                            placeholder="Diferencias, justificaciones, etc."
+                         ></textarea>
+                     </div>
+                 </div>
+
+                 <div class="flex gap-3 mt-8">
+                     <button 
+                        @click="showCloseRegisterModal = false"
+                        class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                     >
+                         Cancelar
+                     </button>
+                     <button 
+                        @click="submitCloseRegister"
+                        class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors"
+                     >
+                         Cerrar Turno
+                     </button>
+                 </div>
+             </div>
+        </n-modal>
+
     </n-config-provider>
   </AppLayout>
 </template>
@@ -474,6 +530,7 @@ const showOpenRegisterModal = ref(!props.activeSession);
 const showCheckoutModal = ref(false);
 const showQuickClientModal = ref(false);
 const showOptionsModal = ref(false);
+const showCloseRegisterModal = ref(false);
 
 // --- ESTADO OPCIONES (SERVICIOS) ---
 const currentOptionItem = ref(null);
@@ -482,6 +539,12 @@ const currentOptionItem = ref(null);
 const openRegisterForm = useForm({
     cash_register_id: null,
     opening_amount: 0
+});
+
+const closeRegisterForm = useForm({
+    cash_register_session_id: props.activeSession ? props.activeSession.id : null,
+    closing_amount: 0,
+    notes: ''
 });
 
 const paymentForm = useForm({
@@ -617,6 +680,21 @@ const removeFromCart = (index) => cart.value.splice(index, 1);
 const submitOpenRegister = () => {
     openRegisterForm.post(route('pos.open-register'), {
         onSuccess: () => showOpenRegisterModal.value = false
+    });
+};
+
+// Cierre de Caja
+const submitCloseRegister = () => {
+    closeRegisterForm.cash_register_session_id = props.activeSession?.id;
+    
+    closeRegisterForm.post(route('pos.close-register'), {
+        onSuccess: () => {
+            showCloseRegisterModal.value = false;
+            message.success('Caja cerrada correctamente');
+        },
+        onError: () => {
+            message.error('Error al cerrar la caja');
+        }
     });
 };
 
