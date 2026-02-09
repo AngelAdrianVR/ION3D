@@ -5,6 +5,7 @@ use App\Http\Controllers\AvailabilityExceptionController;
 use App\Http\Controllers\BusinessHourController;
 use App\Http\Controllers\CashRegisterController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientLedgerController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\NotificationController;
@@ -86,14 +87,19 @@ Route::middleware([
     
     // Clientes
     Route::resource('clients', ClientController::class);
+    // Ruta específica para registrar pagos/abonos a un cliente
+    Route::post('/clients/{client}/payment', [ClientLedgerController::class, 'storePayment'])->name('clients.payment.store');
+
 
     // Inventario (Productos)
     Route::put('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
     Route::resource('products', ProductController::class);
 
+
     // Proveedores
     Route::resource('suppliers', SupplierController::class);
 
+    
     // Cajas Registradoras
     Route::resource('cash-registers', CashRegisterController::class);
 

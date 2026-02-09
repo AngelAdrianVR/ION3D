@@ -20,10 +20,15 @@ return new class extends Migration
             $table->decimal('current_balance', 12, 2)->default(0); // Cuánto debe actualmente
 
             // Dirección Principal (Para autocompletar en el POS)
-            $table->string('address')->nullable();
-            $table->string('city')->nullable();
-            $table->string('state')->nullable();
-            $table->string('zip_code')->nullable();
+            // $table->string('road_type')->nullable();        // NUEVO: Tipo de vialidad (Calle, Avenida, Blvd)
+            $table->string('street')->nullable();           // Calle
+            $table->string('exterior_number')->nullable();  // Número Exterior
+            $table->string('interior_number')->nullable();  // Número Interior
+            $table->string('neighborhood')->nullable();     // Colonia
+            $table->string('municipality')->nullable();     // Municipio / Alcaldía
+            $table->string('state')->nullable();            // Estado
+            $table->string('zip_code')->nullable();         // Código Postal
+            $table->string('country')->default('México');   // País
 
             // personales
             $table->string('name');

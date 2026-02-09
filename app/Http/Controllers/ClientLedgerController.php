@@ -2,64 +2,57 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\ClientLedger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ClientLedgerController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Registra un pago (Abono) o cargo manual a la cuenta del cliente.
      */
-    public function index()
+    public function storePayment(Request $request, Client $client)
     {
-        //
-    }
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'type' => 'required|in:Abono,Cargo', // Abono reduce deuda, Cargo aumenta
+            'description' => 'nullable|string|max:255',
+            'payment_method' => 'required|string', // Efectivo, Transferencia, etc.
+        ]);
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        try {
+            DB::transaction(function () use ($request, $client) {
+                $amount = $request->amount;
+                $currentBalance = $client->current_balance;
+                
+                // Calcular nuevo saldo
+                if ($request->type === 'Abono') {
+                    $newBalance = $currentBalance - $amount;
+                } else {
+                    $newBalance = $currentBalance + $amount;
+                }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+                // 1. Crear registro en el historial (Ledger)
+                ClientLedger::create([
+                    'client_id' => $client->id,
+                    'user_id' => Auth::id(), // Usuario autenticado
+                    'type' => $request->type,
+                    'amount' => $amount,
+                    'balance_after' => $newBalance,
+                    'description' => $request->description ?? ($request->type . ' manual'),
+                    // 'reference_type' => ... podrías ligarlo a un modelo Payment si existiera
+                ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(ClientLedger $clientLedger)
-    {
-        //
-    }
+                // 2. Actualizar saldo del cliente
+                $client->update(['current_balance' => $newBalance]);
+            });
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ClientLedger $clientLedger)
-    {
-        //
-    }
+            return redirect()->back()->with('success', 'Movimiento registrado correctamente.');
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, ClientLedger $clientLedger)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ClientLedger $clientLedger)
-    {
-        //
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Error al registrar el pago: ' . $e->getMessage()]);
+        }
     }
 }
