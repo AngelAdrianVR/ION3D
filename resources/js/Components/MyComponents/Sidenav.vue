@@ -115,6 +115,7 @@ const menuItems = [
 const posItems = [
     { name: 'Terminal PV', route: 'pos.index', show: true },
     { name: 'Cajas', route: 'cash-registers.index', show: true },
+    { name: 'Ventas', route: 'orders.index', show: true },
 ];
 
 const isPosActive = computed(() => {

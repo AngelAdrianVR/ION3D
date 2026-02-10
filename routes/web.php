@@ -9,6 +9,7 @@ use App\Http\Controllers\ClientLedgerController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
@@ -119,6 +120,10 @@ Route::middleware([
     Route::post('/pos/close-register', [PosController::class, 'closeRegister'])->name('pos.close-register');
 
 
+    // Ruta personalizada para devolución antes del resource
+    Route::put('/orders/{order}/shipping', [OrderController::class, 'updateShippingStatus'])->name('orders.update-shipping');
+    Route::put('/orders/{order}/return', [OrderController::class, 'returnOrder'])->name('orders.return');
+    Route::resource('orders', OrderController::class);
     // ------------------------------------------------------------- //
 
     
