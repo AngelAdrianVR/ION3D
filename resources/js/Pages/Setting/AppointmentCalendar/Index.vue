@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from 'vue';
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { ref, h } from 'vue'; // Agregamos 'h' a las importaciones
+import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { 
     NCard, NButton, NIcon, NTag, NDataTable, NModal, NForm, NFormItem, NInput, NGrid, NGi, 
@@ -18,10 +18,13 @@ const props = defineProps({
     exceptions: Array,
 });
 
+// 1. OBTENER PAGE PROPS Y HELPER DE PERMISOS
+const page = usePage();
+const can = (permission) => page.props.auth?.permissions?.includes(permission);
+
 const { notification } = createDiscreteApi(['notification']);
 
 // --- PESTAÑA 1: HORARIOS SEMANALES ---
-// Transformar datos para manipulación local
 const daysMap = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 const formHours = useForm({
@@ -30,12 +33,14 @@ const formHours = useForm({
         day_of_week: h.day_of_week,
         day_name: daysMap[h.day_of_week],
         is_closed: !!h.is_closed,
-        open_time: h.open_time, // String '09:00:00'
-        close_time: h.close_time // String '18:00:00'
+        open_time: h.open_time, 
+        close_time: h.close_time 
     }))
 });
 
 const submitHours = () => {
+    if (!can('calendar.manage')) return;
+
     formHours.put(route('business-hours.update'), {
         onSuccess: () => notification.success({ content: 'Horarios actualizados correctamente', duration: 3000 }),
         onError: () => notification.error({ content: 'Error al guardar horarios', duration: 3000 })
@@ -70,6 +75,9 @@ const exceptionColumns = [
         title: 'Acciones',
         key: 'actions',
         render(row) {
+            // PROTECCIÓN DE ACCIÓN ELIMINAR
+            if (!can('calendar.manage')) return null;
+
             return h(NPopconfirm, {
                 onPositiveClick: () => deleteException(row)
             }, {
@@ -81,7 +89,7 @@ const exceptionColumns = [
 ];
 
 const formException = useForm({
-    date: null, // Timestamp o string dependiendo del datepicker
+    date: null, 
     reason: '',
     is_closed: true,
     open_time: null,
@@ -89,23 +97,18 @@ const formException = useForm({
 });
 
 const openCreateException = () => {
+    if (!can('calendar.manage')) return;
     formException.reset();
     showExceptionModal.value = true;
 };
 
 const submitException = () => {
-    // Convertir timestamp de NaiveUI a formato YYYY-MM-DD
+    if (!can('calendar.manage')) return;
+
     if (formException.date) {
         formException.date = format(new Date(formException.date), 'yyyy-MM-dd');
     }
     
-    // Formatear horas si están seteadas
-    if (formException.open_time && !formException.is_closed) {
-       // NaiveUI date picker da timestamps
-       // Aquí asumimos string si viene del backend o timestamp si es nuevo
-       // Simple check: si es numero (timestamp), formatear
-    }
-
     formException.post(route('availability-exceptions.store'), {
         onSuccess: () => {
             showExceptionModal.value = false;
@@ -117,12 +120,12 @@ const submitException = () => {
 };
 
 const deleteException = (row) => {
+    if (!can('calendar.manage')) return;
+
     router.delete(route('availability-exceptions.destroy', row.id), {
         onSuccess: () => notification.success({ content: 'Excepción eliminada' })
     });
 };
-
-import { h } from 'vue'; 
 
 </script>
 
@@ -155,7 +158,11 @@ import { h } from 'vue';
                             </template>
 
                             <div class="p-4">
-                                <n-alert type="info" class="mb-6" title="Información">
+                                <!-- Banner informativo si no tiene permisos -->
+                                <n-alert v-if="!can('calendar.manage')" type="warning" class="mb-6" title="Modo Lectura">
+                                    No tienes permisos para modificar la configuración de horarios.
+                                </n-alert>
+                                <n-alert v-else type="info" class="mb-6" title="Información">
                                     Define los horarios estándar de la semana. Desactiva el interruptor si el negocio está cerrado ese día (ej. Domingo).
                                 </n-alert>
 
@@ -169,7 +176,13 @@ import { h } from 'vue';
                                     >
                                         <!-- Nombre Día y Switch -->
                                         <div class="flex items-center gap-4 w-40">
-                                            <n-switch v-model:value="day.is_closed" :unchecked-value="false" :checked-value="true">
+                                            <!-- Deshabilitado si no tiene permiso -->
+                                            <n-switch 
+                                                v-model:value="day.is_closed" 
+                                                :unchecked-value="false" 
+                                                :checked-value="true"
+                                                :disabled="!can('calendar.manage')"
+                                            >
                                                 <template #checked>Cerrado</template>
                                                 <template #unchecked>Abierto</template>
                                             </n-switch>
@@ -180,22 +193,26 @@ import { h } from 'vue';
                                         <div class="flex items-center gap-4 mt-3 md:mt-0" v-if="!day.is_closed">
                                             <div class="flex items-center gap-2">
                                                 <span class="text-xs text-gray-500 uppercase">Abre:</span>
+                                                <!-- Deshabilitado si no tiene permiso -->
                                                 <n-time-picker 
                                                     v-model:formatted-value="day.open_time" 
                                                     value-format="HH:mm:ss" 
                                                     format="HH:mm" 
                                                     placeholder="Apertura" 
                                                     class="w-32"
+                                                    :disabled="!can('calendar.manage')"
                                                 />
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <span class="text-xs text-gray-500 uppercase">Cierra:</span>
+                                                <!-- Deshabilitado si no tiene permiso -->
                                                 <n-time-picker 
                                                     v-model:formatted-value="day.close_time" 
                                                     value-format="HH:mm:ss" 
                                                     format="HH:mm" 
                                                     placeholder="Cierre" 
                                                     class="w-32"
+                                                    :disabled="!can('calendar.manage')"
                                                 />
                                             </div>
                                         </div>
@@ -205,7 +222,8 @@ import { h } from 'vue';
                                     </div>
                                 </div>
 
-                                <div class="mt-8 flex justify-end border-t pt-4">
+                                <!-- Botón Guardar: Solo visible con permiso -->
+                                <div class="mt-8 flex justify-end border-t pt-4" v-if="can('calendar.manage')">
                                     <n-button type="primary" size="large" @click="submitHours" :loading="formHours.processing">
                                         <template #icon><n-icon><SaveOutline /></n-icon></template>
                                         Guardar Horarios
@@ -228,7 +246,8 @@ import { h } from 'vue';
                                         <h3 class="text-lg font-medium text-gray-800">Calendario de Excepciones</h3>
                                         <p class="text-sm text-gray-500">Agrega días festivos o días con horario especial.</p>
                                     </div>
-                                    <n-button type="primary" secondary @click="openCreateException">
+                                    <!-- Botón Agregar: Solo visible con permiso -->
+                                    <n-button v-if="can('calendar.manage')" type="primary" secondary @click="openCreateException">
                                         <template #icon><n-icon><AddOutline /></n-icon></template>
                                         Agregar Día
                                     </n-button>

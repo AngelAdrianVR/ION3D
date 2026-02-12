@@ -25,7 +25,8 @@
             </n-input>
           </n-config-provider>
 
-          <Link :href="route('products.create')">
+          <!-- PERMISO: Crear Productos -->
+          <Link v-if="can('products.create')" :href="route('products.create')">
             <button class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-full text-sm font-semibold shadow-lg shadow-blue-500/30 transition-all transform active:scale-95 flex items-center gap-2">
               <!-- Icono Plus SVG -->
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -67,7 +68,7 @@
               >
                 <!-- Header de la Tarjeta -->
                 <div class="flex items-start gap-4">
-                  <!-- Imagen Clickeable (abre modal, no navega al show) -->
+                  <!-- Imagen Clickeable -->
                   <div 
                     class="relative h-20 w-20 rounded-xl overflow-hidden shadow-sm flex-shrink-0 bg-gray-100 cursor-zoom-in"
                     @click.stop="openImageModal(product.image_url)"
@@ -102,27 +103,46 @@
                 </div>
 
                 <!-- Footer de la tarjeta con Acciones -->
-                <div class="mt-5 flex items-center justify-between border-t border-gray-50 pt-3">
-                  <!-- Botón Estado (Toggle) -->
-                   <button 
-                    @click.stop="toggleStatus(product)"
-                    class="px-3 py-1 rounded-full text-xs font-bold transition-colors border flex items-center gap-1.5"
-                    :class="product.is_active 
-                        ? 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100' 
-                        : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100'"
-                   >
-                     <div class="w-1.5 h-1.5 rounded-full" :class="product.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
-                     {{ product.is_active ? 'Activo' : 'Inactivo' }}
-                   </button>
+                <!-- PERMISO: Edit o Delete (si no tiene ninguno, ocultamos el footer para limpiar la UI) -->
+                <div 
+                  v-if="can('products.edit') || can('products.delete')" 
+                  class="mt-5 flex items-center justify-between border-t border-gray-50 pt-3"
+                >
+                  <!-- Botón Estado (Toggle) - PERMISO: products.edit -->
+                  <!-- Si tiene permiso es botón, si no, solo mostramos el estado como badge -->
+                  <div v-if="can('products.edit')">
+                     <button 
+                      @click.stop="toggleStatus(product)"
+                      class="px-3 py-1 rounded-full text-xs font-bold transition-colors border flex items-center gap-1.5"
+                      :class="product.is_active 
+                          ? 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100' 
+                          : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100'"
+                     >
+                       <div class="w-1.5 h-1.5 rounded-full" :class="product.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
+                       {{ product.is_active ? 'Activo' : 'Inactivo' }}
+                     </button>
+                  </div>
+                  <div v-else>
+                      <span class="px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5"
+                        :class="product.is_active ? 'bg-green-50 text-green-600 border-green-100' : 'bg-gray-50 text-gray-400 border-gray-200'">
+                         <div class="w-1.5 h-1.5 rounded-full" :class="product.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
+                         {{ product.is_active ? 'Activo' : 'Inactivo' }}
+                      </span>
+                  </div>
                   
                   <div class="flex gap-2">
+                     <!-- PERMISO: products.edit -->
                      <button 
+                      v-if="can('products.edit')"
                       @click.stop="editProduct(product)"
                       class="w-9 h-9 flex items-center justify-center bg-gray-100 text-gray-600 rounded-full hover:bg-blue-100 hover:text-blue-600 transition-colors"
                      >
                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                      </button>
+                     
+                     <!-- PERMISO: products.delete -->
                      <button 
+                      v-if="can('products.delete')"
                       @click.stop="confirmDelete(product)"
                       class="w-9 h-9 flex items-center justify-center bg-gray-100 text-gray-600 rounded-full hover:bg-red-100 hover:text-red-600 transition-colors"
                      >
@@ -176,13 +196,20 @@
 
 <script setup>
 import { ref, watch, h } from 'vue';
-import { router, Link } from '@inertiajs/vue3';
+import { router, Link, usePage } from '@inertiajs/vue3'; // Importar usePage
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { 
   NConfigProvider, NDataTable, NInput, NTag, NAvatar, 
   NPagination, NModal 
 } from 'naive-ui';
 import { debounce } from 'lodash';
+
+// 1. INICIALIZAR PERMISOS
+const page = usePage();
+// Helper function para verificar permisos en script y template
+const can = (permission) => {
+    return page.props.auth?.permissions?.includes(permission) || page.props.auth?.can?.[permission] || false;
+};
 
 const props = defineProps({
   products: Object,
@@ -220,7 +247,7 @@ const IconEye = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', class: 'h-
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' })
 ]);
 
-// COLUMNAS TABLA (Escritorio)
+// COLUMNAS TABLA (Escritorio) - MODIFICADO CON PERMISOS
 const columns = [
   {
     title: 'PRODUCTO',
@@ -228,7 +255,6 @@ const columns = [
     width: 300,
     render(row) {
       return h('div', { class: 'flex items-center gap-4 py-1' }, [
-        // Imagen clickeable (Stop propagation para no ir al show solo con la imagen)
         h('div', { 
             class: 'h-12 w-12 rounded-lg bg-gray-100 border border-gray-100 flex-shrink-0 cursor-zoom-in overflow-hidden relative group',
             onClick: (e) => { e.stopPropagation(); openImageModal(row.image_url); }
@@ -245,7 +271,7 @@ const columns = [
     }
   },
   {
-    title: 'PRECIO',
+    title: 'PRECIO AL PÚBLICO',
     key: 'sale_price',
     width: 150,
     render(row) {
@@ -258,7 +284,6 @@ const columns = [
     width: 150,
     render(row) {
       const isLowStock = row.stock_quantity <= row.alert_threshold;
-      
       return h(NTag, { 
         type: isLowStock ? 'error' : 'success', 
         size: 'small', 
@@ -278,14 +303,27 @@ const columns = [
     key: 'is_active',
     width: 120,
     render(row) {
-      // Botón Toggle Estado
-      return h('button', {
-        class: `px-3 py-1 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${row.is_active ? 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100' : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100'}`,
-        onClick: (e) => { e.stopPropagation(); toggleStatus(row); }
-      }, [
-          h('div', { class: `w-1.5 h-1.5 rounded-full ${row.is_active ? 'bg-green-500' : 'bg-gray-400'}` }),
-          row.is_active ? 'Activo' : 'Inactivo'
-      ]);
+      const hasEditPermission = can('products.edit');
+
+      // Si tiene permiso, es un botón funcional
+      if (hasEditPermission) {
+          return h('button', {
+            class: `px-3 py-1 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${row.is_active ? 'bg-green-50 text-green-600 border-green-100 hover:bg-green-100' : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100'}`,
+            onClick: (e) => { e.stopPropagation(); toggleStatus(row); }
+          }, [
+              h('div', { class: `w-1.5 h-1.5 rounded-full ${row.is_active ? 'bg-green-500' : 'bg-gray-400'}` }),
+              row.is_active ? 'Activo' : 'Inactivo'
+          ]);
+      } 
+      // Si NO tiene permiso, es solo un indicador visual (span)
+      else {
+          return h('span', {
+            class: `px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 cursor-default ${row.is_active ? 'bg-green-50 text-green-600 border-green-100' : 'bg-gray-50 text-gray-400 border-gray-200'}`,
+          }, [
+              h('div', { class: `w-1.5 h-1.5 rounded-full ${row.is_active ? 'bg-green-500' : 'bg-gray-400'}` }),
+              row.is_active ? 'Activo' : 'Inactivo'
+          ]);
+      }
     }
   },
   {
@@ -293,16 +331,29 @@ const columns = [
     key: 'actions',
     width: 100,
     render(row) {
-      return h('div', { class: 'flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0' }, [
-        h('button', { 
+      const actions = [];
+
+      // Botón Editar
+      if (can('products.edit')) {
+        actions.push(h('button', { 
           class: 'w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm',
-          onClick: (e) => { e.stopPropagation(); editProduct(row); }
-        }, [h(IconEdit)]),
-        h('button', { 
+          onClick: (e) => { e.stopPropagation(); editProduct(row); },
+          title: 'Editar'
+        }, [h(IconEdit)]));
+      }
+
+      // Botón Eliminar
+      if (can('products.delete')) {
+        actions.push(h('button', { 
           class: 'w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm',
-          onClick: (e) => { e.stopPropagation(); confirmDelete(row); }
-        }, [h(IconTrash)])
-      ]);
+          onClick: (e) => { e.stopPropagation(); confirmDelete(row); },
+          title: 'Eliminar'
+        }, [h(IconTrash)]));
+      }
+
+      return h('div', { 
+          class: 'flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0' 
+      }, actions);
     }
   }
 ];
@@ -310,21 +361,31 @@ const columns = [
 const rowProps = (row) => {
   return {
     class: 'group hover:bg-gray-50/80 cursor-pointer transition-colors duration-200',
-    // Navegar al Show al hacer clic en la fila
     onClick: () => goToShow(row)
   };
 };
 
 // ACCIONES
-const goToShow = (product) => router.get(route('products.show', product.id));
+const goToShow = (product) => {
+    // Todos pueden ver el detalle, o podemos restringir también aquí
+    if(can('products.index') || can('products.edit')) {
+        router.get(route('products.show', product.id));
+    }
+};
 
-const editProduct = (product) => router.get(route('products.edit', product.id));
+const editProduct = (product) => {
+    if(can('products.edit')) {
+        router.get(route('products.edit', product.id));
+    }
+};
 
 const toggleStatus = (product) => {
-    router.put(route('products.toggle-status', product.id), {}, {
-        preserveScroll: true,
-        preserveState: true,
-    });
+    if(can('products.edit')) {
+        router.put(route('products.toggle-status', product.id), {}, {
+            preserveScroll: true,
+            preserveState: true,
+        });
+    }
 };
 
 const openImageModal = (url) => {
@@ -334,8 +395,10 @@ const openImageModal = (url) => {
 };
 
 const confirmDelete = (product) => {
-  productToDelete.value = product;
-  showDeleteModal.value = true;
+  if(can('products.delete')) {
+      productToDelete.value = product;
+      showDeleteModal.value = true;
+  }
 };
 
 const deleteProduct = () => {
@@ -353,7 +416,7 @@ watch(search, debounce((value) => {
   router.get(route('products.index'), { search: value }, { preserveState: true, replace: true });
 }, 300));
 
-// TEMAS NAIVE UI (Copia exacta para consistencia visual)
+// TEMAS NAIVE UI
 const searchThemeOverrides = {
   Input: {
     borderRadius: '50px',

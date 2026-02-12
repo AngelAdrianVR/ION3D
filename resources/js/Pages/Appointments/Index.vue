@@ -1,6 +1,6 @@
 <template>
   <AppLayout title="Citas">
-    <template #header>
+    <template v-slot:header>
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <!-- Título -->
         <h2 class="font-bold text-3xl text-gray-900 tracking-tight flex items-center gap-3">
@@ -80,10 +80,21 @@
                    </span>
                    
                    <div class="flex gap-2">
-                      <button @click.stop="openEditModal(appt)" class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                      <!-- BOTÓN EDITAR (Móvil) - Requiere appointments.manage -->
+                      <button 
+                        v-if="can('appointments.manage')"
+                        @click.stop="openEditModal(appt)" 
+                        class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                       </button>
-                      <button @click.stop="confirmDelete(appt)" class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors">
+                      
+                      <!-- BOTÓN ELIMINAR (Móvil) - Requiere appointments.delete -->
+                      <button 
+                        v-if="can('appointments.delete')"
+                        @click.stop="confirmDelete(appt)" 
+                        class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"
+                      >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
                    </div>
@@ -158,8 +169,8 @@
                     </div>
                 </div>
 
-                <!-- Acciones Rápidas de Estatus -->
-                <div>
+                <!-- Acciones Rápidas de Estatus - Requiere appointments.manage -->
+                <div v-if="can('appointments.manage')">
                     <span class="text-xs font-bold uppercase text-gray-400 tracking-wider block mb-2">Cambiar Estatus</span>
                     <div class="flex flex-wrap gap-2">
                         <button @click="updateStatus(selectedAppt, 'Confirmada')" :class="['px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors', selectedAppt.status === 'Confirmada' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 hover:border-blue-500']">Confirmado</button>
@@ -173,7 +184,8 @@
 
               <!-- Footer -->
               <div class="px-7 py-4 bg-gray-50/50 flex justify-end gap-3" v-if="selectedAppt">
-                 <button @click="openEditModal(selectedAppt)" class="text-blue-600 font-medium hover:underline text-sm mr-auto">Editar información</button>
+                 <!-- Botón Editar - Requiere appointments.manage -->
+                 <button v-if="can('appointments.manage')" @click="openEditModal(selectedAppt)" class="text-blue-600 font-medium hover:underline text-sm mr-auto">Editar información</button>
                  <button @click="showDetail = false" class="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50">Cerrar</button>
               </div>
             </div>
@@ -197,7 +209,6 @@
                             <input v-model="editForm.guest_phone" type="text" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <!-- Nota: Para simplificar, usamos input datetime-local nativo o podrías usar NDatePicker -->
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Fecha y Hora Inicio</label>
                                 <input v-model="editForm.start_time" type="datetime-local" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -250,11 +261,20 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, h } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { ref, watch, h } from 'vue';
+import { router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { NConfigProvider, NDataTable, NInput, NTag, NPagination, NModal } from 'naive-ui';
 import { debounce } from 'lodash';
+
+// 1. OBTENER PAGE PROPS (Permisos)
+const page = usePage();
+
+// 2. HELPER PARA VERIFICAR PERMISOS
+// Revisa si el permiso existe en el array 'permissions' que viene de HandleInertiaRequests
+const can = (permissionName) => {
+    return page.props.auth?.permissions?.includes(permissionName) || false;
+};
 
 const props = defineProps({
   appointments: Object,
@@ -306,17 +326,14 @@ const formatTime = (dateString) => {
 }
 
 // LÓGICA DE ESTATUS
-const getStatusLabel = (status) => {
-    return status; 
-}
-
+const getStatusLabel = (status) => status; 
 const getStatusType = (status) => {
     const map = {
-        'Pendiente': 'default',     // Gris
-        'Confirmada': 'info',       // Azul
-        'Cancelada': 'error',       // Rojo
-        'Completada': 'success',    // Verde
-        'No Asistió': 'warning',    // Amarillo
+        'Pendiente': 'default',     
+        'Confirmada': 'info',       
+        'Cancelada': 'error',       
+        'Completada': 'success',    
+        'No Asistió': 'warning',    
     };
     return map[status] || 'default';
 }
@@ -339,6 +356,8 @@ const openDetailModal = (appt) => {
 };
 
 const openEditModal = (appt) => {
+    if (!can('appointments.manage')) return; // Seguridad extra
+
     const date = new Date(appt.start_time);
     const pad = (n) => n < 10 ? '0'+n : n;
     const localIso = date.getFullYear() + '-' + pad(date.getMonth()+1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
@@ -354,6 +373,8 @@ const openEditModal = (appt) => {
 };
 
 const submitEdit = () => {
+    if (!can('appointments.manage')) return;
+
     editForm.put(route('appointments.update', editForm.id), {
         onSuccess: () => {
             showEditModal.value = false;
@@ -362,6 +383,8 @@ const submitEdit = () => {
 };
 
 const updateStatus = (appt, newStatus) => {
+    if (!can('appointments.manage')) return;
+
     router.put(route('appointments.update-status', appt.id), { status: newStatus }, {
         preserveScroll: true,
         onSuccess: () => {
@@ -373,6 +396,8 @@ const updateStatus = (appt, newStatus) => {
 };
 
 const confirmDelete = (appt) => {
+    if (!can('appointments.delete')) return;
+
     apptToDelete.value = appt;
     showDeleteModal.value = true;
 };
@@ -393,18 +418,13 @@ const deleteAppointment = () => {
 };
 
 const handlePageChange = (page) => {
-    // Al hacer click, Naive actualiza 'currentPage' localmente primero.
-    // Luego Inertia pide la data. Cuando la data llega, el watcher asegura
-    // que todo esté en orden.
     router.get(route('appointments.index'), { page, search: search.value }, { preserveState: true });
 };
 
-// --- FIX: Sincronizar currentPage con las props entrantes de Inertia ---
 watch(() => props.appointments.current_page, (newPage) => {
     currentPage.value = newPage;
 });
 
-// Watch para búsqueda
 watch(search, debounce((value) => {
     router.get(route('appointments.index'), { search: value }, { preserveState: true, replace: true });
 }, 300));
@@ -418,6 +438,7 @@ const rowProps = (row) => {
   };
 };
 
+// Iconos
 const IconPencil = () => h('svg', { class: 'w-4 h-4', fill:'none', stroke:'currentColor', viewBox:'0 0 24 24'}, [h('path', { 'stroke-linecap':'round', 'stroke-linejoin':'round', 'stroke-width':'2', d:'M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z'})]);
 const IconTrash = () => h('svg', { class: 'w-4 h-4', fill:'none', stroke:'currentColor', viewBox:'0 0 24 24'}, [h('path', { 'stroke-linecap':'round', 'stroke-linejoin':'round', 'stroke-width':'2', d:'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'})]);
 const IconEye = () => h('svg', { class: 'w-4 h-4', fill:'none', stroke:'currentColor', viewBox:'0 0 24 24'}, [h('path', { 'stroke-linecap':'round', 'stroke-linejoin':'round', 'stroke-width':'2', d:'M15 12a3 3 0 11-6 0 3 3 0 016 0z'}), h('path', { 'stroke-linecap':'round', 'stroke-linejoin':'round', 'stroke-width':'2', d:'M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'})]);
@@ -477,23 +498,38 @@ const columns = [
     key: 'actions',
     width: 140,
     render(row) {
-      return h('div', { class: 'flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300' }, [
-        h('button', { 
+      // LOGICA DE RENDERIZADO CONDICIONAL PARA BOTONES DE TABLA
+      const buttons = [];
+
+      // 1. Botón Ver (Siempre visible si pueden ver el índice)
+      buttons.push(h('button', { 
           class: 'w-8 h-8 rounded-full flex items-center justify-center bg-white text-gray-400 hover:text-blue-600 border border-gray-100 shadow-sm transition-all',
           onClick: (e) => { e.stopPropagation(); openDetailModal(row); },
           title: 'Ver Detalle'
-        }, [h(IconEye)]),
-        h('button', { 
-          class: 'w-8 h-8 rounded-full flex items-center justify-center bg-white text-gray-400 hover:text-indigo-600 border border-gray-100 shadow-sm transition-all',
-          onClick: (e) => { e.stopPropagation(); openEditModal(row); },
-          title: 'Editar'
-        }, [h(IconPencil)]),
-        h('button', { 
-          class: 'w-8 h-8 rounded-full flex items-center justify-center bg-white text-gray-400 hover:text-red-500 border border-gray-100 shadow-sm transition-all',
-          onClick: (e) => { e.stopPropagation(); confirmDelete(row); },
-          title: 'Eliminar'
-        }, [h(IconTrash)])
-      ]);
+        }, [h(IconEye)])
+      );
+
+      // 2. Botón Editar (Solo si tiene permiso appointments.manage)
+      if (can('appointments.manage')) {
+        buttons.push(h('button', { 
+            class: 'w-8 h-8 rounded-full flex items-center justify-center bg-white text-gray-400 hover:text-indigo-600 border border-gray-100 shadow-sm transition-all',
+            onClick: (e) => { e.stopPropagation(); openEditModal(row); },
+            title: 'Editar'
+          }, [h(IconPencil)])
+        );
+      }
+
+      // 3. Botón Eliminar (Solo si tiene permiso appointments.delete)
+      if (can('appointments.delete')) {
+        buttons.push(h('button', { 
+            class: 'w-8 h-8 rounded-full flex items-center justify-center bg-white text-gray-400 hover:text-red-500 border border-gray-100 shadow-sm transition-all',
+            onClick: (e) => { e.stopPropagation(); confirmDelete(row); },
+            title: 'Eliminar'
+          }, [h(IconTrash)])
+        );
+      }
+
+      return h('div', { class: 'flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300' }, buttons);
     }
   }
 ];

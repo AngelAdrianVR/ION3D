@@ -10,6 +10,14 @@ const emit = defineEmits(['closeMobile']);
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+// Obtenemos los permisos del usuario actual
+const userPermissions = computed(() => page.props.auth.permissions || []);
+
+// Función Helper para checar permisos
+const can = (permission) => {
+    if (!permission) return true; // Si no requiere permiso, es público
+    return userPermissions.value.includes(permission);
+};
 
 // Estado local (Colapsado / Expandido)
 const isCollapsed = ref(false);
@@ -70,77 +78,91 @@ const posOpen = ref(false);
 const settingsOpen = ref(false);
 const webManagementOpen = ref(false);
 
-// --- MENÚ PRINCIPAL (Módulos individuales) ---
-const menuItems = [
-    { 
-        name: 'Dashboard', 
-        route: 'dashboard', 
-        icon: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z', 
-        show: true 
-    },
-    // Productos se agrega aquí como módulo individual
-    { 
-        name: 'Productos', 
-        route: 'products.index', 
-        icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', 
-        show: true 
-    },
-    { 
-        name: 'Clientes', 
-        route: 'clients.index', 
-        icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', 
-        show: true 
-    },
-    // { 
-    //     name: 'Proveedores', 
-    //     route: 'suppliers.index', 
-    //     icon: 'M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z', 
-    //     show: true 
-    // },
-    // { 
-    //     name: 'Reportes', 
-    //     route: 'reports.index', 
-    //     icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 
-    //     show: true 
-    // },
-    { 
-        name: 'Usuarios', 
-        route: 'users.index', 
-        icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', 
-        show: true 
-    },
-];
+// --- 1. MENÚ PRINCIPAL (Módulos individuales) ---
+// Usamos computed para filtrar items que el usuario no puede ver
+const filteredMenuItems = computed(() => {
+    const items = [
+        { 
+            name: 'Dashboard', 
+            route: 'dashboard', 
+            icon: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z', 
+            permission: null // Visible para todos los logueados
+        },
+        // Productos 
+        { 
+            name: 'Productos', 
+            route: 'products.index', 
+            icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', 
+            permission: 'products.index' 
+        },
+        { 
+            name: 'Clientes', 
+            route: 'clients.index', 
+            icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', 
+            permission: 'clients.index'
+        },
+        // { 
+        //     name: 'Proveedores', 
+        //     route: 'suppliers.index', 
+        //     icon: 'M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z', 
+        //     permission: 'suppliers.index' // (Futuro)
+        // },
+        // { 
+        //     name: 'Reportes', 
+        //     route: 'reports.index', 
+        //     icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 
+        //     permission: 'reports.view' // (Futuro)
+        // },
+        { 
+            name: 'Usuarios', 
+            route: 'users.index', 
+            icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', 
+            permission: 'users.index'
+        },
+    ];
 
-// --- GRUPO: PUNTO DE VENTA ---
-const posItems = [
-    { name: 'Terminal PV', route: 'pos.index', show: true },
-    { name: 'Cajas', route: 'cash-registers.index', show: true },
-    { name: 'Ventas', route: 'orders.index', show: true },
-];
+    return items.filter(item => can(item.permission));
+});
+
+// --- 2. GRUPO: PUNTO DE VENTA ---
+const filteredPosItems = computed(() => {
+    const items = [
+        { name: 'Terminal PV', route: 'pos.index', permission: 'pos.access' },
+        { name: 'Cajas', route: 'cash-registers.index', permission: 'pos.access' }, // Asumimos acceso si entra al POS
+        { name: 'Ventas', route: 'orders.index', permission: 'orders.index' },
+    ];
+    return items.filter(item => can(item.permission));
+});
 
 const isPosActive = computed(() => {
-    return posItems.some(item => isActiveRoute(item.route));
+    return filteredPosItems.value.some(item => isActiveRoute(item.route));
 });
 
-// --- GRUPO: GESTIÓN WEB ---
-const webManagementItems = [
-    { name: 'Citas', route: 'appointments.index', show: true },
-    { name: 'Mensajes', route: 'contact-messages.index', show: true },
-    { name: 'Gestión de Página', route: 'cms.index', show: true },
-];
+// --- 3. GRUPO: GESTIÓN WEB ---
+const filteredWebItems = computed(() => {
+    const items = [
+        { name: 'Citas', route: 'appointments.index', permission: 'appointments.index' },
+        { name: 'Mensajes', route: 'contact-messages.index', permission: 'messages.index' },
+        { name: 'Gestión de Página', route: 'cms.index', permission: 'cms.access' },
+    ];
+    return items.filter(item => can(item.permission));
+});
 
 const isWebManagementActive = computed(() => {
-    return webManagementItems.some(item => isActiveRoute(item.route));
+    return filteredWebItems.value.some(item => isActiveRoute(item.route));
 });
 
-// --- GRUPO: CONFIGURACIÓN ---
-const configItems = [
-    { name: 'Roles y Permisos', route: 'roles.index', show: true },
-    { name: 'Calendario de citas', route: 'settings.calendar.index', show: true } 
-];
+// --- 4. GRUPO: CONFIGURACIÓN ---
+const filteredConfigItems = computed(() => {
+    const items = [
+        { name: 'Roles y Permisos', route: 'roles.index', permission: 'roles.index' },
+        { name: 'Calendario de citas', route: 'settings.calendar.index', permission: 'calendar.manage' } 
+    ];
+    return items.filter(item => can(item.permission));
+});
 
 const isConfigActive = computed(() => {
-    return configItems.some(item => isActiveRoute(item.route));
+    return filteredConfigItems.value.some(item => isActiveRoute(item.route));
 });
 
 const logout = () => {
@@ -234,9 +256,8 @@ const logout = () => {
             <div v-if="isCollapsed" class="hidden md:block h-4 border-b border-slate-100 mb-4 mx-2"></div> 
 
             <!-- ITEMS PRINCIPALES (Loop) -->
-            <template v-for="(item, index) in menuItems" :key="index">
+            <template v-for="(item, index) in filteredMenuItems" :key="index">
                 <Link 
-                    v-if="item.show"
                     :href="route(item.route)" 
                     class="group relative flex items-center rounded-xl transition-all duration-300 ease-out"
                     :class="[
@@ -266,9 +287,9 @@ const logout = () => {
             </template>
 
              <!-- 
-                NUEVO GRUPO: PUNTO DE VENTA 
+                GRUPO: PUNTO DE VENTA (Solo si hay items visibles)
             -->
-            <div class="group relative">
+            <div class="group relative" v-if="filteredPosItems.length > 0">
                 <button 
                     @click="(!isCollapsed || window.innerWidth < 768) ? (posOpen = !posOpen) : null"
                     class="w-full flex items-center rounded-xl transition-all duration-300"
@@ -294,7 +315,7 @@ const logout = () => {
                 <!-- Submenú Expandido -->
                 <div v-show="posOpen && (!isCollapsed || window.innerWidth < 768)" class="mt-1 space-y-1 overflow-hidden transition-all duration-300">
                     <Link 
-                        v-for="(subItem, subIndex) in posItems" 
+                        v-for="(subItem, subIndex) in filteredPosItems" 
                         :key="subIndex"
                         :href="route(subItem.route)"
                         class="block pl-12 py-2 text-sm font-medium transition-all duration-200 border-r-2"
@@ -315,7 +336,7 @@ const logout = () => {
                         Punto de Venta
                     </div>
                     <Link 
-                        v-for="(subItem, subIndex) in posItems" 
+                        v-for="(subItem, subIndex) in filteredPosItems" 
                         :key="subIndex"
                         :href="route(subItem.route)"
                         class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors"
@@ -338,9 +359,9 @@ const logout = () => {
             <div class="my-4 border-t border-slate-100 mx-2"></div>
 
             <!-- 
-                GRUPO: GESTIÓN WEB 
+                GRUPO: GESTIÓN WEB (Solo si hay items visibles)
             -->
-            <div class="group relative">
+            <div class="group relative" v-if="filteredWebItems.length > 0">
                 <button 
                     @click="(!isCollapsed || window.innerWidth < 768) ? (webManagementOpen = !webManagementOpen) : null"
                     class="w-full flex items-center rounded-xl transition-all duration-300"
@@ -365,7 +386,7 @@ const logout = () => {
                 <!-- Submenú Expandido -->
                 <div v-show="webManagementOpen && (!isCollapsed || window.innerWidth < 768)" class="mt-1 space-y-1 overflow-hidden transition-all duration-300">
                     <Link 
-                        v-for="(subItem, subIndex) in webManagementItems" 
+                        v-for="(subItem, subIndex) in filteredWebItems" 
                         :key="subIndex"
                         :href="route(subItem.route)"
                         class="block pl-12 py-2 text-sm font-medium transition-all duration-200 border-r-2"
@@ -386,7 +407,7 @@ const logout = () => {
                         Gestión Web
                     </div>
                     <Link 
-                        v-for="(subItem, subIndex) in webManagementItems" 
+                        v-for="(subItem, subIndex) in filteredWebItems" 
                         :key="subIndex"
                         :href="route(subItem.route)"
                         class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors"
@@ -406,9 +427,9 @@ const logout = () => {
             </div>
 
             <!-- 
-                GRUPO: CONFIGURACIÓN
+                GRUPO: CONFIGURACIÓN (Solo si hay items visibles)
             -->
-            <div class="group relative mt-2">
+            <div class="group relative mt-2" v-if="filteredConfigItems.length > 0">
                 <button 
                     @click="(!isCollapsed || window.innerWidth < 768) ? (settingsOpen = !settingsOpen) : null"
                     class="w-full flex items-center rounded-xl transition-all duration-300"
@@ -433,7 +454,7 @@ const logout = () => {
                 <!-- Submenú Configuración Expandido -->
                 <div v-show="settingsOpen && (!isCollapsed || window.innerWidth < 768)" class="mt-1 space-y-1 overflow-hidden transition-all duration-300">
                     <Link 
-                        v-for="(subItem, subIndex) in configItems" 
+                        v-for="(subItem, subIndex) in filteredConfigItems" 
                         :key="subIndex"
                         :href="route(subItem.route)"
                         class="block pl-12 py-2 text-sm font-medium transition-all duration-200 border-r-2"
@@ -454,7 +475,7 @@ const logout = () => {
                         Configuración
                     </div>
                     <Link 
-                        v-for="(subItem, subIndex) in configItems" 
+                        v-for="(subItem, subIndex) in filteredConfigItems" 
                         :key="subIndex"
                         :href="route(subItem.route)"
                         class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors"

@@ -70,7 +70,7 @@ class DashboardController extends Controller
             ->take(5)
             ->get(['id', 'name', 'stock_quantity', 'alert_threshold']);
 
-        return Inertia::render('Dashboard', [
+        return Inertia::render('Dashboard/Index', [
             'stats' => $stats,
             'recentOrders' => $recentOrders,
             'todayAppointments' => $todayAppointments,
