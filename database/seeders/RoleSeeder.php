@@ -37,6 +37,11 @@ class RoleSeeder extends Seeder
                 'description' => 'Eliminar o desactivar usuarios',
                 'module' => 'Usuarios'
             ],
+            [
+                'name' => 'users.status',
+                'description' => 'Cambiar estatus de usuarios (activar/desactivar)',
+                'module' => 'Usuarios'
+            ],
 
             // --- Módulo: Citas (Appointments) ---
             [

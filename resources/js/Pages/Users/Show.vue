@@ -44,6 +44,7 @@
                                     :src="user.profile_photo_url" 
                                     :alt="user.name"
                                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                    :class="{'grayscale opacity-80': !user.is_active}"
                                 >
                                 <!-- Overlay 'Ver' al hover -->
                                 <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -53,14 +54,23 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Badge de estado (Ejemplo) -->
-                        <div class="absolute bottom-4 right-0 md:-right-2 w-6 h-6 bg-green-500 border-4 border-white rounded-full"></div>
+                        
+                        <!-- Badge de estado dinámico -->
+                        <div 
+                            class="absolute bottom-4 right-0 md:-right-2 w-6 h-6 border-4 border-white rounded-full transition-colors duration-300"
+                            :class="user.is_active ? 'bg-green-500' : 'bg-red-500'"
+                            :title="user.is_active ? 'Usuario Activo' : 'Usuario Inactivo'"
+                        ></div>
                     </div>
 
                     <!-- NOMBRE Y ROL -->
                     <div class="flex-1 mb-2">
-                        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight leading-tight">
+                        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight leading-tight flex flex-col md:block">
                             {{ user.name }}
+                            <!-- Etiqueta de Inactivo visible junto al nombre -->
+                            <span v-if="!user.is_active" class="md:ml-2 inline-block md:inline mt-2 md:mt-0 px-3 py-1 text-xs font-bold text-red-600 bg-red-100 rounded-full align-middle border border-red-200">
+                                CUENTA INACTIVA
+                            </span>
                         </h1>
                         <div class="mt-2 flex flex-wrap gap-2 justify-center md:justify-start items-center">
                              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-50 text-blue-600 border border-blue-100">
@@ -72,9 +82,25 @@
                         </div>
                     </div>
 
-                    <!-- BOTÓN DE ACCIÓN (EDITAR) -->
-                    <div class="mt-4 md:mt-0">
-                        <Link :href="route('users.edit', user.id)">
+                    <!-- BOTONES DE ACCIÓN -->
+                    <div class="mt-4 md:mt-0 flex flex-wrap justify-center gap-3">
+                        
+                        <!-- Botón Activar/Desactivar -->
+                        <button
+                            v-if="can('users.status')"
+                            @click="toggleStatus"
+                            class="px-5 py-2.5 text-sm font-bold rounded-full shadow-lg transition-all duration-300 active:scale-95 flex items-center gap-2 border"
+                            :class="user.is_active 
+                                ? 'bg-white text-red-600 border-red-100 hover:bg-red-50 hover:border-red-200' 
+                                : 'bg-green-600 text-white border-transparent hover:bg-green-500 shadow-green-500/30'"
+                        >
+                            <svg v-if="user.is_active" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            {{ user.is_active ? 'Desactivar' : 'Activar' }}
+                        </button>
+
+                        <!-- Botón Editar -->
+                        <Link v-if="can('users.edit')" :href="route('users.edit', user.id)">
                             <button class="px-6 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-full shadow-lg hover:bg-gray-800 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-95 flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -195,7 +221,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Back from '@/Components/MyComponents/Back.vue';
 import { NConfigProvider } from 'naive-ui';
@@ -203,6 +229,8 @@ import { NConfigProvider } from 'naive-ui';
 const props = defineProps({
     user: Object,
 });
+
+const page = usePage();
 
 // --- ESTADO MODAL FOTO ---
 const isPhotoModalOpen = ref(false);
@@ -217,10 +245,22 @@ const closePhotoModal = () => {
     document.body.style.overflow = ''; // Restaurar scroll
 };
 
+// --- PERMISOS ---
+const can = (permission) => {
+    return page.props.auth?.permissions?.includes(permission) || page.props.auth?.can?.[permission] || false;
+};
+
+// --- ACCIONES ---
+const toggleStatus = () => {
+    // router.put conserva el scroll y el estado para una experiencia fluida
+    router.put(route('users.status', props.user.id), {}, {
+        preserveScroll: true
+    });
+};
+
 // --- HELPERS ---
 const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    // Reemplazo nativo de dayjs para evitar errores de dependencia
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('es-ES', { 
         day: 'numeric', 

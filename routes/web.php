@@ -3,19 +3,25 @@
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AvailabilityExceptionController;
 use App\Http\Controllers\BusinessHourController;
+use App\Http\Controllers\CashRegisterController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientLedgerController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\NotificationController;
-// Controladores para los módulos administrativos (Asegúrate de crearlos si no existen)
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PosController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PageManagementController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use App\Models\ServicePackage; 
 
 // PAGINAS PÚBLICAS ===============================================================================
 // ================================================================================================
@@ -28,16 +34,28 @@ Route::get('/', function () {
 Route::get('/inicio', [LandingController::class, 'index'])->name('landing.index');
 
 Route::get('/proceso', [LandingController::class, 'process'])->name('landing.process');
-Route::get('/servicios/{category?}', [LandingController::class, 'services'])->name('landing.services'); // Parámetro opcional 'category'
-Route::get('/portafolio/{category?}', [LandingController::class, 'portfolio'])->name('landing.portfolio'); // Parámetro opcional 'category'
+Route::get('/servicios/{category?}', [LandingController::class, 'services'])->name('landing.services');
+Route::get('/portafolio/{category?}', [LandingController::class, 'portfolio'])->name('landing.portfolio'); 
 Route::get('/contacto', [LandingController::class, 'contact'])->name('landing.contact');
 
-// Rutas de Citas (Públicas para registro - Solo Store)
+// Rutas de Citas (Públicas)
+// 1. Guardar cita
 Route::resource('appointments', AppointmentController::class)->only(['store']);
+// 2. [MOVIDO AQUÍ] Consultar días deshabilitados (público para el calendario)
+Route::get('/appointments/disabled-days', [AppointmentController::class, 'disabledDays'])->name('appointments.disabled-days');
+// 3. [MOVIDO AQUÍ] Checar disponibilidad de horas (público para el calendario)
+Route::get('/appointments/check-availability', [AppointmentController::class, 'checkAvailability'])->name('appointments.check');
+
 
 // NUEVA RUTA: Guardar mensajes de contacto
 Route::post('/contacto-mensaje', [ContactMessageController::class, 'store'])->name('contact.store');
 
+// Endpoint ligero para obtener lista de servicios en el Modal de Citas
+Route::get('/api/services-list', function () {
+    return ServicePackage::where('is_active', true)
+        ->orderBy('title', 'asc')
+        ->pluck('title');
+})->name('api.services.list');
 
 
 // INTRANET (PANEL ADMINISTRATIVO) ================================================================
@@ -53,11 +71,9 @@ Route::middleware([
         return Inertia::render('Dashboard/Index');
     })->name('dashboard');
 
-    // ---------------------------- NUEVO: RUTAS DE CONFIGURACIÓN / ROLES ----------------------------
-    // Se recomienda proteger esto con un middleware tipo 'role:admin' o similar
+    // ---------------------------- CONFIGURACIÓN / ROLES ----------------------------
     Route::resource('roles', RoleController::class)->except(['show', 'create', 'edit']);
     
-    // Rutas extra para CRUD de permisos (Solo Developer ID 1 validado en controlador)
     Route::post('/permissions', [RoleController::class, 'storePermission'])->name('permissions.store');
     Route::put('/permissions/{permission}', [RoleController::class, 'updatePermission'])->name('permissions.update');
     Route::delete('/permissions/{permission}', [RoleController::class, 'destroyPermission'])->name('permissions.destroy');
@@ -66,8 +82,51 @@ Route::middleware([
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 
     // 2. Punto de Venta (POS)
-    Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
+    // RUTAS DEL PUNTO DE VENTA (POS)
+    Route::prefix('pos')->name('pos.')->group(function () {
+        Route::get('/', [PosController::class, 'index'])->name('index');
+        Route::post('/store', [PosController::class, 'store'])->name('store');
+        
+        // Endpoints para funcionalidades AJAX/Inertia dentro del POS
+        Route::get('/search-clients', [PosController::class, 'searchClients'])->name('search-clients');
+        Route::post('/quick-client', [PosController::class, 'storeQuickClient'])->name('quick-client');
+        Route::get('/check-stock/{product}', [PosController::class, 'checkStock'])->name('check-stock');
+        
+        // Control de Caja desde el POS
+        Route::post('/open-register', [PosController::class, 'openRegister'])->name('open-register');
+        Route::post('/close-register', [PosController::class, 'closeRegister'])->name('close-register');
+    });
 
+    // ---------------- [NUEVOS MÓDULOS DE GESTIÓN] ---------------- //
+    
+    // Clientes
+    Route::resource('clients', ClientController::class);
+    // Ruta específica para registrar pagos/abonos a un cliente
+    Route::post('/clients/{client}/payment', [ClientLedgerController::class, 'storePayment'])->name('clients.payment.store');
+
+
+    // Inventario (Productos)
+    Route::put('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
+    Route::resource('products', ProductController::class);
+
+
+    // Proveedores
+    Route::resource('suppliers', SupplierController::class);
+
+
+    // Cajas Registradoras
+    Route::resource('cash-registers', CashRegisterController::class);
+    // La ruta para cierre de caja (si no la tenías ya)
+    Route::post('/pos/close-register', [PosController::class, 'closeRegister'])->name('pos.close-register');
+
+
+    // Ruta personalizada para devolución antes del resource
+    Route::put('/orders/{order}/shipping', [OrderController::class, 'updateShippingStatus'])->name('orders.update-shipping');
+    Route::put('/orders/{order}/return', [OrderController::class, 'returnOrder'])->name('orders.return');
+    Route::resource('orders', OrderController::class);
+    // ------------------------------------------------------------- //
+
+    
     // 3. Gestión de Página (CMS)
     Route::prefix('cms')->name('cms.')->group(function () {
         // Vista principal
@@ -80,31 +139,39 @@ Route::middleware([
 
         // Rutas para Portafolio
         Route::post('/portfolio', [PageManagementController::class, 'storePortfolioItem'])->name('portfolio.store');
-        Route::post('/portfolio/{item}', [PageManagementController::class, 'updatePortfolioItem'])->name('portfolio.update'); // POST para manejar archivos con _method PUT
+        Route::post('/portfolio/{item}', [PageManagementController::class, 'updatePortfolioItem'])->name('portfolio.update'); 
         Route::delete('/portfolio/{item}', [PageManagementController::class, 'destroyPortfolioItem'])->name('portfolio.destroy');
     });
 
+
     // 4. Usuarios (Gestión de usuarios del sistema)
     Route::resource('users', UserController::class);
+    Route::put('/users/{user}/status', [UserController::class, 'toggleStatus'])->name('users.status');
+    
 
-    // 5. Citas (Gestión Administrativa: Ver lista, detalles, reagendar, cancelar)
-    // Usamos el mismo controlador pero accedemos a los métodos index, show, update, etc.
+    // 5. Citas (Gestión Administrativa)
     Route::resource('appointments-admin', AppointmentController::class)
-        ->parameters(['appointments-admin' => 'appointment']) // Para que el parámetro sea {appointment}
-        ->except(['store']) // El store ya es público, aunque aquí podrías incluirlo si el admin agenda manualmente
-        ->names('appointments'); // Nombra las rutas como appointments.index, appointments.show, etc.
+        ->parameters(['appointments-admin' => 'appointment'])
+        ->except(['store'])
+        ->names('appointments');
+        
     Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::put('/appointments/{appointment}', [AppointmentController::class, 'update'])->name('appointments.update');
     Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
     
+
     // Ruta específica para cambio de estatus rápido
     Route::put('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus'])->name('appointments.update-status');
+    
 
-    Route::get('/appointments/check-availability', [AppointmentController::class, 'checkAvailability'])->name('appointments.check');
+    // NOTA: Se movió 'check-availability' arriba para que sea pública
+    // NOTA: Se movió 'disabled-days' arriba para que sea pública
+
 
     // 6. Mensajes de Contacto (Buzón de entrada)
     Route::resource('contact-messages', ContactMessageController::class)->only(['index', 'show', 'destroy'])->names('contact-messages');
     Route::put('/contact-messages/{contact_message}/mark-as-read', [ContactMessageController::class, 'markAsRead'])->name('contact-messages.mark-as-read');
+
 
     // Rutas de notificaciones
     Route::prefix('notifications')->name('notifications.')->group(function () {
@@ -115,22 +182,22 @@ Route::middleware([
         Route::post('/bulk-action', [NotificationController::class, 'bulkAction'])->name('bulk');
     });
 
+
     // ---------------------------- CONFIGURACIÓN DE AGENDA ----------------------------
     Route::get('/settings/calendar', [BusinessHourController::class, 'index'])->name('settings.calendar.index');
     Route::put('/settings/business-hours', [BusinessHourController::class, 'update'])->name('business-hours.update');
-    Route::get('/appointments/disabled-days', [AppointmentController::class, 'disabledDays'])->name('appointments.disabled-days');
     
+
     Route::post('/settings/availability-exceptions', [AvailabilityExceptionController::class, 'store'])->name('availability-exceptions.store');
     Route::delete('/settings/availability-exceptions/{exception}', [AvailabilityExceptionController::class, 'destroy'])->name('availability-exceptions.destroy');
     
-    
 });
+
 
 // eliminacion de archivo, imagen o video global
 Route::delete('/media/{media}', function (Media $media) {
     try {
-        $media->delete(); // Elimina el archivo y su registro
-
+        $media->delete(); 
         // return response()->json(['message' => 'Archivo eliminado correctamente.'], 200);
     } catch (\Exception $e) {
         return response()->json(['error' => 'Error al eliminar el archivo.'], 500);

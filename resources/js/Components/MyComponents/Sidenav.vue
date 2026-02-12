@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -14,43 +14,63 @@ const user = computed(() => page.props.auth.user);
 // Estado local (Colapsado / Expandido)
 const isCollapsed = ref(false);
 
-onMounted(() => {
-    // Verificamos si existe una preferencia guardada al montar el componente
-    const storedState = localStorage.getItem('sidebar_collapsed');
-    
-    // Solo aplicamos el colapso si la pantalla es grande (Desktop). 
-    // En móvil siempre queremos ver el menú completo por defecto.
-    if (window.innerWidth >= 768 && storedState !== null) {
-        isCollapsed.value = storedState === 'true';
-    } else {
+const checkScreenSize = () => {
+    // Si la pantalla es menor a 768px (Móvil/Tablet vertical), 
+    // FORZAMOS a que NO esté colapsado.
+    if (window.innerWidth < 768) {
         isCollapsed.value = false;
+    } else {
+        // Si es escritorio, recuperamos la preferencia del usuario
+        const storedState = localStorage.getItem('sidebar_collapsed');
+        if (storedState !== null) {
+            isCollapsed.value = storedState === 'true';
+        }
     }
+};
+
+onMounted(() => {
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', checkScreenSize);
 });
 
 const toggleCollapse = () => {
+    // No permitir colapsar si estamos en móvil (aunque el botón suele estar oculto)
+    if (window.innerWidth < 768) {
+        isCollapsed.value = false;
+        return;
+    }
+
     isCollapsed.value = !isCollapsed.value;
     
     // Guardamos la preferencia en localStorage
     localStorage.setItem('sidebar_collapsed', isCollapsed.value);
 
-    // Si colapsamos, cerramos el acordeón de settings para evitar bugs visuales al re-expandir
-    if (isCollapsed.value) settingsOpen.value = false;
+    // Si colapsamos, cerramos los acordeones para evitar bugs visuales al re-expandir
+    if (isCollapsed.value) {
+        posOpen.value = false;
+        settingsOpen.value = false;
+        webManagementOpen.value = false;
+    }
 };
 
-// Función auxiliar para detectar rutas activas (incluyendo create, edit, show)
+// Función auxiliar para detectar rutas activas
 const isActiveRoute = (routeKey) => {
     if (!routeKey) return false;
-    // 1. Coincidencia exacta
     if (route().current(routeKey)) return true;
-    // 2. Coincidencia de recurso (ej: 'users.index' -> 'users.*')
     const resourceBase = routeKey.replace('.index', '');
     return route().current(`${resourceBase}.*`);
 };
 
-// Estado para submenús (Solo para modo expandido)
+// Estados para submenús (Acordeones)
+const posOpen = ref(false);
 const settingsOpen = ref(false);
+const webManagementOpen = ref(false);
 
-// --- MENÚ ---
+// --- MENÚ PRINCIPAL (Módulos individuales) ---
 const menuItems = [
     { 
         name: 'Dashboard', 
@@ -58,36 +78,31 @@ const menuItems = [
         icon: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z', 
         show: true 
     },
+    // Productos se agrega aquí como módulo individual
     { 
-        name: 'Citas', 
-        route: 'appointments.index', 
-        icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', 
+        name: 'Productos', 
+        route: 'products.index', 
+        icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', 
         show: true 
     },
     { 
-        name: 'Mensajes', 
-        route: 'contact-messages.index', 
-        icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', 
+        name: 'Clientes', 
+        route: 'clients.index', 
+        icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', 
         show: true 
     },
-    { 
-        name: 'Punto de Venta', 
-        route: 'pos.index', 
-        icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z', 
-        show: true 
-    },
-    { 
-        name: 'Reportes', 
-        route: 'reports.index', 
-        icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 
-        show: true 
-    },
-    { 
-        name: 'Gestión de Página', 
-        route: 'cms.index', 
-        icon: 'M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9', 
-        show: true 
-    },
+    // { 
+    //     name: 'Proveedores', 
+    //     route: 'suppliers.index', 
+    //     icon: 'M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z', 
+    //     show: true 
+    // },
+    // { 
+    //     name: 'Reportes', 
+    //     route: 'reports.index', 
+    //     icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 
+    //     show: true 
+    // },
     { 
         name: 'Usuarios', 
         route: 'users.index', 
@@ -96,13 +111,34 @@ const menuItems = [
     },
 ];
 
+// --- GRUPO: PUNTO DE VENTA ---
+const posItems = [
+    { name: 'Terminal PV', route: 'pos.index', show: true },
+    { name: 'Cajas', route: 'cash-registers.index', show: true },
+    { name: 'Ventas', route: 'orders.index', show: true },
+];
+
+const isPosActive = computed(() => {
+    return posItems.some(item => isActiveRoute(item.route));
+});
+
+// --- GRUPO: GESTIÓN WEB ---
+const webManagementItems = [
+    { name: 'Citas', route: 'appointments.index', show: true },
+    { name: 'Mensajes', route: 'contact-messages.index', show: true },
+    { name: 'Gestión de Página', route: 'cms.index', show: true },
+];
+
+const isWebManagementActive = computed(() => {
+    return webManagementItems.some(item => isActiveRoute(item.route));
+});
+
+// --- GRUPO: CONFIGURACIÓN ---
 const configItems = [
     { name: 'Roles y Permisos', route: 'roles.index', show: true },
-    // Nuevo Submenú agregado
     { name: 'Calendario de citas', route: 'settings.calendar.index', show: true } 
 ];
 
-// Computed: Verifica si ALGUNA ruta de configuración está activa para iluminar el padre (incluyendo CRUD)
 const isConfigActive = computed(() => {
     return configItems.some(item => isActiveRoute(item.route));
 });
@@ -137,10 +173,11 @@ const logout = () => {
                     <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-50"></div>
                 </div>
                 
-                <!-- Texto Logo: Usamos clase css md:hidden en lugar de v-if para que siempre se vea en movil -->
+                <!-- Texto Logo -->
                 <div :class="isCollapsed ? 'md:hidden' : ''" class="flex flex-col leading-none transition-all duration-300">
                     <span class="text-2xl font-bold tracking-tight text-[#2f4b59]">
-                        ION<span class="text-slate-400">3D</span>
+                        ORION
+                        <!-- <span class="text-slate-400">3D</span> -->
                     </span>
                 </div>
             </div>
@@ -183,7 +220,6 @@ const logout = () => {
                     Ver Sitio Web
                 </span>
                 
-                <!-- Tooltip Sitio Web -->
                 <div v-if="isCollapsed" 
                         class="hidden md:flex absolute left-full ml-4 px-3 py-2 bg-[#2f4b59] text-white text-sm font-medium rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 translate-x-[-10px] group-hover:translate-x-0 z-50 whitespace-nowrap items-center">
                     Ver Sitio Web
@@ -197,6 +233,7 @@ const logout = () => {
             </div>
             <div v-if="isCollapsed" class="hidden md:block h-4 border-b border-slate-100 mb-4 mx-2"></div> 
 
+            <!-- ITEMS PRINCIPALES (Loop) -->
             <template v-for="(item, index) in menuItems" :key="index">
                 <Link 
                     v-if="item.show"
@@ -216,12 +253,10 @@ const logout = () => {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
                     </svg>
 
-                    <!-- Texto: Oculto solo en desktop colapsado (md:hidden) -->
                     <span :class="isCollapsed ? 'md:hidden' : ''" class="font-medium whitespace-nowrap text-sm">
                         {{ item.name }}
                     </span>
                     
-                    <!-- TOOLTIP (Solo desktop) -->
                     <div v-if="isCollapsed" 
                          class="hidden md:flex absolute left-full ml-4 px-3 py-2 bg-[#2f4b59] text-white text-sm font-medium rounded-lg shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 translate-x-[-10px] group-hover:translate-x-0 z-50 whitespace-nowrap items-center">
                         {{ item.name }}
@@ -230,24 +265,158 @@ const logout = () => {
                 </Link>
             </template>
 
+             <!-- 
+                NUEVO GRUPO: PUNTO DE VENTA 
+            -->
+            <div class="group relative">
+                <button 
+                    @click="(!isCollapsed || window.innerWidth < 768) ? (posOpen = !posOpen) : null"
+                    class="w-full flex items-center rounded-xl transition-all duration-300"
+                    :class="[
+                        isCollapsed ? 'justify-center p-3' : 'justify-between px-3 py-3',
+                        isPosActive 
+                            ? 'bg-gradient-to-r from-[#2f4b59] to-[#507588] text-white shadow-lg shadow-[#2f4b59]/25' 
+                            : (posOpen && (!isCollapsed || window.innerWidth < 768) ? 'bg-slate-50 text-[#2f4b59]' : 'text-slate-500 hover:bg-gradient-to-r hover:from-slate-200 hover:to-slate-50 hover:text-[#2f4b59]')
+                    ]"
+                >
+                    <div class="flex items-center gap-3">
+                        <!-- Icono Store/POS -->
+                        <svg xmlns="http://www.w3.org/2000/svg" 
+                             :class="isCollapsed ? 'h-6 w-6' : 'h-[22px] w-[22px] min-w-[22px]'"
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                             <!-- Icono de Tienda/POS -->
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span :class="isCollapsed ? 'md:hidden' : ''" class="font-medium whitespace-nowrap text-sm">Punto de Venta</span>
+                    </div>
+                </button>
+
+                <!-- Submenú Expandido -->
+                <div v-show="posOpen && (!isCollapsed || window.innerWidth < 768)" class="mt-1 space-y-1 overflow-hidden transition-all duration-300">
+                    <Link 
+                        v-for="(subItem, subIndex) in posItems" 
+                        :key="subIndex"
+                        :href="route(subItem.route)"
+                        class="block pl-12 py-2 text-sm font-medium transition-all duration-200 border-r-2"
+                        :class="[
+                             isActiveRoute(subItem.route)
+                                ? 'text-[#2f4b59] bg-slate-50 border-[#2f4b59]' 
+                                : 'text-slate-400 hover:text-[#2f4b59] hover:translate-x-1 border-transparent'
+                        ]"
+                    >
+                        {{ subItem.name }}
+                    </Link>
+                </div>
+
+                <!-- Submenú Colapsado (Solo Desktop) -->
+                <div v-if="isCollapsed" 
+                     class="hidden md:block absolute top-0 left-full ml-4 w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-x-[-10px] group-hover:translate-x-0 z-50">
+                    <div class="px-3 py-2 text-xs font-bold text-slate-400 uppercase border-b border-slate-100 mb-1">
+                        Punto de Venta
+                    </div>
+                    <Link 
+                        v-for="(subItem, subIndex) in posItems" 
+                        :key="subIndex"
+                        :href="route(subItem.route)"
+                        class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors"
+                        :class="[
+                            isActiveRoute(subItem.route)
+                                ? 'bg-slate-100 text-[#2f4b59] font-bold'
+                                : 'text-slate-600 hover:text-[#2f4b59] hover:bg-slate-50'
+                        ]"
+                    >
+                        <span class="w-1.5 h-1.5 rounded-full" 
+                              :class="isActiveRoute(subItem.route) ? 'bg-[#2f4b59]' : 'bg-slate-300'">
+                        </span>
+                        {{ subItem.name }}
+                    </Link>
+                    <div class="absolute left-0 top-6 -translate-x-1.5 w-3 h-3 bg-white border-l border-b border-slate-100 rotate-45"></div>
+                </div>
+            </div>
+
             <!-- Separador -->
             <div class="my-4 border-t border-slate-100 mx-2"></div>
 
             <!-- 
-                CONFIGURACIÓN (GRUPO)
+                GRUPO: GESTIÓN WEB 
             -->
             <div class="group relative">
-                
-                <!-- Botón Principal Configuración -->
+                <button 
+                    @click="(!isCollapsed || window.innerWidth < 768) ? (webManagementOpen = !webManagementOpen) : null"
+                    class="w-full flex items-center rounded-xl transition-all duration-300"
+                    :class="[
+                        isCollapsed ? 'justify-center p-3' : 'justify-between px-3 py-3',
+                        isWebManagementActive 
+                            ? 'bg-gradient-to-r from-[#2f4b59] to-[#507588] text-white shadow-lg shadow-[#2f4b59]/25' 
+                            : (webManagementOpen && (!isCollapsed || window.innerWidth < 768) ? 'bg-slate-50 text-[#2f4b59]' : 'text-slate-500 hover:bg-gradient-to-r hover:from-slate-200 hover:to-slate-50 hover:text-[#2f4b59]')
+                    ]"
+                >
+                    <div class="flex items-center gap-3">
+                        <!-- Icono Mundo/Web -->
+                        <svg xmlns="http://www.w3.org/2000/svg" 
+                             :class="isCollapsed ? 'h-6 w-6' : 'h-[22px] w-[22px] min-w-[22px]'"
+                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                        <span :class="isCollapsed ? 'md:hidden' : ''" class="font-medium whitespace-nowrap text-sm">Página pública</span>
+                    </div>
+                </button>
+
+                <!-- Submenú Expandido -->
+                <div v-show="webManagementOpen && (!isCollapsed || window.innerWidth < 768)" class="mt-1 space-y-1 overflow-hidden transition-all duration-300">
+                    <Link 
+                        v-for="(subItem, subIndex) in webManagementItems" 
+                        :key="subIndex"
+                        :href="route(subItem.route)"
+                        class="block pl-12 py-2 text-sm font-medium transition-all duration-200 border-r-2"
+                        :class="[
+                             isActiveRoute(subItem.route)
+                                ? 'text-[#2f4b59] bg-slate-50 border-[#2f4b59]' 
+                                : 'text-slate-400 hover:text-[#2f4b59] hover:translate-x-1 border-transparent'
+                        ]"
+                    >
+                        {{ subItem.name }}
+                    </Link>
+                </div>
+
+                <!-- Submenú Colapsado -->
+                <div v-if="isCollapsed" 
+                     class="hidden md:block absolute top-0 left-full ml-4 w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-x-[-10px] group-hover:translate-x-0 z-50">
+                    <div class="px-3 py-2 text-xs font-bold text-slate-400 uppercase border-b border-slate-100 mb-1">
+                        Gestión Web
+                    </div>
+                    <Link 
+                        v-for="(subItem, subIndex) in webManagementItems" 
+                        :key="subIndex"
+                        :href="route(subItem.route)"
+                        class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors"
+                        :class="[
+                            isActiveRoute(subItem.route)
+                                ? 'bg-slate-100 text-[#2f4b59] font-bold'
+                                : 'text-slate-600 hover:text-[#2f4b59] hover:bg-slate-50'
+                        ]"
+                    >
+                        <span class="w-1.5 h-1.5 rounded-full" 
+                              :class="isActiveRoute(subItem.route) ? 'bg-[#2f4b59]' : 'bg-slate-300'">
+                        </span>
+                        {{ subItem.name }}
+                    </Link>
+                    <div class="absolute left-0 top-6 -translate-x-1.5 w-3 h-3 bg-white border-l border-b border-slate-100 rotate-45"></div>
+                </div>
+            </div>
+
+            <!-- 
+                GRUPO: CONFIGURACIÓN
+            -->
+            <div class="group relative mt-2">
                 <button 
                     @click="(!isCollapsed || window.innerWidth < 768) ? (settingsOpen = !settingsOpen) : null"
                     class="w-full flex items-center rounded-xl transition-all duration-300"
                     :class="[
                         isCollapsed ? 'justify-center p-3' : 'justify-between px-3 py-3',
-                        // Lógica de estilos activa/inactiva
                         isConfigActive 
-                            ? 'bg-gradient-to-r from-[#2f4b59] to-[#507588] text-white shadow-lg shadow-[#2f4b59]/25' // Activo (Hijo seleccionado)
-                            : (settingsOpen && (!isCollapsed || window.innerWidth < 768) ? 'bg-slate-50 text-[#2f4b59]' : 'text-slate-500 hover:bg-gradient-to-r hover:from-slate-200 hover:to-slate-50 hover:text-[#2f4b59]') // Inactivo pero abierto o cerrado
+                            ? 'bg-gradient-to-r from-[#2f4b59] to-[#507588] text-white shadow-lg shadow-[#2f4b59]/25' 
+                            : (settingsOpen && (!isCollapsed || window.innerWidth < 768) ? 'bg-slate-50 text-[#2f4b59]' : 'text-slate-500 hover:bg-gradient-to-r hover:from-slate-200 hover:to-slate-50 hover:text-[#2f4b59]')
                     ]"
                 >
                     <div class="flex items-center gap-3">
@@ -259,13 +428,9 @@ const logout = () => {
                         </svg>
                         <span :class="isCollapsed ? 'md:hidden' : ''" class="font-medium whitespace-nowrap text-sm">Configuración</span>
                     </div>
-                    <!-- Chevron -->
-                    <!-- <svg :class="isCollapsed ? 'md:hidden' : ''" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform duration-200" :class="{'rotate-90': settingsOpen}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg> -->
                 </button>
 
-                <!-- Submenú: MODO EXPANDIDO (Acordeón) & MÓVIL (Siempre se comporta como expandido) -->
+                <!-- Submenú Configuración Expandido -->
                 <div v-show="settingsOpen && (!isCollapsed || window.innerWidth < 768)" class="mt-1 space-y-1 overflow-hidden transition-all duration-300">
                     <Link 
                         v-for="(subItem, subIndex) in configItems" 
@@ -282,14 +447,12 @@ const logout = () => {
                     </Link>
                 </div>
 
-                <!-- Submenú: MODO COLAPSADO DESKTOP (Dropdown Flotante) -->
+                <!-- Submenú Configuración Colapsado -->
                 <div v-if="isCollapsed" 
                      class="hidden md:block absolute top-0 left-full ml-4 w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-x-[-10px] group-hover:translate-x-0 z-50">
-                    
                     <div class="px-3 py-2 text-xs font-bold text-slate-400 uppercase border-b border-slate-100 mb-1">
                         Configuración
                     </div>
-                    
                     <Link 
                         v-for="(subItem, subIndex) in configItems" 
                         :key="subIndex"
@@ -306,7 +469,6 @@ const logout = () => {
                         </span>
                         {{ subItem.name }}
                     </Link>
-
                     <div class="absolute left-0 top-6 -translate-x-1.5 w-3 h-3 bg-white border-l border-b border-slate-100 rotate-45"></div>
                 </div>
             </div>
@@ -314,24 +476,21 @@ const logout = () => {
 
         <!-- 3. FOOTER / USER PROFILE -->
         <div class="p-4 mt-auto border-t border-slate-100 bg-slate-50/50 backdrop-blur-sm">
-            
+            <!-- (Sin cambios en el footer) -->
             <Link :href="route('profile.show')" 
                   class="flex items-center gap-3 p-2 rounded-2xl hover:bg-white hover:shadow-md transition-all duration-300 group cursor-pointer" 
                   :class="{'justify-center': isCollapsed}">
                 
-                <!-- Avatar -->
                 <div class="relative shrink-0">
                      <img class="h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm group-hover:border-[#2f4b59] transition-colors" :src="user.profile_photo_url" :alt="user.name">
                      <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                 </div>
 
-                <!-- Info -->
                 <div :class="isCollapsed ? 'md:hidden' : ''" class="flex-1 min-w-0 overflow-hidden text-left">
                     <p class="text-sm font-bold text-slate-700 truncate group-hover:text-[#2f4b59]">{{ user.name }}</p>
                     <p class="text-xs text-slate-400 truncate">Ver Perfil</p>
                 </div>
                 
-                <!-- Icono Chevron -->
                 <div :class="isCollapsed ? 'md:hidden' : ''">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-300 group-hover:text-[#2f4b59] group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -339,7 +498,6 @@ const logout = () => {
                 </div>
             </Link>
 
-            <!-- Logout Extendido -->
             <div :class="isCollapsed ? 'md:hidden' : ''" class="mt-2">
                  <form @submit.prevent="logout">
                     <button type="submit" class="w-full flex items-center justify-center gap-2 p-2.5 text-xs font-bold text-slate-400 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 rounded-xl transition-all uppercase tracking-wider shadow-sm hover:shadow-red-200">
@@ -351,7 +509,6 @@ const logout = () => {
                 </form>
             </div>
 
-            <!-- Logout Colapsado (Solo icono visible en desktop colapsado) -->
              <div v-if="isCollapsed" class="hidden md:block mt-2">
                 <form @submit.prevent="logout" class="flex justify-center">
                    <button type="submit" class="flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Cerrar Sesión">

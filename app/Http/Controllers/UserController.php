@@ -136,4 +136,22 @@ class UserController extends Controller
         return redirect()->route('users.index')
             ->with('success', 'Usuario eliminado correctamente.');
     }
+
+    /**
+     * Toggle the status (is_active) of the specified user.
+     */
+    public function toggleStatus(User $user)
+    {
+        // Prevenir desactivarse a sí mismo por seguridad
+        if (auth()->id() === $user->id) {
+            return back()->with('error', 'No puedes desactivar tu propia cuenta.');
+        }
+
+        $user->is_active = !$user->is_active;
+        $user->save();
+
+        $status = $user->is_active ? 'activado' : 'desactivado';
+
+        return back()->with('success', "Usuario {$status} correctamente.");
+    }
 }

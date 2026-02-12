@@ -12,7 +12,8 @@ import { Link } from '@inertiajs/vue3';
         </div>
         <div class="flex flex-col leading-none transition-all duration-300">
             <span class="text-2xl font-bold tracking-tight text-[#2f4b59]">
-                ION<span class="text-slate-400">3D</span>
+                ORION
+                <!-- <span class="text-slate-400">3D</span> -->
             </span>
         </div>
     </Link>

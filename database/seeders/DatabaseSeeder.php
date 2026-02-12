@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\CashRegister;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -38,5 +39,12 @@ class DatabaseSeeder extends Seeder
 
         // Ejecutar el seeder de horas y dias de calendario (citas)
         $this->call(BusinessHourSeeder::class);
+
+        // Crear Caja Registradora Principal
+        CashRegister::create([
+            'name' => 'Caja Principal',
+            'location' => 'Mostrador Principal',
+            'is_active' => true,
+        ]);
     }
 }

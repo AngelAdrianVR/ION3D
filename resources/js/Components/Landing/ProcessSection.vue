@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 
 const activeStep = ref(0);
 
+// Datos actualizados con los nuevos pasos (3 y 4)
 const steps = [
   { 
     id: 1, 
@@ -11,7 +12,6 @@ const steps = [
     shortDesc: 'Reserva tu sesión fácilmente.',
     description: 'Selecciona el paquete ideal para ti y elige el horario que mejor te convenga en nuestro calendario en línea. Recibirás una confirmación inmediata.',
     techSpecs: ['Reserva 24/7', 'Asesoría Previa', 'Confirmación Instantánea'],
-    // Imagen: Persona agendando / Calendario
     image: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&q=80&w=1000'
   },
   { 
@@ -21,28 +21,26 @@ const steps = [
     shortDesc: 'Asiste a nuestro estudio.',
     description: 'Ven a nuestra cabina fotogramétrica. Recomendamos usar ropa con texturas, patrones o colores mate. Evita el color negro absoluto, materiales brillantes o transparencias para una captura perfecta.',
     techSpecs: ['Evitar Ropa Negra', 'Sin Materiales Brillantes', 'Captura en 1/1000s'],
-    // Imagen: Estudio / Cámaras
     image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=1000'
   },
   { 
     id: 3, 
-    title: 'Impresión y Acabado', 
-    duration: '3-5 Días', 
-    shortDesc: 'Materialización de alta fidelidad.',
-    description: 'Procesamos tu gemelo digital y lo imprimimos capa por capa con tecnología Full Color. Posteriormente, nuestros artesanos realizan el curado y sellado manual para garantizar durabilidad.',
-    techSpecs: ['Impresión CJP/SLA', 'Millones de Colores', 'Post-proceso Manual'],
-    // Imagen: Impresión 3D
-    image: 'https://images.unsplash.com/photo-1631541909061-71e349d1f203?auto=format&fit=crop&q=80&w=1000'
+    title: 'Personaliza', 
+    duration: '1-2 Días', 
+    shortDesc: 'Hazlo único.',
+    description: 'Aquí ocurre la magia digital. Puedes personalizar tu gemelo digital cambiando tu vestimenta, agregando accesorios únicos o integrando el modelo en escenas temáticas antes de la impresión.',
+    techSpecs: ['Cambio de Ropa', 'Accesorios 3D', 'Escenas Virtuales'],
+    // Imagen sugerida: Edición digital / Software
+    image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=1000'
   },
   { 
     id: 4, 
-    title: 'Entrega Final', 
-    duration: 'Inmediata', 
-    shortDesc: 'Recibe tu figura terminada.',
-    description: 'Tu figura está lista. Puedes recogerla en nuestro estudio o solicitar el envío asegurado a tu domicilio. Se entrega en un empaque de protección premium.',
-    techSpecs: ['Empaque Seguro', 'Envío Nacional', 'Certificado Digital'],
-    // Imagen: Entrega / Caja / Figura
-    image: 'https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&q=80&w=1000'
+    title: 'Impresión 3D', 
+    duration: 'Entrega', 
+    shortDesc: 'Recibe tu figura.',
+    description: 'Una vez personalizado y aprobado, imprimimos tu figura. Te notificaremos cuando esté lista para que pases a recogerla al estudio o te la enviamos asegurada a tu domicilio.',
+    techSpecs: ['Pickup en Estudio', 'Envío a Domicilio', 'Protección Premium'],
+    image: 'https://images.unsplash.com/photo-1631541909061-71e349d1f203?auto=format&fit=crop&q=80&w=1000'
   },
 ];
 

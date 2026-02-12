@@ -130,7 +130,7 @@ const submit = () => {
         <!-- Footer simple -->
         <div class="mt-10 text-center border-t border-slate-100 pt-6">
             <p class="text-[10px] text-slate-400 font-mono">
-                SYSTEM ID: ION-AUTH-V2
+                SYSTEM ID: ORION-AUTH-V2
             </p>
         </div>
     </AuthenticationCard>
