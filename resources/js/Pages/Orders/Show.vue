@@ -294,7 +294,7 @@ const columns = [
     render(row) {
         // Si es producto, link al detalle. Si es servicio (ServicePackage), texto simple o link si existiera ruta
         const isProduct = row.purchasable_type === 'App\Models\Product';
-        const name = row.purchasable?.name || row.purchasable?.title || 'Ítem Desconocido';
+        const name = row.purchasable?.name || row.purchasable?.title || 'Ítem Desconocido o eliminado';
         
         if (isProduct) {
              return h(Link, { 

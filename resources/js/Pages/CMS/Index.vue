@@ -1,6 +1,6 @@
 <template>
   <AppLayout title="Gestión de Contenido">
-    <template #header>
+    <template v-slot:header>
       <h2 class="font-bold text-3xl text-gray-900 tracking-tight">
         Gestión Web
       </h2>
@@ -16,8 +16,8 @@
               
               <!-- ================= TAB 1: PAQUETES ================= -->
               <n-tab-pane name="packages" tab="Paquetes">
-                <div class="flex justify-end mb-6">
-                  <!-- FIX: Asegurar paréntesis explícitos para no pasar el evento click -->
+                <!-- Botón Nuevo: Requiere services.manage -->
+                <div class="flex justify-end mb-6" v-if="can('services.manage')">
                   <button @click="openPackageModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2 text-sm md:text-base">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                     <span class="hidden md:inline">Nuevo Paquete</span>
@@ -61,7 +61,8 @@
 
                     <p class="text-sm text-gray-500 line-clamp-2 flex-grow">{{ pkg.description }}</p>
                     
-                    <div class="flex items-center gap-2 pt-4 border-t border-gray-50 mt-4">
+                    <!-- Botones de Acción: Requieren services.manage -->
+                    <div class="flex items-center gap-2 pt-4 border-t border-gray-50 mt-4" v-if="can('services.manage')">
                       <button @click="openPackageModal(pkg)" class="flex-1 py-2 rounded-lg bg-gray-50 text-gray-600 font-medium text-sm hover:bg-gray-100 transition-colors">Editar</button>
                       <button @click="deletePackage(pkg.id)" class="px-3 py-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
@@ -73,7 +74,8 @@
 
               <!-- ================= TAB 2: PORTAFOLIO ================= -->
               <n-tab-pane name="portfolio" tab="Portafolio">
-                <div class="flex justify-end mb-6">
+                <!-- Botón Nuevo: Requiere portfolio.manage -->
+                <div class="flex justify-end mb-6" v-if="can('portfolio.manage')">
                   <button @click="openPortfolioModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg shadow-indigo-500/30 transition-all flex items-center gap-2 text-sm md:text-base">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" /></svg>
                     <span class="hidden md:inline">Nuevo Item</span>
@@ -98,10 +100,10 @@
                        </div>
                     </div>
                     
-                    <!-- Acciones Rápidas -->
+                    <!-- Acciones Rápidas: Requieren portfolio.manage -->
                     <div class="p-3 bg-white">
                         <h4 class="font-bold text-gray-800 text-sm truncate">{{ item.title }}</h4>
-                        <div class="flex justify-between items-center mt-2">
+                        <div class="flex justify-between items-center mt-2" v-if="can('portfolio.manage')">
                             <button @click="openPortfolioModal(item)" class="text-xs font-bold text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded">EDITAR</button>
                             <button @click="deletePortfolio(item.id)" class="text-xs font-bold text-red-500 hover:bg-red-50 px-2 py-1 rounded">BORRAR</button>
                         </div>
@@ -324,7 +326,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useForm, router } from '@inertiajs/vue3';
+import { useForm, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { NConfigProvider, NTabs, NTabPane, NModal, NInput, NInputNumber, NSwitch, NDynamicInput, NSelect, NTag } from 'naive-ui';
 
@@ -332,6 +334,10 @@ const props = defineProps({
   packages: Array,
   portfolio: Array,
 });
+
+// ================= PERMISOS =================
+const page = usePage();
+const can = (permission) => page.props.auth?.permissions?.includes(permission);
 
 // ================= ESTADO Y LÓGICA: LIGHTBOX =================
 const showLightbox = ref(false);
@@ -397,6 +403,8 @@ const formatPrice = (value) => {
 };
 
 const openPackageModal = (pkg = null) => {
+  if (!can('services.manage')) return; // Check adicional de seguridad
+
   packageForm.reset();
   packageForm.clearErrors();
   packageForm.images = []; 
@@ -441,6 +449,8 @@ const openPackageModal = (pkg = null) => {
 };
 
 const submitPackage = () => {
+  if (!can('services.manage')) return;
+
   // FIX: Verificación doble de ID para evitar error 405 (PUT a url sin ID)
   if (isEditingPackage.value && packageForm.id) {
     // EDITAR: Usamos POST con _method: PUT para soportar archivos
@@ -465,6 +475,7 @@ const submitPackage = () => {
 };
 
 const deletePackage = (id) => {
+  if (!can('services.manage')) return;
   if(confirm('¿Estás seguro de eliminar este paquete?')) {
     router.delete(route('cms.packages.destroy', id));
   }
@@ -472,6 +483,7 @@ const deletePackage = (id) => {
 
 // Eliminar imagen individualmente
 const deleteExistingMedia = (mediaId, index) => {
+    if (!can('services.manage')) return;
     if(confirm('¿Eliminar esta imagen permanentemente?')) {
         router.delete(route('media.delete-file', mediaId), {
             preserveScroll: true,
@@ -512,6 +524,8 @@ const handleFileUpload = (e) => {
 };
 
 const openPortfolioModal = (item = null) => {
+  if (!can('portfolio.manage')) return;
+
   portfolioForm.reset();
   portfolioForm.clearErrors();
   portfolioFilePreview.value = null;
@@ -533,6 +547,8 @@ const openPortfolioModal = (item = null) => {
 };
 
 const submitPortfolio = () => {
+  if (!can('portfolio.manage')) return;
+
   if (isEditingPortfolio.value && portfolioForm.id) {
     // CORRECCIÓN: Eliminamos el transform con _method: 'PUT'
     // El error 405 indica que la ruta espera POST, no PUT.
@@ -551,6 +567,7 @@ const submitPortfolio = () => {
 };
 
 const deletePortfolio = (id) => {
+  if (!can('portfolio.manage')) return;
   if(confirm('¿Eliminar este item del portafolio?')) {
     router.delete(route('cms.portfolio.destroy', id));
   }

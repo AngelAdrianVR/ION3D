@@ -24,7 +24,8 @@
             </n-input>
           </n-config-provider>
 
-          <Link :href="route('clients.create')">
+          <!-- PERMISO: Crear Cliente -->
+          <Link v-if="can('clients.create')" :href="route('clients.create')">
             <button class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-full text-sm font-semibold shadow-lg shadow-blue-500/30 transition-all transform active:scale-95 flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -75,8 +76,8 @@
                             <span class="text-xs font-mono text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">{{ client.tax_id || 'S/RFC' }}</span>
                         </div>
                         
-                        <!-- Barra de Crédito Móvil -->
-                        <div class="mt-3 mb-1">
+                        <!-- Barra de Crédito Móvil (PERMISO: clients.debt) -->
+                        <div v-if="can('clients.debt')" class="mt-3 mb-1">
                              <div class="flex justify-between text-xs mb-1">
                                 <span class="text-gray-500">Deuda: <span class="font-bold text-gray-900">{{ formatCurrency(client.current_balance) }}</span></span>
                                 <span class="text-gray-400">Límite: {{ formatCurrency(client.credit_limit) }}</span>
@@ -93,17 +94,21 @@
 
                 <!-- Footer Acciones Móvil -->
                 <div class="mt-4 flex items-center justify-end gap-3 border-t border-gray-50 pt-3">
+                    <!-- PERMISO: clients.payment -->
                     <button 
+                      v-if="can('clients.payment')"
                       @click.stop="openPaymentModal(client)"
                       class="px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-semibold flex items-center gap-1 hover:bg-green-100 transition-colors"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       Abonar
                     </button>
-                     <button @click.stop="editClient(client)" class="p-2 bg-gray-50 text-gray-600 rounded-full hover:bg-blue-50 hover:text-blue-600">
+                     <!-- PERMISO: clients.edit -->
+                     <button v-if="can('clients.edit')" @click.stop="editClient(client)" class="p-2 bg-gray-50 text-gray-600 rounded-full hover:bg-blue-50 hover:text-blue-600">
                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                      </button>
-                     <button @click.stop="confirmDelete(client)" class="p-2 bg-gray-50 text-gray-600 rounded-full hover:bg-red-50 hover:text-red-600">
+                     <!-- PERMISO: clients.delete -->
+                     <button v-if="can('clients.delete')" @click.stop="confirmDelete(client)" class="p-2 bg-gray-50 text-gray-600 rounded-full hover:bg-red-50 hover:text-red-600">
                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                      </button>
                 </div>
@@ -220,12 +225,17 @@
 
 <script setup>
 import { ref, watch, h } from 'vue';
-import { router, Link, useForm } from '@inertiajs/vue3';
+import { router, Link, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { 
   NConfigProvider, NDataTable, NInput, NTag, NPagination, NModal, NTooltip 
 } from 'naive-ui';
 import { debounce } from 'lodash';
+
+// 1. INICIALIZAR PERMISOS
+const page = usePage();
+// Helper para verificar permisos
+const can = (permission) => page.props.auth.permissions.includes(permission);
 
 const props = defineProps({
   clients: Object,
@@ -234,6 +244,12 @@ const props = defineProps({
 
 const search = ref(props.filters.search || '');
 const currentPage = ref(props.clients.current_page);
+
+// CORRECCIÓN BUG PAGINACIÓN
+// Si Inertia actualiza props.clients (al cambiar página), actualizamos currentPage visualmente
+watch(() => props.clients.current_page, (val) => {
+    currentPage.value = val;
+});
 
 // Modales Estado
 const showDeleteModal = ref(false);
@@ -280,96 +296,124 @@ const IconCash = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', class: 'h
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' })
 ]);
 
-// COLUMNAS TABLA
-const columns = [
-  {
-    title: 'CLIENTE',
-    key: 'name',
-    width: 280,
-    render(row) {
-      return h('div', { class: 'flex items-center gap-3 py-1' }, [
-        h('div', { 
-            class: 'h-10 w-10 rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center text-blue-600 font-bold text-xs border border-white shadow-sm' 
-        }, getInitials(row.name)),
-        h('div', { class: 'flex flex-col' }, [
-            h('span', { class: 'font-bold text-gray-900 text-sm' }, row.name),
-            h('span', { class: 'text-xs text-gray-400 font-mono' }, row.email || row.phone || 'Sin contacto'),
-        ])
-      ]);
-    }
-  },
-  {
-    title: 'RFC / ID',
-    key: 'tax_id',
-    width: 140,
-    render(row) {
-      return row.tax_id 
-        ? h(NTag, { bordered: false, type: 'default', size: 'small', class: 'font-mono' }, { default: () => row.tax_id }) 
-        : h('span', { class: 'text-gray-300 text-xs italic' }, '---');
-    }
-  },
-  {
-    title: 'UBICACIÓN',
-    key: 'location',
-    width: 150,
-    render(row) {
-        if(!row.municipality && !row.state) return h('span', { class: 'text-gray-300 text-xs' }, 'N/A');
-        return h('div', { class: 'flex flex-col text-xs text-gray-600' }, [
-            h('span', { class: 'font-semibold' }, row.municipality),
-            h('span', { class: 'text-gray-400' }, row.state),
-        ]);
-    }
-  },
-  {
-    title: 'CRÉDITO Y SALDO',
-    key: 'balance',
-    width: 220,
-    render(row) {
-        // Barra de progreso manual usando divs
-        return h('div', { class: 'w-full pr-4' }, [
-            h('div', { class: 'flex justify-between text-xs mb-1' }, [
-                h('span', { class: 'text-gray-500' }, 'Deuda:'),
-                h('span', { class: `font-bold ${row.current_balance > 0 ? 'text-red-600' : 'text-green-600'}` }, formatCurrency(row.current_balance))
-            ]),
-            // Contenedor barra
-            h('div', { class: 'w-full bg-gray-100 rounded-full h-1.5 overflow-hidden' }, [
+// CREAR COLUMNAS DINÁMICAMENTE (Según Permisos)
+const createColumns = () => {
+    const list = [
+        {
+            title: 'CLIENTE',
+            key: 'name',
+            width: 280,
+            render(row) {
+            return h('div', { class: 'flex items-center gap-3 py-1' }, [
                 h('div', { 
-                    class: `h-full rounded-full ${getProgressColor(row.credit_usage_percent)}`,
-                    style: { width: `${Math.min(row.credit_usage_percent, 100)}%` }
-                })
-            ]),
-            h('div', { class: 'flex justify-end text-[10px] text-gray-400 mt-0.5' }, `Límite: ${formatCurrency(row.credit_limit)}`)
-        ]);
+                    class: 'h-10 w-10 rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center text-blue-600 font-bold text-xs border border-white shadow-sm' 
+                }, getInitials(row.name)),
+                h('div', { class: 'flex flex-col' }, [
+                    h('span', { class: 'font-bold text-gray-900 text-sm' }, row.name),
+                    h('span', { class: 'text-xs text-gray-400 font-mono' }, row.email || row.phone || 'Sin contacto'),
+                ])
+            ]);
+            }
+        },
+        {
+            title: 'RFC / ID',
+            key: 'tax_id',
+            width: 140,
+            render(row) {
+            return row.tax_id 
+                ? h(NTag, { bordered: false, type: 'default', size: 'small', class: 'font-mono' }, { default: () => row.tax_id }) 
+                : h('span', { class: 'text-gray-300 text-xs italic' }, '---');
+            }
+        },
+        {
+            title: 'UBICACIÓN',
+            key: 'location',
+            width: 150,
+            render(row) {
+                if(!row.municipality && !row.state) return h('span', { class: 'text-gray-300 text-xs' }, 'N/A');
+                return h('div', { class: 'flex flex-col text-xs text-gray-600' }, [
+                    h('span', { class: 'font-semibold' }, row.municipality),
+                    h('span', { class: 'text-gray-400' }, row.state),
+                ]);
+            }
+        },
+    ];
+
+    // COLUMNA: CRÉDITO Y SALDO (Solo si tiene permiso clients.debt)
+    if (can('clients.debt')) {
+        list.push({
+            title: 'CRÉDITO Y SALDO',
+            key: 'balance',
+            width: 220,
+            render(row) {
+                // Barra de progreso manual usando divs
+                return h('div', { class: 'w-full pr-4' }, [
+                    h('div', { class: 'flex justify-between text-xs mb-1' }, [
+                        h('span', { class: 'text-gray-500' }, 'Deuda:'),
+                        h('span', { class: `font-bold ${row.current_balance > 0 ? 'text-red-600' : 'text-green-600'}` }, formatCurrency(row.current_balance))
+                    ]),
+                    // Contenedor barra
+                    h('div', { class: 'w-full bg-gray-100 rounded-full h-1.5 overflow-hidden' }, [
+                        h('div', { 
+                            class: `h-full rounded-full ${getProgressColor(row.credit_usage_percent)}`,
+                            style: { width: `${Math.min(row.credit_usage_percent, 100)}%` }
+                        })
+                    ]),
+                    h('div', { class: 'flex justify-end text-[10px] text-gray-400 mt-0.5' }, `Límite: ${formatCurrency(row.credit_limit)}`)
+                ]);
+            }
+        });
     }
-  },
-  {
-    title: '',
-    key: 'actions',
-    width: 130,
-    render(row) {
-      return h('div', { class: 'flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300' }, [
-        // Botón Pagar
-        h(NTooltip, { trigger: 'hover' }, {
-            trigger: () => h('button', { 
-                class: 'w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition-all shadow-sm',
-                onClick: (e) => { e.stopPropagation(); openPaymentModal(row); }
-            }, [h(IconCash)]),
-            default: () => 'Registrar Abono'
-        }),
-        // Botón Editar
-        h('button', { 
-          class: 'w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm',
-          onClick: (e) => { e.stopPropagation(); editClient(row); }
-        }, [h(IconEdit)]),
-        // Botón Eliminar
-        h('button', { 
-          class: 'w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm',
-          onClick: (e) => { e.stopPropagation(); confirmDelete(row); }
-        }, [h(IconTrash)])
-      ]);
-    }
-  }
-];
+
+    // COLUMNA ACCIONES
+    list.push({
+        title: '',
+        key: 'actions',
+        width: 130,
+        render(row) {
+            const actions = [];
+
+            // 1. Botón Pagar (clients.payment)
+            if (can('clients.payment')) {
+                actions.push(
+                    h(NTooltip, { trigger: 'hover' }, {
+                        trigger: () => h('button', { 
+                            class: 'w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition-all shadow-sm',
+                            onClick: (e) => { e.stopPropagation(); openPaymentModal(row); }
+                        }, [h(IconCash)]),
+                        default: () => 'Registrar Abono'
+                    })
+                );
+            }
+
+            // 2. Botón Editar (clients.edit)
+            if (can('clients.edit')) {
+                actions.push(
+                    h('button', { 
+                        class: 'w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm',
+                        onClick: (e) => { e.stopPropagation(); editClient(row); }
+                    }, [h(IconEdit)])
+                );
+            }
+
+            // 3. Botón Eliminar (clients.delete)
+            if (can('clients.delete')) {
+                actions.push(
+                    h('button', { 
+                        class: 'w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm',
+                        onClick: (e) => { e.stopPropagation(); confirmDelete(row); }
+                    }, [h(IconTrash)])
+                );
+            }
+
+            return h('div', { class: 'flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300' }, actions);
+        }
+    });
+
+    return list;
+};
+
+const columns = createColumns();
 
 const rowProps = (row) => {
   return {
@@ -379,8 +423,17 @@ const rowProps = (row) => {
 };
 
 // ACTIONS
-const goToShow = (client) => router.get(route('clients.show', client.id));
-const editClient = (client) => router.get(route('clients.edit', client.id));
+const goToShow = (client) => {
+    // Si tienes un permiso para "ver detalle" podrías checarlo aquí, 
+    // comúnmente 'clients.index' o 'clients.show' cubre esto.
+    if(can('clients.index')) {
+        router.get(route('clients.show', client.id));
+    }
+};
+
+const editClient = (client) => {
+    if(can('clients.edit')) router.get(route('clients.edit', client.id));
+};
 
 const confirmDelete = (client) => {
   clientToDelete.value = client;

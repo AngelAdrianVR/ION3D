@@ -7,6 +7,7 @@ use App\Http\Controllers\CashRegisterController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientLedgerController;
 use App\Http\Controllers\ContactMessageController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
@@ -67,9 +68,8 @@ Route::middleware([
 ])->group(function () {
     
     // 0. Dashboard Principal
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard/Index');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
 
     // ---------------------------- CONFIGURACIÓN / ROLES ----------------------------
     Route::resource('roles', RoleController::class)->except(['show', 'create', 'edit']);
@@ -147,7 +147,7 @@ Route::middleware([
     // 4. Usuarios (Gestión de usuarios del sistema)
     Route::resource('users', UserController::class);
     Route::put('/users/{user}/status', [UserController::class, 'toggleStatus'])->name('users.status');
-    
+
 
     // 5. Citas (Gestión Administrativa)
     Route::resource('appointments-admin', AppointmentController::class)

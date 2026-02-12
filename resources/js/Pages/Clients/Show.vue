@@ -23,19 +23,34 @@
 
             <!-- Acciones Principales -->
             <div class="flex items-center gap-3">
-                 <!-- Botón Abonar -->
+                 <!-- Botón Abonar (PERMISO: clients.payment) -->
                  <button 
+                    v-if="can('clients.payment')"
                     @click="openPaymentModal"
                     class="px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-full text-sm font-bold shadow-lg shadow-green-500/30 transition-all transform active:scale-95 flex items-center gap-2"
                  >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Registrar Abono
+                    <span class="hidden md:inline">Abonar</span>
+                    <span class="md:hidden">Pago</span>
                  </button>
 
-                 <!-- Editar -->
+                 <!-- Botón Nuevo Cliente (PERMISO: clients.create) -->
+                 <Link v-if="can('clients.create')" :href="route('clients.create')">
+                    <button 
+                        class="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm active:scale-95"
+                        title="Nuevo Cliente"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </button>
+                 </Link>
+
+                 <!-- Editar (PERMISO: clients.edit) -->
                  <button 
+                    v-if="can('clients.edit')"
                     @click="editClient"
                     class="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-gray-200 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm active:scale-95"
                     title="Editar Cliente"
@@ -45,8 +60,9 @@
                     </svg>
                  </button>
 
-                 <!-- Eliminar -->
+                 <!-- Eliminar (PERMISO: clients.delete) -->
                  <button 
+                    v-if="can('clients.delete')"
                     @click="showDeleteModal = true"
                     class="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-gray-200 text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all shadow-sm active:scale-95"
                     title="Eliminar Cliente"
@@ -131,8 +147,8 @@
                     </div>
                 </div>
 
-                <!-- Columna 2: Situación Financiera (2/3) -->
-                <div class="lg:col-span-2">
+                <!-- Columna 2: Situación Financiera (2/3) - PROTEGIDO CON PERMISO clients.debt -->
+                <div class="lg:col-span-2" v-if="can('clients.debt')">
                     <div class="bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl p-6 h-full flex flex-col">
                         
                         <h3 class="font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -180,8 +196,14 @@
                              <h4 class="text-xs font-bold text-yellow-600 uppercase mb-1">Notas Internas</h4>
                              <p class="text-sm text-gray-700 italic">{{ client.notes || 'Sin notas adicionales.' }}</p>
                         </div>
-
                     </div>
+                </div>
+                 <!-- Fallback si no tiene permisos financieros -->
+                <div class="lg:col-span-2 flex items-center justify-center bg-gray-50 rounded-3xl border border-dashed border-gray-200 min-h-[200px]" v-else>
+                   <div class="text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                        <p class="text-gray-400 text-sm font-medium">Información financiera restringida</p>
+                   </div>
                 </div>
             </div>
 
@@ -190,8 +212,8 @@
                 
                 <n-tabs type="line" size="large" animated>
                     
-                    <!-- TAB 1: ESTADO DE CUENTA (LEDGER) -->
-                    <n-tab-pane name="ledger" tab="Estado de Cuenta">
+                    <!-- TAB 1: ESTADO DE CUENTA (PERMISO: clients.debt) -->
+                    <n-tab-pane name="ledger" tab="Estado de Cuenta" v-if="can('clients.debt')">
                          <div class="p-4 overflow-x-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead>
@@ -238,8 +260,8 @@
                          </div>
                     </n-tab-pane>
 
-                    <!-- TAB 2: HISTORIAL DE VENTAS (ORDERS) -->
-                    <n-tab-pane name="sales" tab="Historial de Ventas">
+                    <!-- TAB 2: HISTORIAL DE VENTAS (PERMISO: orders.index) -->
+                    <n-tab-pane name="sales" tab="Historial de Ventas" v-if="can('orders.index')">
                         <div class="p-4 overflow-x-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead>
@@ -390,12 +412,17 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { router, useForm, usePage, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Back from '@/Components/MyComponents/Back.vue';
 import { 
   NConfigProvider, NTabs, NTabPane, NModal
 } from 'naive-ui';
+
+// 1. INICIALIZAR PERMISOS
+const page = usePage();
+// Helper para verificar permisos
+const can = (permission) => page.props.auth.permissions.includes(permission);
 
 const props = defineProps({
     client: Object,
@@ -444,18 +471,20 @@ const getInitials = (name) => {
 };
 
 const editClient = () => {
-    router.get(route('clients.edit', props.client.id));
+    if(can('clients.edit')) router.get(route('clients.edit', props.client.id));
 };
 
 const deleteClient = () => {
-    router.delete(route('clients.destroy', props.client.id));
+    if(can('clients.delete')) router.delete(route('clients.destroy', props.client.id));
 };
 
 // Lógica Pago
 const openPaymentModal = () => {
-    paymentForm.reset();
-    paymentForm.description = `Abono a cuenta de ${props.client.name}`;
-    showPaymentModalVar.value = true;
+    if(can('clients.payment')) {
+        paymentForm.reset();
+        paymentForm.description = `Abono a cuenta de ${props.client.name}`;
+        showPaymentModalVar.value = true;
+    }
 };
 
 const submitPayment = () => {

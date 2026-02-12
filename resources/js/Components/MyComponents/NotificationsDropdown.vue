@@ -175,7 +175,7 @@ const executeBulkAction = async (action) => {
         >
             <div 
                 v-if="isOpen" 
-                class="absolute right-0 mt-3 w-80 md:w-96 bg-white/90 backdrop-blur-xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl z-50 overflow-hidden ring-1 ring-black/5 origin-top-right"
+                class="absolute right-0 mt-3 w-80 md:w-96 bg-white/100 backdrop-blur-xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl z-50 overflow-hidden ring-1 ring-black/5 origin-top-right"
             >
                 <!-- Header -->
                 <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-white/50">

@@ -16,6 +16,37 @@ class RoleSeeder extends Seeder
 
         // 2. Definir Permisos por Módulo (Basado en tus migraciones y rutas)
         $permissions = [
+            // --- Módulo: Productos e inventario ---
+            [
+                'name' => 'products.index',
+                'description' => 'Ver catálogo de productos e inventario',
+                'module' => 'Productos'
+            ],
+            [
+                'name' => 'products.create',
+                'description' => 'Crear nuevos productos',
+                'module' => 'Productos'
+            ],
+            [
+                'name' => 'products.edit',
+                'description' => 'Editar precios y detalles de productos',
+                'module' => 'Productos'
+            ],
+            [
+                'name' => 'products.delete',
+                'description' => 'Eliminar productos',
+                'module' => 'Productos'
+            ],
+            [
+                'name' => 'products.cost',
+                'description' => 'Ver costos de productos',
+                'module' => 'Productos'
+            ],
+            [
+                'name' => 'products.inventory-movement',
+                'description' => 'Registrar movimientos de inventario (entradas/salidas)',
+                'module' => 'Productos'
+            ],
             // --- Módulo: Usuarios (Administración del Sistema) ---
             [
                 'name' => 'users.index',
@@ -71,33 +102,16 @@ class RoleSeeder extends Seeder
                 'description' => 'Ver historial de ventas y órdenes',
                 'module' => 'Ventas'
             ],
+            [
+                'name' => 'sales.view-amounts',
+                'description' => 'Muestra montos de dinero en ventas',
+                'module' => 'Ventas'
+            ],
             // La creación de órdenes suele ir implícita con el acceso al POS, pero lo definimos por si acaso
             [
                 'name' => 'orders.create',
                 'description' => 'Registrar nuevas ventas',
                 'module' => 'Ventas'
-            ],
-
-            // --- Módulo: Inventario y Productos ---
-            [
-                'name' => 'products.index',
-                'description' => 'Ver catálogo de productos e inventario',
-                'module' => 'Inventario'
-            ],
-            [
-                'name' => 'products.create',
-                'description' => 'Crear nuevos productos',
-                'module' => 'Inventario'
-            ],
-            [
-                'name' => 'products.edit',
-                'description' => 'Editar precios y detalles de productos',
-                'module' => 'Inventario'
-            ],
-            [
-                'name' => 'products.delete',
-                'description' => 'Eliminar productos',
-                'module' => 'Inventario'
             ],
 
             // --- Módulo: Clientes (CRM) ---
@@ -119,6 +133,16 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'clients.delete',
                 'description' => 'Eliminar clientes',
+                'module' => 'Clientes'
+            ],
+            [
+                'name' => 'clients.payment',
+                'description' => 'Registrar pagos de clientes',
+                'module' => 'Clientes'
+            ],
+            [
+                'name' => 'clients.debt',
+                'description' => 'Ver deudas/Saldos de clientes',
                 'module' => 'Clientes'
             ],
 
@@ -177,6 +201,11 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'settings.general',
                 'description' => 'Acceder a configuraciones generales del sistema',
+                'module' => 'Configuraciones'
+            ],
+            [
+                'name' => 'calendar.manage',
+                'description' => 'Gestiona horarios y días de trabajo',
                 'module' => 'Configuraciones'
             ],
         ];

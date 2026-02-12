@@ -24,7 +24,7 @@ class ClientController extends Controller
                     ->orWhere('phone', 'like', "%{$search}%");
             })
             ->orderBy('name', 'asc')
-            ->paginate(10)
+            ->paginate(20)
             ->withQueryString()
             ->through(fn ($client) => [
                 'id' => $client->id,

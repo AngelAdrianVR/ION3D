@@ -18,20 +18,34 @@
 
             <!-- Acciones Principales -->
             <div class="flex items-center gap-3">
-                 <!-- Toggle Status -->
-                 <button 
-                    @click="toggleStatus"
-                    class="px-4 py-2 rounded-full text-sm font-bold transition-all border flex items-center gap-2"
-                    :class="product.is_active 
-                        ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100' 
-                        : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100'"
-                 >
-                    <div class="w-2 h-2 rounded-full" :class="product.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
-                    {{ product.is_active ? 'Activo' : 'Inactivo' }}
-                 </button>
+                 <!-- Toggle Status: Lógica condicional según permisos -->
+                 <div v-if="can('products.edit')">
+                     <button 
+                        @click="toggleStatus"
+                        class="px-4 py-2 rounded-full text-sm font-bold transition-all border flex items-center gap-2"
+                        :class="product.is_active 
+                            ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100' 
+                            : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100'"
+                     >
+                        <div class="w-2 h-2 rounded-full" :class="product.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
+                        {{ product.is_active ? 'Activo' : 'Inactivo' }}
+                     </button>
+                 </div>
+                 <div v-else>
+                     <span 
+                        class="px-4 py-2 rounded-full text-sm font-bold border flex items-center gap-2 cursor-default"
+                        :class="product.is_active 
+                            ? 'bg-green-50 text-green-600 border-green-200' 
+                            : 'bg-gray-50 text-gray-400 border-gray-200'"
+                     >
+                        <div class="w-2 h-2 rounded-full" :class="product.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
+                        {{ product.is_active ? 'Activo' : 'Inactivo' }}
+                     </span>
+                 </div>
 
-                 <!-- Editar -->
+                 <!-- Editar (Solo si tiene permiso products.edit) -->
                  <button 
+                    v-if="can('products.edit')"
                     @click="editProduct"
                     class="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-gray-200 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm active:scale-95"
                     title="Editar"
@@ -41,8 +55,9 @@
                     </svg>
                  </button>
 
-                 <!-- Eliminar -->
+                 <!-- Eliminar (Solo si tiene permiso products.delete) -->
                  <button 
+                    v-if="can('products.delete')"
                     @click="showDeleteModal = true"
                     class="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-gray-200 text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all shadow-sm active:scale-95"
                     title="Eliminar"
@@ -120,8 +135,8 @@
                                 </p>
                             </div>
 
-                             <!-- Costo (Discreto) -->
-                            <div class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                             <!-- Costo (Discreto) - PERMISO REQUERIDO: products.cost -->
+                            <div v-if="can('products.cost')" class="p-4 rounded-2xl bg-gray-50 border border-gray-100">
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Costo Interno</p>
                                 <p class="text-xl font-bold text-gray-600">{{ formatCurrency(product.cost_price) }}</p>
                             </div>
@@ -139,7 +154,7 @@
             </div>
 
             <!-- SECCIÓN INFERIOR: HISTORIAL DE MOVIMIENTOS -->
-            <div class="bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl overflow-hidden">
+            <div class="bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl">
                 
                 <!-- Header Tabla -->
                 <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/50">
@@ -147,7 +162,7 @@
                         <h3 class="text-lg font-bold text-gray-900">Historial de Inventario</h3>
                         <p class="text-xs text-gray-500">Registro de entradas, salidas y ajustes.</p>
                     </div>
-
+                    
                     <!-- Filtro Fecha con Botón -->
                     <div class="w-full md:w-auto flex items-center gap-2">
                         <n-date-picker 
@@ -167,7 +182,7 @@
                 </div>
 
                 <!-- Tabla Movimientos -->
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto overflow-auto max-h-[400px]">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="text-xs text-gray-400 font-bold uppercase tracking-wider border-b border-gray-100 bg-white">
@@ -262,12 +277,19 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Back from '@/Components/MyComponents/Back.vue';
 import { 
   NConfigProvider, NDatePicker, NTag, NModal
 } from 'naive-ui';
+
+// 1. INICIALIZAR PERMISOS
+const page = usePage();
+// Helper function para verificar permisos en script y template
+const can = (permission) => {
+    return page.props.auth.permissions.includes(permission);
+};
 
 const props = defineProps({
     product: Object,
@@ -314,15 +336,21 @@ const handleDateChange = () => {
 };
 
 const toggleStatus = () => {
-    router.put(route('products.toggle-status', props.product.id), {}, { preserveScroll: true });
+    if (can('products.edit')) {
+        router.put(route('products.toggle-status', props.product.id), {}, { preserveScroll: true });
+    }
 };
 
 const editProduct = () => {
-    router.get(route('products.edit', props.product.id));
+    if (can('products.edit')) {
+        router.get(route('products.edit', props.product.id));
+    }
 };
 
 const deleteProduct = () => {
-    router.delete(route('products.destroy', props.product.id));
+    if (can('products.delete')) {
+        router.delete(route('products.destroy', props.product.id));
+    }
 };
 
 const openImageModal = () => {
