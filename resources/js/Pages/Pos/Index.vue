@@ -430,19 +430,128 @@
             </div>
         </n-modal>
 
-        <!-- 4. MODAL CLIENTE RÁPIDO -->
+        <!-- 4. MODAL CLIENTE RÁPIDO (Actualizado) -->
         <n-modal v-model:show="showQuickClientModal">
-            <div class="bg-white rounded-2xl p-6 w-96 shadow-2xl">
-                <h3 class="font-bold text-lg mb-4">Nuevo Cliente Rápido</h3>
-                <div class="space-y-3">
-                    <input v-model="quickClientForm.name" class="w-full rounded-lg border-gray-300" placeholder="Nombre Completo *">
-                    <input v-model="quickClientForm.phone" class="w-full rounded-lg border-gray-300" placeholder="Teléfono">
-                    <input v-model="quickClientForm.email" class="w-full rounded-lg border-gray-300" placeholder="Email">
-                    <input v-model="quickClientForm.tax_id" class="w-full rounded-lg border-gray-300" placeholder="RFC / NIT">
+            <div class="bg-white rounded-3xl p-6 w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-xl text-gray-900">Nuevo Cliente Rápido</h3>
+                    <button @click="showQuickClientModal = false" class="bg-gray-100 p-2 rounded-full text-gray-500 hover:bg-gray-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
                 </div>
-                <div class="mt-6 flex justify-end gap-2">
-                    <button @click="showQuickClientModal = false" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg font-bold">Cancelar</button>
-                    <button @click="submitQuickClient" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">Guardar</button>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    
+                    <!-- Columna 1: Datos Generales -->
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2 mb-2 border-b border-gray-100 pb-2">
+                            <span class="bg-blue-100 text-blue-600 p-1.5 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                            </span>
+                            <h4 class="font-bold text-gray-700">Información Personal</h4>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Nombre Completo *</label>
+                            <n-input v-model:value="quickClientForm.name" placeholder="Ej. Juan Pérez" />
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">RFC / Tax ID</label>
+                                <n-input v-model:value="quickClientForm.tax_id" placeholder="XAXX010101000" uppercase />
+                            </div>
+                            <div>
+                                 <label class="block text-xs font-bold text-gray-500 mb-1">Teléfono</label>
+                                 <n-input v-model:value="quickClientForm.phone" placeholder="55 1234 5678" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Email</label>
+                            <n-input v-model:value="quickClientForm.email" placeholder="cliente@email.com" />
+                        </div>
+
+                        <!-- Crédito -->
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 mt-4">
+                            <label class="block text-xs font-bold text-blue-700 mb-1">Límite de Crédito</label>
+                            <n-input-number 
+                                v-model:value="quickClientForm.credit_limit" 
+                                :show-button="false"
+                            >
+                                <template #prefix>$</template>
+                            </n-input-number>
+                            <p class="text-[10px] text-blue-500 mt-1">Dejar en 0 para ventas de contado.</p>
+                        </div>
+                    </div>
+
+                    <!-- Columna 2: Dirección -->
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2 mb-2 border-b border-gray-100 pb-2">
+                            <span class="bg-gray-100 text-gray-600 p-1.5 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            </span>
+                            <h4 class="font-bold text-gray-700">Dirección</h4>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Calle</label>
+                            <n-input v-model:value="quickClientForm.street" placeholder="Calle principal" />
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">No. Ext.</label>
+                                <n-input v-model:value="quickClientForm.exterior_number" placeholder="123" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">No. Int.</label>
+                                <n-input v-model:value="quickClientForm.interior_number" placeholder="Apto 4" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Colonia</label>
+                                <n-input v-model:value="quickClientForm.neighborhood" placeholder="Colonia" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">CP</label>
+                                <n-input v-model:value="quickClientForm.zip_code" placeholder="00000" />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Municipio</label>
+                                <n-input v-model:value="quickClientForm.municipality" placeholder="Municipio" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">Estado</label>
+                                <n-select 
+                                    v-model:value="quickClientForm.state" 
+                                    :options="mexicoStates" 
+                                    placeholder="Estado" 
+                                    filterable 
+                                />
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                
+                <div class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button @click="showQuickClientModal = false" class="px-5 py-2.5 text-gray-500 hover:bg-gray-100 rounded-xl font-bold transition-colors">Cancelar</button>
+                    <button 
+                        @click="submitQuickClient" 
+                        class="px-6 py-2.5 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 shadow-lg shadow-gray-900/20 transition-all flex items-center gap-2"
+                        :disabled="quickClientForm.processing"
+                    >
+                        <span v-if="quickClientForm.processing" class="animate-spin">C</span>
+                        Guardar Cliente
+                    </button>
                 </div>
             </div>
         </n-modal>
@@ -505,7 +614,7 @@ import { ref, computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { 
-  NConfigProvider, NModal, NSelect, NInputNumber, NSwitch, createDiscreteApi
+  NConfigProvider, NModal, NSelect, NInputNumber, NSwitch, createDiscreteApi, NInput
 } from 'naive-ui';
 import axios from 'axios';
 
@@ -535,6 +644,42 @@ const showCloseRegisterModal = ref(false);
 // --- ESTADO OPCIONES (SERVICIOS) ---
 const currentOptionItem = ref(null);
 
+// --- LISTAS ---
+const mexicoStates = [
+    { label: 'Aguascalientes', value: 'Aguascalientes' },
+    { label: 'Baja California', value: 'Baja California' },
+    { label: 'Baja California Sur', value: 'Baja California Sur' },
+    { label: 'Campeche', value: 'Campeche' },
+    { label: 'Chiapas', value: 'Chiapas' },
+    { label: 'Chihuahua', value: 'Chihuahua' },
+    { label: 'Ciudad de México', value: 'Ciudad de México' },
+    { label: 'Coahuila', value: 'Coahuila' },
+    { label: 'Colima', value: 'Colima' },
+    { label: 'Durango', value: 'Durango' },
+    { label: 'Guanajuato', value: 'Guanajuato' },
+    { label: 'Guerrero', value: 'Guerrero' },
+    { label: 'Hidalgo', value: 'Hidalgo' },
+    { label: 'Jalisco', value: 'Jalisco' },
+    { label: 'México', value: 'México' },
+    { label: 'Michoacán', value: 'Michoacán' },
+    { label: 'Morelos', value: 'Morelos' },
+    { label: 'Nayarit', value: 'Nayarit' },
+    { label: 'Nuevo León', value: 'Nuevo León' },
+    { label: 'Oaxaca', value: 'Oaxaca' },
+    { label: 'Puebla', value: 'Puebla' },
+    { label: 'Querétaro', value: 'Querétaro' },
+    { label: 'Quintana Roo', value: 'Quintana Roo' },
+    { label: 'San Luis Potosí', value: 'San Luis Potosí' },
+    { label: 'Sinaloa', value: 'Sinaloa' },
+    { label: 'Sonora', value: 'Sonora' },
+    { label: 'Tabasco', value: 'Tabasco' },
+    { label: 'Tamaulipas', value: 'Tamaulipas' },
+    { label: 'Tlaxcala', value: 'Tlaxcala' },
+    { label: 'Veracruz', value: 'Veracruz' },
+    { label: 'Yucatán', value: 'Yucatán' },
+    { label: 'Zacatecas', value: 'Zacatecas' }
+];
+
 // --- FORMULARIOS ---
 const openRegisterForm = useForm({
     cash_register_id: null,
@@ -559,7 +704,19 @@ const paymentForm = useForm({
 });
 
 const quickClientForm = useForm({
-    name: '', email: '', phone: '', tax_id: ''
+    name: '', 
+    email: '', 
+    phone: '', 
+    tax_id: '',
+    credit_limit: 0,
+    // Dirección
+    street: '',
+    exterior_number: '',
+    interior_number: '',
+    neighborhood: '',
+    municipality: '',
+    state: null,
+    zip_code: ''
 });
 
 // --- CLIENT SEARCH & DATA ---
@@ -738,8 +895,24 @@ const submitQuickClient = async () => {
         const newClient = res.data.client;
         searchedClients.value = [{ label: newClient.name, value: newClient.id, ...newClient }];
         paymentForm.client_id = newClient.id;
-        selectedClientData.value = { ...newClient, available_credit: 0 }; // Nuevo cliente sin crédito aun
         
+        // Asignar datos del cliente recién creado
+        selectedClientData.value = { 
+            ...newClient, 
+            available_credit: newClient.credit_limit || 0 
+        };
+        
+        // Prellenar dirección en la venta si se creó
+        if (newClient.address || (quickClientForm.street)) {
+            const parts = [
+                quickClientForm.street, 
+                quickClientForm.exterior_number, 
+                quickClientForm.neighborhood, 
+                quickClientForm.zip_code
+            ].filter(Boolean);
+            shippingAddressString.value = parts.join(', ');
+        }
+
         quickClientForm.reset();
         message.success('Cliente creado correctamente');
     } catch (error) {

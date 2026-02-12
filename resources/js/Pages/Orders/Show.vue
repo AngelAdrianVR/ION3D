@@ -1,7 +1,8 @@
 <template>
   <AppLayout :title="`Venta #${String(order.id).padStart(3, '0')}`">
     <template #header>
-      <div class="flex items-center justify-between">
+      <!-- Ajuste responsive: flex-col en móvil, md:flex-row en escritorio -->
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div class="flex items-center gap-4">
             <Link :href="route('orders.index')" class="p-2 bg-white rounded-full text-gray-400 hover:text-gray-600 shadow-sm transition-all hover:scale-105">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -15,14 +16,15 @@
         </div>
 
         <!-- Acciones Principales -->
-        <div class="flex gap-3">
+        <div class="flex gap-3 w-full md:w-auto justify-end">
              <button 
                 v-if="order.shipping_status !== 'Devuelto'"
                 @click="confirmReturn"
                 class="px-5 py-2.5 bg-white text-orange-600 border border-orange-100 rounded-xl text-sm font-bold shadow-sm hover:bg-orange-50 transition-all flex items-center gap-2"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
-                Devolución
+                <span class="hidden sm:inline">Devolución</span>
+                <span class="sm:hidden">Devolver</span>
             </button>
             <button 
                 @click="confirmDelete"
@@ -36,7 +38,7 @@
     </template>
 
     <div class="py-8 min-h-screen">
-      <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
         <!-- GRID SUPERIOR: CLIENTE Y RESUMEN -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -49,22 +51,22 @@
                 
                 <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Información del Cliente</h3>
                 
-                <div class="flex items-start gap-5 relative z-10">
-                    <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-500/20">
+                <div class="flex items-start gap-5 relative z-10 flex-wrap sm:flex-nowrap">
+                    <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-500/20 flex-shrink-0">
                         {{ order.client ? getInitials(order.client.name) : 'PG' }}
                     </div>
                     <div>
-                        <h4 class="text-xl font-bold text-gray-900">
+                        <h4 class="text-xl font-bold text-gray-900 break-words">
                             {{ order.client ? order.client.name : 'Venta a Público en General' }}
                         </h4>
                         
                         <div v-if="order.client" class="mt-2 space-y-1">
-                            <p class="text-sm text-gray-500 flex items-center gap-2">
-                                <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                            <p class="text-sm text-gray-500 flex items-center gap-2 break-all">
+                                <svg class="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                                 {{ order.client.email || 'Sin email' }}
                             </p>
                             <p class="text-sm text-gray-500 flex items-center gap-2">
-                                <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                <svg class="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                                 {{ order.client.phone || 'Sin teléfono' }}
                             </p>
                         </div>
@@ -102,11 +104,11 @@
 
         <!-- SECCION ENVÍO (STEPPER) -->
         <n-config-provider :theme-overrides="stepperThemeOverrides">
-            <div class="bg-white/80 backdrop-blur-xl border border-white/20 shadow-sm rounded-3xl p-8">
-                <div class="flex justify-between items-center mb-8">
+            <div class="bg-white/80 backdrop-blur-xl border border-white/20 shadow-sm rounded-3xl p-6 sm:p-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
                     <h3 class="text-lg font-bold text-gray-900">Estatus del Envío</h3>
                     
-                    <div v-if="order.shipping_status === 'Devuelto'" class="flex items-center gap-2 text-red-500 bg-red-50 px-3 py-1 rounded-lg">
+                    <div v-if="order.shipping_status === 'Devuelto'" class="flex items-center gap-2 text-red-500 bg-red-50 px-3 py-1 rounded-lg self-start">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         <span class="font-bold text-sm">ORDEN DEVUELTA</span>
                     </div>
@@ -115,27 +117,30 @@
                     </p>
                 </div>
 
-                <n-steps 
-                    :current="currentStepIndex" 
-                    :status="order.shipping_status === 'Devuelto' ? 'error' : 'process'"
-                    class="w-full cursor-pointer"
-                    @update:current="handleStepClick"
-                >
-                    <n-step
-                        v-for="(status, index) in shippingStatuses"
-                        :key="status"
-                        :title="formatStatus(status)"
-                        :description="getStepDescription(status)"
-                        :disabled="order.shipping_status === 'Devuelto'"
-                    />
-                </n-steps>
+                <!-- CONTENEDOR CON SCROLL HORIZONTAL PARA STEPPER -->
+                <div class="overflow-x-auto pb-4">
+                    <n-steps 
+                        :current="currentStepIndex" 
+                        :status="order.shipping_status === 'Devuelto' ? 'error' : 'process'"
+                        class="w-full cursor-pointer min-w-[600px]"
+                        @update:current="handleStepClick"
+                    >
+                        <n-step
+                            v-for="(status, index) in shippingStatuses"
+                            :key="status"
+                            :title="formatStatus(status)"
+                            :description="getStepDescription(status)"
+                            :disabled="order.shipping_status === 'Devuelto'"
+                        />
+                    </n-steps>
+                </div>
                 
                 <!-- Dirección de Envío si existe -->
                  <div v-if="order.shipping_address" class="mt-8 bg-gray-50 rounded-2xl p-4 border border-gray-100 flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    <div class="text-sm text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <div class="text-sm text-gray-600 w-full overflow-hidden">
                         <span class="block font-bold text-gray-900 mb-1">Dirección de Entrega:</span>
-                        {{ formatAddress(order.shipping_address) }}
+                        <p class="break-words">{{ formatAddress(order.shipping_address) }}</p>
                     </div>
                  </div>
             </div>
@@ -148,12 +153,14 @@
                     <h3 class="text-lg font-bold text-gray-900">Productos</h3>
                 </div>
                 
+                <!-- AGREGADO: scroll-x para pantallas pequeñas -->
                 <n-data-table
                     :columns="columns"
                     :data="order.items"
                     :bordered="false"
                     :single-line="false"
                     class="ios-table"
+                    :scroll-x="800" 
                 />
              </div>
         </n-config-provider>
@@ -264,7 +271,7 @@ const columns = [
   {
     title: 'IMAGEN',
     key: 'image',
-    width: 100,
+    width: 80,
     render(row) {
         // Verificar si existe media en el purchasable (Product)
         const media = row.purchasable?.media?.[0];
@@ -292,17 +299,17 @@ const columns = [
         if (isProduct) {
              return h(Link, { 
                  href: route('products.show', row.purchasable_id),
-                 class: 'font-bold text-gray-900 hover:text-blue-600 transition-colors' 
+                 class: 'font-bold text-gray-900 hover:text-blue-600 transition-colors line-clamp-2' 
              }, { default: () => name });
         }
         
-        return h('span', { class: 'font-bold text-gray-700' }, name);
+        return h('span', { class: 'font-bold text-gray-700 line-clamp-2' }, name);
     }
   },
   {
-    title: 'CANTIDAD',
+    title: 'CANT.',
     key: 'quantity',
-    width: 100,
+    width: 80,
     align: 'center',
     render(row) {
         return h('div', { class: 'font-mono bg-gray-50 rounded-lg py-1 px-2 inline-block text-gray-700' }, row.quantity);
@@ -311,7 +318,7 @@ const columns = [
   {
     title: 'P. UNITARIO',
     key: 'unit_price',
-    width: 150,
+    width: 120,
     align: 'right',
     render(row) {
         return h('span', { class: 'text-gray-600' }, formatCurrency(row.unit_price));
@@ -320,7 +327,7 @@ const columns = [
   {
     title: 'TOTAL',
     key: 'total',
-    width: 150,
+    width: 120,
     align: 'right',
     render(row) {
         return h('span', { class: 'font-bold text-gray-900' }, formatCurrency(row.unit_price * row.quantity));
@@ -335,9 +342,38 @@ const getInitials = (name) => name ? name.split(' ').map(n => n[0]).join('').sub
 
 const formatAddress = (addr) => {
     if (!addr) return 'Sin dirección registrada';
-    // Asumiendo que viene como objeto JSON parseado o array
-    if (typeof addr === 'string') return addr;
-    return `${addr.street} ${addr.exterior_number}, ${addr.neighborhood}, ${addr.municipality}, ${addr.state}`;
+    
+    let addressObj = addr;
+
+    // Intento de parseo si viene como string JSON
+    if (typeof addr === 'string') {
+        try {
+            addressObj = JSON.parse(addr);
+        } catch (e) {
+            // Si falla el parseo, se asume que es una dirección de texto plano
+            return addr;
+        }
+    }
+
+    // Lógica prioritaria: Si tiene full_text, usarlo
+    if (addressObj.full_text) {
+        return addressObj.full_text;
+    }
+
+    // Fallback: Armar dirección si es objeto estructurado
+    if (typeof addressObj === 'object') {
+        const parts = [
+            addressObj.street,
+            addressObj.exterior_number,
+            addressObj.neighborhood,
+            addressObj.municipality,
+            addressObj.state
+        ].filter(Boolean); // Filtra nulos/undefined/vacíos
+
+        if (parts.length > 0) return parts.join(', ');
+    }
+
+    return 'Formato desconocido';
 };
 
 const getStatusType = (status) => {

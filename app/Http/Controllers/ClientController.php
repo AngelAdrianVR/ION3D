@@ -109,7 +109,7 @@ class ClientController extends Controller
 
         // 2. Cargar historial de compras (Orders) con items
         $orders = $client->orders()
-            ->with(['items.product', 'user:id,name'])
+            ->with(['items.purchasable', 'user:id,name'])
             ->latest()
             ->limit(20)
             ->get()
@@ -121,7 +121,7 @@ class ClientController extends Controller
                     'status' => $order->payment_status, // 'Pagado', 'Pendiente', 'Crédito'
                     'items_count' => $order->items->count(),
                     'summary' => $order->items->take(3)->map(fn($item) => 
-                        "{$item->quantity}x {$item->product->name}"
+                        "{$item->quantity}x {$item->purchasable?->name}"
                     )->join(', ') . ($order->items->count() > 3 ? '...' : ''),
                 ];
             });

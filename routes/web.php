@@ -143,8 +143,11 @@ Route::middleware([
         Route::delete('/portfolio/{item}', [PageManagementController::class, 'destroyPortfolioItem'])->name('portfolio.destroy');
     });
 
+
     // 4. Usuarios (Gestión de usuarios del sistema)
     Route::resource('users', UserController::class);
+    Route::put('/users/{user}/status', [UserController::class, 'toggleStatus'])->name('users.status');
+    
 
     // 5. Citas (Gestión Administrativa)
     Route::resource('appointments-admin', AppointmentController::class)
@@ -156,15 +159,19 @@ Route::middleware([
     Route::put('/appointments/{appointment}', [AppointmentController::class, 'update'])->name('appointments.update');
     Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
     
+
     // Ruta específica para cambio de estatus rápido
     Route::put('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus'])->name('appointments.update-status');
     
+
     // NOTA: Se movió 'check-availability' arriba para que sea pública
     // NOTA: Se movió 'disabled-days' arriba para que sea pública
+
 
     // 6. Mensajes de Contacto (Buzón de entrada)
     Route::resource('contact-messages', ContactMessageController::class)->only(['index', 'show', 'destroy'])->names('contact-messages');
     Route::put('/contact-messages/{contact_message}/mark-as-read', [ContactMessageController::class, 'markAsRead'])->name('contact-messages.mark-as-read');
+
 
     // Rutas de notificaciones
     Route::prefix('notifications')->name('notifications.')->group(function () {
@@ -175,14 +182,17 @@ Route::middleware([
         Route::post('/bulk-action', [NotificationController::class, 'bulkAction'])->name('bulk');
     });
 
+
     // ---------------------------- CONFIGURACIÓN DE AGENDA ----------------------------
     Route::get('/settings/calendar', [BusinessHourController::class, 'index'])->name('settings.calendar.index');
     Route::put('/settings/business-hours', [BusinessHourController::class, 'update'])->name('business-hours.update');
     
+
     Route::post('/settings/availability-exceptions', [AvailabilityExceptionController::class, 'store'])->name('availability-exceptions.store');
     Route::delete('/settings/availability-exceptions/{exception}', [AvailabilityExceptionController::class, 'destroy'])->name('availability-exceptions.destroy');
     
 });
+
 
 // eliminacion de archivo, imagen o video global
 Route::delete('/media/{media}', function (Media $media) {

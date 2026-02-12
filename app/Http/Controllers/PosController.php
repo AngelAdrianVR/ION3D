@@ -132,13 +132,33 @@ class PosController extends Controller
      */
     public function storeQuickClient(Request $request)
     {
+        // 1. Validar todos los campos nuevos
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'nullable|email',
-            'phone' => 'nullable|string',
-            'tax_id' => 'nullable|string'
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
+            'tax_id' => 'nullable|string|max:20',
+            
+            // Nuevo: Límite de Crédito
+            'credit_limit' => 'nullable|numeric|min:0',
+
+            // Nuevos: Campos de Dirección
+            'street' => 'nullable|string|max:255',
+            'exterior_number' => 'nullable|string|max:20',
+            'interior_number' => 'nullable|string|max:20',
+            'neighborhood' => 'nullable|string|max:255',
+            'municipality' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'zip_code' => 'nullable|string|max:10',
         ]);
 
+        // 2. Asignar valor por defecto al crédito si viene vacío
+        if (!isset($validated['credit_limit'])) {
+            $validated['credit_limit'] = 0;
+        }
+
+        // 3. Crear el cliente
+        // Nota: Asegúrate de que estos campos existan en tu tabla 'clients' y en el array $fillable del modelo.
         $client = Client::create($validated);
 
         return response()->json([

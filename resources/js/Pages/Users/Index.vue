@@ -25,7 +25,7 @@
             </n-input>
           </n-config-provider>
 
-          <Link :href="route('users.create')">
+          <Link v-if="can('users.create')" :href="route('users.create')">
             <button class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-full text-sm font-semibold shadow-lg shadow-blue-500/30 transition-all transform active:scale-95 flex items-center gap-2">
               <!-- Icono Plus SVG -->
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -63,6 +63,7 @@
                 v-for="user in users.data" 
                 :key="user.id" 
                 class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100/50 relative overflow-hidden transition-all active:scale-[0.98]"
+                :class="{'opacity-60 grayscale': !user.is_active}"
                 @click="goToShow(user)"
               >
                 <!-- Header de la Tarjeta -->
@@ -81,7 +82,10 @@
                       {{ getInitials(user.name) }}
                     </n-avatar>
                     <div>
-                      <h4 class="text-base font-bold text-gray-900 leading-tight">{{ user.name }}</h4>
+                      <h4 class="text-base font-bold text-gray-900 leading-tight flex items-center gap-2">
+                          {{ user.name }}
+                          <span v-if="!user.is_active" class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">Inactivo</span>
+                      </h4>
                       <p class="text-sm text-gray-500 font-medium">{{ user.email }}</p>
                     </div>
                   </div>
@@ -100,7 +104,20 @@
                   </n-tag>
                   
                   <div class="flex gap-2">
+                     <!-- Botón Status (Solo si tiene permiso) -->
                      <button 
+                      v-if="can('users.status')"
+                      @click.stop="toggleStatus(user)"
+                      class="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+                      :class="user.is_active ? 'bg-orange-50 text-orange-500 hover:bg-orange-100' : 'bg-green-50 text-green-600 hover:bg-green-100'"
+                      :title="user.is_active ? 'Desactivar usuario' : 'Activar usuario'"
+                     >
+                       <svg v-if="user.is_active" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                       <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                     </button>
+
+                     <button 
+                      v-if="can('users.edit')"
                       @click.stop="editUser(user)"
                       class="w-9 h-9 flex items-center justify-center bg-gray-100 text-gray-600 rounded-full hover:bg-blue-100 hover:text-blue-600 transition-colors"
                      >
@@ -110,6 +127,7 @@
                        </svg>
                      </button>
                      <button 
+                      v-if="can('users.delete')"
                       @click.stop="confirmDelete(user)"
                       class="w-9 h-9 flex items-center justify-center bg-gray-100 text-gray-600 rounded-full hover:bg-red-100 hover:text-red-600 transition-colors"
                      >
@@ -168,7 +186,7 @@
 
 <script setup>
 import { ref, watch, h } from 'vue';
-import { router, Link } from '@inertiajs/vue3';
+import { router, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { 
   NConfigProvider, NDataTable, NInput, NTag, NAvatar, 
@@ -181,6 +199,7 @@ const props = defineProps({
   filters: Object,
 });
 
+const page = usePage();
 const search = ref(props.filters.search || '');
 const currentPage = ref(props.users.current_page);
 const showDeleteModal = ref(false);
@@ -208,6 +227,13 @@ const getRoleType = (role) => {
   }
 };
 
+// --- Manejo de Permisos ---
+// Asumimos que los permisos vienen en auth.permissions o auth.can (ajustar según tu HandleInertiaRequests)
+// Si usas el paquete de Spatie + Inertia Resource a veces viene en 'permissions' a nivel raíz o dentro de auth
+const can = (permission) => {
+    return page.props.auth?.permissions?.includes(permission) || page.props.auth?.can?.[permission] || false;
+};
+
 // Componentes SVG Render Functions para usar dentro de h() en la tabla
 const IconEdit = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', class: 'h-4 w-4', fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '2' }, [
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' })
@@ -217,6 +243,14 @@ const IconTrash = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', class: '
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' })
 ]);
 
+const IconBan = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', class: 'h-4 w-4', fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '2' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636' })
+]);
+
+const IconCheck = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', class: 'h-4 w-4', fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '2' }, [
+  h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M5 13l4 4L19 7' })
+]);
+
 // COLUMNAS TABLA (Escritorio)
 const columns = [
   {
@@ -224,16 +258,17 @@ const columns = [
     key: 'name',
     width: 280,
     render(row) {
-      return h('div', { class: 'flex items-center gap-4 py-1' }, [
+      return h('div', { class: `flex items-center gap-4 py-1 ${!row.is_active ? 'opacity-50' : ''}` }, [
         h(NAvatar, { 
           round: true, 
           size: 44, 
-          src: row.profile_photo_url, // Se usa la propiedad del modelo
-          // En caso de fallo de carga o nulo, NaiveUI mostrará el contenido del slot
+          src: row.profile_photo_url, 
           style: { backgroundColor: stringToColor(row.name), color: 'white', fontWeight: 'bold', objectFit: 'cover' } 
         }, { default: () => getInitials(row.name) }),
         h('div', { class: 'flex flex-col' }, [
             h('span', { class: 'font-bold text-gray-900 text-sm' }, row.name),
+            // Indicador de estado inactivo
+            !row.is_active ? h('span', { class: 'text-[10px] text-red-500 font-bold uppercase tracking-wider' }, 'Inactivo') : null
         ])
       ]);
     }
@@ -242,7 +277,7 @@ const columns = [
     title: 'CORREO ELECTRÓNICO',
     key: 'email',
     render(row) {
-      return h('span', { class: 'text-gray-500 font-medium' }, row.email);
+      return h('span', { class: `text-gray-500 font-medium ${!row.is_active ? 'opacity-50' : ''}` }, row.email);
     }
   },
   {
@@ -257,25 +292,47 @@ const columns = [
         size: 'small', 
         round: true, 
         bordered: false,
-        style: { fontWeight: '600' }
+        style: { fontWeight: '600', opacity: !row.is_active ? 0.5 : 1 }
       }, { default: () => role });
     }
   },
   {
     title: '',
     key: 'actions',
-    width: 120,
+    width: 160,
     render(row) {
-      return h('div', { class: 'flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0' }, [
-        h('button', { 
-          class: 'w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm',
-          onClick: (e) => { e.stopPropagation(); editUser(row); }
-        }, [h(IconEdit)]),
-        h('button', { 
-          class: 'w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm',
-          onClick: (e) => { e.stopPropagation(); confirmDelete(row); }
-        }, [h(IconTrash)])
-      ]);
+      const actions = [];
+      
+      // Botón Toggle Status
+      if (can('users.status')) {
+          actions.push(h('button', {
+              class: `w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm ${
+                  row.is_active 
+                  ? 'bg-orange-50 text-orange-400 hover:bg-orange-500 hover:text-white' 
+                  : 'bg-green-50 text-green-600 hover:bg-green-600 hover:text-white'
+              }`,
+              title: row.is_active ? 'Desactivar usuario' : 'Activar usuario',
+              onClick: (e) => { e.stopPropagation(); toggleStatus(row); }
+          }, [row.is_active ? h(IconBan) : h(IconCheck)]));
+      }
+
+      // Botón Editar
+      if (can('users.edit')) {
+          actions.push(h('button', { 
+            class: 'w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm',
+            onClick: (e) => { e.stopPropagation(); editUser(row); }
+          }, [h(IconEdit)]));
+      }
+      
+      // Botón Eliminar
+      if (can('users.delete')) {
+          actions.push(h('button', { 
+            class: 'w-8 h-8 rounded-full flex items-center justify-center bg-gray-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm',
+            onClick: (e) => { e.stopPropagation(); confirmDelete(row); }
+          }, [h(IconTrash)]));
+      }
+
+      return h('div', { class: 'flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0' }, actions);
     }
   }
 ];
@@ -290,6 +347,13 @@ const rowProps = (row) => {
 // ACCIONES
 const goToShow = (user) => router.get(route('users.show', user.id));
 const editUser = (user) => router.get(route('users.edit', user.id));
+
+const toggleStatus = (user) => {
+    router.put(route('users.status', user.id), {}, {
+        preserveScroll: true
+    });
+};
+
 const confirmDelete = (user) => {
   userToDelete.value = user;
   showDeleteModal.value = true;
@@ -309,34 +373,33 @@ watch(search, debounce((value) => {
 }, 300));
 
 // TEMAS NAIVE UI PERSONALIZADOS (IOS STYLE)
-
 const searchThemeOverrides = {
   Input: {
-    borderRadius: '50px', // Pill shape
-    color: '#F2F2F7', // iOS System Gray 6
+    borderRadius: '50px',
+    color: '#F2F2F7', 
     colorFocus: '#FFFFFF',
     border: '1px solid transparent',
     borderFocus: '1px solid #e5e7eb',
     boxShadowFocus: '0 4px 12px rgba(0,0,0,0.05)',
     placeholderColor: '#9CA3AF',
     textColor: '#1F2937',
-    heightLarge: '44px', // Standard iOS touch height
+    heightLarge: '44px',
   }
 };
 
 const tableThemeOverrides = {
   common: {
-    primaryColor: '#007AFF', // iOS Blue
+    primaryColor: '#007AFF', 
     borderRadius: '12px',
   },
   DataTable: {
     thColor: '#ffffff',
-    thTextColor: '#8E8E93', // iOS Label Color Secondary
+    thTextColor: '#8E8E93',
     thFontWeight: '700',
     tdColor: '#ffffff',
     tdColorHover: '#F2F2F7',
-    borderColor: 'transparent', // Sin bordes duros
-    tdPaddingMedium: '16px 24px', // Más aire
+    borderColor: 'transparent',
+    tdPaddingMedium: '16px 24px',
     borderRadius: '0px',
   },
   Pagination: {
@@ -345,7 +408,7 @@ const tableThemeOverrides = {
     itemBorder: 'none',
     itemBorderActive: 'none',
     itemColorActive: 'rgba(0, 122, 255, 0.1)',
-    itemBorderRadius: '50%', // Circular pagination
+    itemBorderRadius: '50%',
   }
 };
 </script>
@@ -356,13 +419,13 @@ const tableThemeOverrides = {
   text-transform: uppercase;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
-  border-bottom: 1px solid #f3f4f6 !important; /* Borde muy sutil solo abajo del header */
+  border-bottom: 1px solid #f3f4f6 !important; 
 }
 
 :deep(.ios-table .n-data-table-td) {
   font-size: 0.9rem;
   color: #1f2937;
-  border-bottom: 1px solid #f9fafb !important; /* Separadores ultra sutiles */
+  border-bottom: 1px solid #f9fafb !important; 
 }
 
 /* Eliminar borde del último item */
@@ -370,7 +433,7 @@ const tableThemeOverrides = {
   border-bottom: none !important;
 }
 
-/* Fix para el input de búsqueda de Naive UI para que se vea totalmente redondo y limpio */
+/* Fix para el input de búsqueda de Naive UI */
 :deep(.ios-search .n-input__input-el) {
   font-weight: 500;
 }
