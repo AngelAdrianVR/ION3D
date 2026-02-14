@@ -3,63 +3,58 @@
 namespace App\Http\Controllers;
 
 use App\Models\InventoryMovement;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class InventoryMovementController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
+     * Guarda un nuevo movimiento manual de inventario.
      */
     public function store(Request $request)
     {
-        //
-    }
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'direction' => 'required|in:in,out', // Entrada o Salida
+            'type' => 'required|in:Venta,Compra,Devolucion,Ajuste,Merma',
+            'quantity' => 'required|integer|min:1',
+            'description' => 'nullable|string|max:255',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(InventoryMovement $inventoryMovement)
-    {
-        //
-    }
+        $product = Product::findOrFail($request->product_id);
+        
+        // Determinar el signo de la cantidad
+        $quantity = $request->quantity;
+        if ($request->direction === 'out') {
+            $quantity = -$quantity;
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(InventoryMovement $inventoryMovement)
-    {
-        //
-    }
+        // Validar stock suficiente si es salida
+        if ($quantity < 0 && ($product->stock_quantity + $quantity) < 0) {
+            return back()->withErrors(['quantity' => 'Stock insuficiente para realizar esta salida.']);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, InventoryMovement $inventoryMovement)
-    {
-        //
-    }
+        DB::transaction(function () use ($product, $request, $quantity) {
+            // 1. Calcular nuevo stock
+            $newStock = $product->stock_quantity + $quantity;
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(InventoryMovement $inventoryMovement)
-    {
-        //
+            // 2. Actualizar producto
+            $product->update(['stock_quantity' => $newStock]);
+
+            // 3. Registrar movimiento
+            InventoryMovement::create([
+                'product_id' => $product->id,
+                'user_id' => auth()->id(),
+                'type' => $request->type,
+                'quantity' => $quantity,
+                'stock_after' => $newStock,
+                'description' => $request->description,
+                'reference_type' => null, // Es manual
+                'reference_id' => null,
+            ]);
+        });
+
+        return back()->with('success', 'Movimiento registrado correctamente.');
     }
 }

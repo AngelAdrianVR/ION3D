@@ -9,45 +9,81 @@ export default {
     components: { NButton, Link },
     setup() {
         const canvasContainer = ref(null);
-        const isLoaded = ref(false); // Para disparar animaciones de UI
+        const isLoaded = ref(false); 
         let renderer, scene, camera, animationId;
-        let modelGroup;
+        let modelGroup; // El modelo actual en escena
         let mixer; 
         let platformGrid; 
+        let modelInterval; // Variable para el intervalo de cambio
 
-        // Variables de control de animación de entrada
-        let introRotation = Math.PI * 4; // 720 grados iniciales
-        let currentRotationSpeed = 0.15; // Velocidad de giro inicial (rápida)
-        const targetRotationSpeed = 0.003; // Velocidad de crucero
-        const damping = 0.96; // Factor de desaceleración
+        // --- CONFIGURACIÓN DE MODELOS ---
+        // Ahora cada elemento es un objeto con su URL, Escala y Posición individual.
+        const modelsList = [
+            {
+                name: 'Human Body',
+                url: '/3d_person.glb',
+                scale: 1.9,                     // Tamaño original
+                position: { x: 0, y: -1.1, z: 0 } // Posición original
+            },
+            {
+                name: 'Heart',
+                url: '/heart.glb',
+                scale: 7.5,                     // <--- MODIFICA TAMAÑO AQUÍ (Prueba valores como 0.05, 0.1, 1.0 dependiendo del modelo)
+                position: { x: 0, y: 0, z: 0 }  // <--- MODIFICA POSICIÓN AQUÍ { x, y, z }
+            },
+            {
+                name: 'Head',
+                url: '/head.glb',
+                scale: 0.8,                     // <--- MODIFICA TAMAÑO AQUÍ
+                position: { x: 0, y: 1, z: 0 }
+            },
+            {
+                name: 'Sofa',
+                url: '/sofa.glb',
+                scale: 2.0,                     // <--- MODIFICA TAMAÑO AQUÍ
+                position: { x: 0, y: 0, z: 0 }
+            }
+        ];
+        
+        let currentModelIndex = 0;
+        const CHANGE_INTERVAL_MS = 3000; // 3 segundos por modelo
 
-        const MODEL_URL = '/3d_person.glb';
+        // Variables de control de animación
+        let currentRotationSpeed = 0.15; 
+        const targetRotationSpeed = 0.003; 
+        const damping = 0.96; 
 
-        const loadModel = () => {
+        // Función para cargar un modelo específico usando su configuración
+        const loadModel = (modelConfig) => {
             const loader = new GLTFLoader();
 
+            // Guardamos la rotación actual para aplicarla al siguiente modelo y que no "salte" visualmente
+            const currentRotationY = modelGroup ? modelGroup.rotation.y : Math.PI * 4;
+
             loader.load(
-                MODEL_URL,
+                modelConfig.url,
                 (gltf) => {
-                    const model = gltf.scene;
+                    const newModel = gltf.scene;
                     
-                    // Ajuste de escala
-                    const s = 1.9;
-                    model.scale.set(s, s, s); 
+                    // 1. APLICAR ESCALA INDIVIDUAL
+                    const s = modelConfig.scale;
+                    newModel.scale.set(s, s, s); 
 
-                    // Posición inicial
-                    model.position.y = -1.1; 
-                    model.position.x = 0;
-                    model.position.z = 0;
+                    // 2. APLICAR POSICIÓN INDIVIDUAL
+                    newModel.position.set(
+                        modelConfig.position.x,
+                        modelConfig.position.y,
+                        modelConfig.position.z
+                    );
 
-                    // Aplicar rotación inicial de impacto
-                    model.rotation.y = introRotation;
+                    // Aplicar la rotación acumulada para continuidad visual
+                    newModel.rotation.y = currentRotationY;
 
-                    model.traverse((child) => {
+                    // Procesamiento de materiales (Manteniendo tu estilo actual)
+                    newModel.traverse((child) => {
                         if (child.isMesh) {
                             child.castShadow = true;
                             child.receiveShadow = true;
-                            // Mejora de material para look más "premium"
                             if (child.material) {
                                 child.material.roughness = 0.4;
                                 child.material.metalness = 0.2;
@@ -55,23 +91,40 @@ export default {
                         }
                     });
 
-                    scene.add(model);
-                    modelGroup = model;
+                    // SWAP: Remover anterior y añadir nuevo
+                    if (modelGroup) {
+                        scene.remove(modelGroup);
+                    }
+                    
+                    scene.add(newModel);
+                    modelGroup = newModel;
 
+                    // Manejo de animaciones si el modelo las tiene
                     if (gltf.animations && gltf.animations.length) {
-                        mixer = new THREE.AnimationMixer(model);
+                        mixer = new THREE.AnimationMixer(newModel);
                         const action = mixer.clipAction(gltf.animations[0]); 
                         action.play();
+                    } else {
+                        mixer = null;
                     }
 
-                    // Notificar que el modelo está listo para mostrar la UI
-                    setTimeout(() => {
-                        isLoaded.value = true;
-                    }, 300);
+                    // Primera carga: activar UI
+                    if (!isLoaded.value) {
+                        setTimeout(() => {
+                            isLoaded.value = true;
+                        }, 300);
+                    }
                 },
                 undefined,
-                (error) => console.error('Error cargando modelo:', error)
+                (error) => console.error(`Error cargando modelo ${modelConfig.url}:`, error)
             );
+        };
+
+        // Función para ciclar al siguiente modelo
+        const cycleNextModel = () => {
+            currentModelIndex = (currentModelIndex + 1) % modelsList.length;
+            // Pasamos el objeto de configuración completo
+            loadModel(modelsList[currentModelIndex]);
         };
 
         onMounted(() => {
@@ -82,7 +135,6 @@ export default {
             const width = canvasContainer.value.clientWidth;
             const height = canvasContainer.value.clientHeight;
             
-            // Iniciamos la cámara un poco más lejos para el efecto de zoom-in
             camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 100);
             camera.position.set(0, 1.2, 10); 
 
@@ -98,14 +150,14 @@ export default {
             
             canvasContainer.value.appendChild(renderer.domElement);
 
-            // Rejilla Polar Estilizada
+            // Rejilla
             platformGrid = new THREE.PolarGridHelper(3.0, 16, 8, 64, 0x94a3b8, 0xf1f5f9);
             platformGrid.position.y = -1.8;
             platformGrid.material.transparent = true;
             platformGrid.material.opacity = 0.3;
             scene.add(platformGrid);
 
-            // Iluminación de Estudio Profesional
+            // Iluminación
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
             scene.add(ambientLight);
 
@@ -124,7 +176,11 @@ export default {
             rimLight.position.set(0, 5, -5);
             scene.add(rimLight);
 
-            loadModel();
+            // 1. Cargar el primer modelo
+            loadModel(modelsList[0]);
+
+            // 2. Iniciar el intervalo de cambio
+            modelInterval = setInterval(cycleNextModel, CHANGE_INTERVAL_MS);
 
             const clock = new THREE.Clock();
 
@@ -135,10 +191,9 @@ export default {
                 if (mixer) mixer.update(delta);
 
                 if (modelGroup) {
-                    // Lógica de rotación de impacto (Deceleración suave)
+                    // Lógica de rotación (Intro rápida -> Velocidad crucero)
                     if (currentRotationSpeed > targetRotationSpeed) {
                         currentRotationSpeed *= damping;
-                        // Zoom in suave de la cámara mientras gira
                         if (camera.position.z > 8.5) {
                             camera.position.z -= 0.03;
                         }
@@ -146,6 +201,7 @@ export default {
                         currentRotationSpeed = targetRotationSpeed;
                     }
                     
+                    // Giramos el grupo actual (sea cual sea el modelo cargado)
                     modelGroup.rotation.y += currentRotationSpeed;
                 }
                 
@@ -171,6 +227,8 @@ export default {
 
         onBeforeUnmount(() => {
             cancelAnimationFrame(animationId);
+            // Limpiar intervalo para evitar memory leaks
+            if (modelInterval) clearInterval(modelInterval);
             if (renderer) renderer.dispose();
         });
 

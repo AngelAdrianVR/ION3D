@@ -8,6 +8,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientLedgerController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InventoryMovementController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
@@ -35,6 +36,7 @@ Route::get('/', function () {
 Route::get('/inicio', [LandingController::class, 'index'])->name('landing.index');
 
 Route::get('/proceso', [LandingController::class, 'process'])->name('landing.process');
+Route::get('/productos', [LandingController::class, 'products'])->name('landing.products');
 Route::get('/servicios/{category?}', [LandingController::class, 'services'])->name('landing.services');
 Route::get('/portafolio/{category?}', [LandingController::class, 'portfolio'])->name('landing.portfolio'); 
 Route::get('/contacto', [LandingController::class, 'contact'])->name('landing.contact');
@@ -108,6 +110,7 @@ Route::middleware([
     // Inventario (Productos)
     Route::put('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
     Route::resource('products', ProductController::class);
+    Route::post('/inventory-movements', [InventoryMovementController::class, 'store'])->name('inventory-movements.store');
 
 
     // Proveedores
