@@ -45,6 +45,7 @@ export default {
                 { label: 'Inicio', href: '/inicio', icon: 'home' },
                 { label: 'Proceso', href: '/proceso', icon: 'cpu' },
                 { label: 'Servicios', href: '/servicios', icon: 'grid' },
+                { label: 'Productos', href: '/productos', icon: 'box' },
                 { label: 'Galería', href: '/portafolio', icon: 'image' },
                 { label: 'Contacto', href: '/contacto', icon: 'mail' },
             ]
@@ -146,6 +147,12 @@ export default {
                                      class="relative px-4 py-2 text-sm font-medium transition-colors rounded-full hover:bg-[#2f4b59]/20"
                                      :class="isActive('/servicios') ? 'text-[#2f4b59] font-bold bg-gray-200/80' : 'text-slate-600 hover:text-[#2f4b59]'">
                                     Servicios
+                                </Link>
+
+                                <Link href="/productos"
+                                     class="relative px-4 py-2 text-sm font-medium transition-colors rounded-full hover:bg-[#2f4b59]/20"
+                                     :class="isActive('/productos') ? 'text-[#2f4b59] font-bold bg-gray-200/80' : 'text-slate-600 hover:text-[#2f4b59]'">
+                                    Productos
                                 </Link>
 
                                 <!-- GALERÍA (Sin Dropdown) -->

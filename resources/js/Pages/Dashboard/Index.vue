@@ -58,7 +58,7 @@ const quickActions = computed(() => [
             </div>
         </template>
 
-        <div class="py-8 bg-gray-50/50 min-h-screen">
+        <div class="py-8 min-h-screen">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
                 
                 <!-- Sección 1: KPIs (Tarjetas Superiores) -->

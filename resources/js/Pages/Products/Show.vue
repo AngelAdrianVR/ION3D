@@ -163,21 +163,38 @@
                         <p class="text-xs text-gray-500">Registro de entradas, salidas y ajustes.</p>
                     </div>
                     
-                    <!-- Filtro Fecha con Botón -->
-                    <div class="w-full md:w-auto flex items-center gap-2">
-                        <n-date-picker 
-                            v-model:value="filterDate" 
-                            type="month" 
-                            clearable
-                            placeholder="Filtrar por mes"
-                            class="ios-input-shadow w-full md:w-48"
-                        />
-                        <button 
-                            @click="handleDateChange"
-                            class="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg font-bold text-sm hover:bg-indigo-100 transition-colors border border-indigo-100"
+                    <!-- Acciones Derecha -->
+                    <div class="w-full md:w-auto flex items-center gap-3">
+                         <!-- Botón NUEVO MOVIMIENTO -->
+                         <button 
+                            v-if="can('products.edit')" 
+                            @click="showMovementModal = true"
+                            class="px-4 py-2 bg-gray-900 text-white rounded-lg font-bold text-sm hover:bg-gray-800 transition-colors shadow-lg shadow-gray-200 flex items-center gap-2"
                         >
-                            Filtrar
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                            Registrar Movimiento
                         </button>
+
+                        <div class="w-px h-6 bg-gray-200 mx-1 hidden md:block"></div>
+
+                        <!-- Filtro Fecha -->
+                        <div class="flex items-center gap-2">
+                            <n-date-picker 
+                                v-model:value="filterDate" 
+                                type="month" 
+                                clearable
+                                placeholder="Filtrar por mes"
+                                class="ios-input-shadow w-full md:w-40"
+                            />
+                            <button 
+                                @click="handleDateChange"
+                                class="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg font-bold text-sm hover:bg-indigo-100 transition-colors border border-indigo-100"
+                            >
+                                Filtrar
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -255,6 +272,97 @@
         </div>
     </n-modal>
 
+    <!-- Modal Registrar Movimiento -->
+    <n-modal v-model:show="showMovementModal" transform-origin="center">
+        <div class="bg-white w-[95%] max-w-md rounded-2xl p-6 shadow-2xl">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                </div>
+                Registrar Movimiento
+            </h3>
+
+            <form @submit.prevent="submitMovement">
+                
+                <!-- 1. Dirección: Entrada / Salida -->
+                <div class="mb-5">
+                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Acción</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label 
+                            class="cursor-pointer border-2 rounded-xl p-3 flex flex-col items-center justify-center gap-1 transition-all"
+                            :class="movementForm.direction === 'in' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-100 hover:bg-gray-50'"
+                        >
+                            <input type="radio" v-model="movementForm.direction" value="in" class="hidden">
+                            <span class="font-bold">Entrada</span>
+                            <span class="text-xs opacity-75">Agregar Stock</span>
+                        </label>
+                        <label 
+                            class="cursor-pointer border-2 rounded-xl p-3 flex flex-col items-center justify-center gap-1 transition-all"
+                            :class="movementForm.direction === 'out' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-100 hover:bg-gray-50'"
+                        >
+                            <input type="radio" v-model="movementForm.direction" value="out" class="hidden">
+                            <span class="font-bold">Salida</span>
+                            <span class="text-xs opacity-75">Reducir Stock</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 2. Tipo de Movimiento -->
+                <div class="mb-5">
+                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Motivo</label>
+                    <n-select 
+                        v-model:value="movementForm.type" 
+                        :options="movementTypes" 
+                        placeholder="Selecciona el motivo"
+                        class="ios-input-shadow"
+                    />
+                    <div v-if="movementForm.errors.type" class="text-red-500 text-xs mt-1">{{ movementForm.errors.type }}</div>
+                </div>
+
+                <!-- 3. Cantidad -->
+                <div class="mb-5">
+                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Cantidad</label>
+                    <n-input-number 
+                        v-model:value="movementForm.quantity" 
+                        :min="1" 
+                        placeholder="0"
+                        class="text-center font-bold"
+                    >
+                        <template #prefix>
+                             <span class="text-gray-400 font-bold">Unidades:</span>
+                        </template>
+                    </n-input-number>
+                    <div v-if="movementForm.errors.quantity" class="text-red-500 text-xs mt-1">{{ movementForm.errors.quantity }}</div>
+                </div>
+
+                <!-- 4. Nota -->
+                <div class="mb-8">
+                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Nota (Opcional)</label>
+                    <textarea 
+                        v-model="movementForm.description"
+                        rows="2"
+                        class="w-full rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm bg-gray-50"
+                        placeholder="Detalles adicionales..."
+                    ></textarea>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" @click="showMovementModal = false" class="flex-1 py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">
+                        Cancelar
+                    </button>
+                    <button 
+                        type="submit" 
+                        class="flex-1 py-3 rounded-xl font-bold text-white shadow-lg transition-all transform active:scale-95"
+                        :class="movementForm.direction === 'in' ? 'bg-green-600 hover:bg-green-700 shadow-green-500/30' : 'bg-red-600 hover:bg-red-700 shadow-red-500/30'"
+                        :disabled="movementForm.processing"
+                    >
+                        {{ movementForm.processing ? 'Guardando...' : 'Confirmar' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </n-modal>
+
     <!-- Confirmación Eliminar -->
     <n-modal v-model:show="showDeleteModal" transform-origin="center">
         <div class="bg-white/90 backdrop-blur-xl w-80 rounded-2xl p-6 text-center shadow-2xl">
@@ -276,13 +384,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { ref, computed, watch } from 'vue';
+import { router, usePage, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Back from '@/Components/MyComponents/Back.vue';
 import { 
-  NConfigProvider, NDatePicker, NTag, NModal
+  NConfigProvider, NDatePicker, NTag, NModal, NSelect, NInputNumber
 } from 'naive-ui';
+import { createDiscreteApi } from 'naive-ui';
 
 // 1. INICIALIZAR PERMISOS
 const page = usePage();
@@ -300,10 +409,43 @@ const props = defineProps({
 // Estado
 const showImageModal = ref(false);
 const showDeleteModal = ref(false);
+const showMovementModal = ref(false);
 const filterDate = ref(props.filters.date || Date.now());
+
+// Formulario Movimiento
+const movementForm = useForm({
+    product_id: props.product.id,
+    direction: 'in', // 'in' | 'out'
+    type: 'Compra',  // Default
+    quantity: 1,
+    description: ''
+});
 
 // Computed
 const isLowStock = computed(() => props.product.stock_quantity <= props.product.alert_threshold);
+
+// Opciones de tipo dinámicas según dirección
+const movementTypes = computed(() => {
+    if (movementForm.direction === 'in') {
+        return [
+            { label: 'Compra de Material', value: 'Compra' },
+            { label: 'Devolución de Cliente', value: 'Devolucion' },
+            { label: 'Ajuste de Inventario (+)', value: 'Ajuste' }
+        ];
+    } else {
+        return [
+            { label: 'Venta / Salida', value: 'Venta' },
+            { label: 'Merma / Daño', value: 'Merma' },
+            { label: 'Uso Interno / Demo', value: 'Ajuste' } // Ajuste negativo
+        ];
+    }
+});
+
+// Resetear tipo al cambiar dirección para evitar inconsistencias
+watch(() => movementForm.direction, (newVal) => {
+    movementForm.type = newVal === 'in' ? 'Compra' : 'Venta';
+});
+
 
 // Métodos
 const formatCurrency = (value) => {
@@ -332,6 +474,22 @@ const handleDateChange = () => {
         preserveScroll: true,
         preserveState: true,
         only: ['movements', 'filters'] // Partial reload para eficiencia
+    });
+};
+
+const submitMovement = () => {
+    movementForm.post(route('inventory-movements.store'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showMovementModal.value = false;
+            movementForm.reset('quantity', 'description');
+            const { message } = createDiscreteApi(['message']);
+            message.success('Inventario actualizado');
+        },
+        onError: () => {
+             const { message } = createDiscreteApi(['message']);
+             message.error('Error al registrar movimiento. Verifica el stock.');
+        }
     });
 };
 
@@ -366,6 +524,13 @@ const iosThemeOverrides = {
   DatePicker: {
       itemTextColorActive: '#4F46E5',
       itemBorderRadius: '8px'
+  },
+  Select: {
+      peers: {
+          InternalSelection: {
+              borderRadius: '12px'
+          }
+      }
   }
 };
 </script>

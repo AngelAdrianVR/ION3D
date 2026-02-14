@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PortfolioItem;
+use App\Models\Product;
 use App\Models\ServicePackage;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -125,6 +126,41 @@ class LandingController extends Controller
         return Inertia::render('Landing/Services', [
             'packages' => $packages,
             'initialCategory' => $category
+        ]);
+    }
+
+    /**
+     * Muestra la vista de Productos (NUEVO MÉTODO).
+     */
+    public function products()
+    {
+        // Usamos paginate(25) en lugar de get()
+        $products = Product::where('is_active', true)
+            ->orderBy('created_at', 'desc')
+            ->paginate(25) // Paginación de 25 elementos
+            ->through(function ($product) { 
+                // Usamos through() para transformar la colección sin perder la data de paginación
+                
+                // Lógica de imagen
+                $imgUrl = null; 
+                $imgUrl = $product->getFirstMediaUrl('product_image'); 
+
+                return [
+                    'id' => $product->id,
+                    'sku' => $product->sku,
+                    'name' => $product->name,
+                    'description' => Str::limit($product->description, 100),
+                    'price' => (float) $product->sale_price,
+                    'stock' => (int) $product->stock_quantity,
+                    'alert_threshold' => (int) $product->alert_threshold,
+                    'image' => $imgUrl ?: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&q=80&w=1000',
+                    'is_low_stock' => $product->stock_quantity <= $product->alert_threshold && $product->stock_quantity > 0,
+                    'is_out_of_stock' => $product->stock_quantity <= 0,
+                ];
+            });
+
+        return Inertia::render('Landing/Products', [
+            'products' => $products
         ]);
     }
 
