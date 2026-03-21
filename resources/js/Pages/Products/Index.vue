@@ -78,6 +78,7 @@
                         :src="product.image_url" 
                         class="h-full w-full object-cover" 
                         alt="Producto"
+                        @error="handleImageError"
                     />
                     <div v-else class="h-full w-full flex items-center justify-center text-gray-300">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -184,7 +185,7 @@
           <!-- Modal Visualizador de Imagen -->
           <n-modal v-model:show="showImageModal" transform-origin="center">
             <div class="bg-transparent p-0 outline-none flex justify-center items-center" style="max-height: 90vh; max-width: 90vw;">
-                <img :src="selectedImage" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl border-4 border-white/20" alt="Vista previa">
+                <img :src="selectedImage" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl border-4 border-white/20" alt="Vista previa" @error="handleImageError">
             </div>
           </n-modal>
 
@@ -233,6 +234,31 @@ const formatCurrency = (value) => {
     }).format(value);
 };
 
+// MANEJADOR DE ERRORES DE IMAGEN (RETRY AUTOMÁTICO)
+const handleImageError = (e) => {
+    const img = e.target;
+    // Obtener número de reintentos actuales (máximo 3)
+    const currentRetries = parseInt(img.getAttribute('data-retries') || '0', 10);
+    
+    if (currentRetries < 3) {
+        img.setAttribute('data-retries', currentRetries + 1);
+        
+        // Esperar 1.5 segundos antes de intentar recargar
+        setTimeout(() => {
+            try {
+                // Generar URL con parámetro para evitar la caché fallida del navegador
+                const url = new URL(img.src);
+                url.searchParams.set('retry', Date.now());
+                img.src = url.toString();
+            } catch (err) {
+                // Fallback de string si la URL base causa error
+                const separator = img.src.includes('?') ? '&' : '?';
+                img.src = `${img.src.split('retry=')[0]}${separator}retry=${Date.now()}`;
+            }
+        }, 1500);
+    }
+};
+
 // Componentes SVG Render Functions para usar dentro de h()
 const IconEdit = () => h('svg', { xmlns: 'http://www.w3.org/2000/svg', class: 'h-4 w-4', fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '2' }, [
   h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' })
@@ -260,7 +286,11 @@ const columns = [
             onClick: (e) => { e.stopPropagation(); openImageModal(row.image_url); }
         }, [
             row.image_url 
-                ? h('img', { src: row.image_url, class: 'h-full w-full object-cover transition-transform duration-500 group-hover:scale-110' })
+                ? h('img', { 
+                    src: row.image_url, 
+                    class: 'h-full w-full object-cover transition-transform duration-500 group-hover:scale-110',
+                    onError: handleImageError // <-- Aplicado en el render de la tabla
+                  })
                 : h('div', { class: 'h-full w-full flex items-center justify-center text-gray-300' }, h(IconEye))
         ]),
         h('div', { class: 'flex flex-col' }, [

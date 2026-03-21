@@ -80,7 +80,8 @@ export default {
                 cpu: 'M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z',
                 grid: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
                 image: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z',
-                mail: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+                mail: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+                box: 'M20 13V7a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 7v6a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0020 13z M12 22V12 M12 12L3 7 M12 12l9-5'
             };
             return paths[name] || '';
         }
@@ -286,9 +287,9 @@ export default {
                 <footer class="bg-[#0f172a] text-white pt-20 pb-10 relative overflow-hidden mt-auto border-t-0">
                     
                     <!-- LUZ DE BORDE (Running Light) -->
-                    <div class="absolute top-0 left-0 right-0 h-[4px] w-full bg-[#1e293b] overflow-hidden">
+                    <!-- <div class="absolute top-0 left-0 right-0 h-[4px] w-full bg-[#1e293b] overflow-hidden">
                         <div class="absolute inset-0 w-[30%] bg-gradient-to-r from-transparent via-[#4cc9f0] to-transparent animate-scanline h-full blur-[2px]"></div>
-                    </div>
+                    </div> -->
 
                     <!-- Fondos y Efectos -->
                     <div class="absolute inset-0 pointer-events-none overflow-hidden">
@@ -312,7 +313,7 @@ export default {
                                     </span>
                                 </div>
                                 <p class="text-slate-400 text-sm leading-relaxed max-w-sm">
-                                    Pioneros en la digitalización humana. Fusionamos tecnología de escaneo de vanguardia con arte para crear réplicas físicas eternas.
+                                    Fusionamos tecnología de vanguardia para la digitalización humana, de la naturaleza y del arte para crear replicas físicas eternas
                                 </p>
                                 <div class="flex gap-4 pt-2">
                                     <!-- Social Icons Placeholders -->

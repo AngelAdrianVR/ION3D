@@ -6,7 +6,7 @@ const stats = ref([
   { 
     id: 1, 
     label: 'Escaneos Realizados', 
-    targetValue: 1200, 
+    targetValue: 200, 
     displayValue: 0, 
     suffix: '+',
     prefix: '',
@@ -14,7 +14,7 @@ const stats = ref([
   },
   { 
     id: 2, 
-    label: 'Tiempo de Entrega', 
+    label: 'Tiempo de Entrega promedio', 
     targetValue: 48, 
     displayValue: 0, 
     suffix: 'h', 
@@ -24,7 +24,7 @@ const stats = ref([
   { 
     id: 3, 
     label: 'Resolución Texturas', 
-    targetValue: 4, 
+    targetValue: 16, 
     displayValue: 0, 
     suffix: 'K', 
     prefix: '',

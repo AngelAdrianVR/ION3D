@@ -207,12 +207,12 @@ onBeforeUnmount(() => {
 
         <!-- --- TEXTO (Sin barra de progreso) --- -->
         <div class="relative z-20 mt-4 text-center">
-            <h1 class="text-2xl font-bold tracking-widest mb-1 font-sans text-slate-900">
-                ION<span class="text-blue-500">3D</span>
+            <h1 class="text-2xl font-bold tracking-widest mb-1 font-sans text-[#2f4b59]">
+                ORION
             </h1>
             
             <!-- Texto simple pulsante -->
-            <p class="text-sm text-blue-400 font-medium tracking-wide animate-pulse uppercase">
+            <p class="text-sm text-blue-700 font-medium tracking-wide animate-pulse uppercase">
                 Cargando...
             </p>
         </div>

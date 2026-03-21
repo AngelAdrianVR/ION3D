@@ -38,7 +38,7 @@
 
                     <!-- Cover Image con onClick Lightbox -->
                     <div class="w-full h-48 rounded-xl bg-gray-100 overflow-hidden mb-4 cursor-zoom-in relative" @click="openLightbox(pkg.images)">
-                        <img v-if="pkg.preview_image" :src="pkg.preview_image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        <img v-if="pkg.preview_image" :src="pkg.preview_image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" @error="handleImageError" />
                         <div v-else class="w-full h-full flex items-center justify-center text-gray-300 bg-gray-50">
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         </div>
@@ -88,7 +88,7 @@
                   <div v-for="item in portfolio" :key="item.id" class="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative">
                     <!-- Imagen con Lightbox -->
                     <div class="h-48 w-full bg-gray-100 cursor-zoom-in relative overflow-hidden" @click="openLightbox([item.media_object])">
-                       <img v-if="item.image_url" :src="item.image_url" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                       <img v-if="item.image_url" :src="item.image_url" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" @error="handleImageError" />
                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                        
                        <!-- Badges -->
@@ -146,7 +146,7 @@
             <!-- SECCIÓN: OPCIONES Y PRECIOS (Dinámico) -->
             <div class="col-span-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                 <label class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08-.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     Opciones y Precios
                 </label>
                 
@@ -178,7 +178,7 @@
               <!-- Galería de imágenes existentes (Con opción de eliminar) -->
               <div v-if="packageForm.existing_images?.length" class="flex gap-3 overflow-x-auto pb-2 mb-3">
                 <div v-for="(img, idx) in packageForm.existing_images" :key="img.id" class="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 group">
-                  <img :src="img.url" class="w-full h-full object-cover" />
+                  <img :src="img.url" class="w-full h-full object-cover" @error="handleImageError" />
                   <!-- Botón Eliminar Imagen Individual -->
                   <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button type="button" @click="deleteExistingMedia(img.id, idx)" class="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 shadow-lg transform hover:scale-110 transition-transform">
@@ -265,7 +265,7 @@
               <label class="block text-sm font-medium text-gray-700 mb-2">Imagen</label>
               <!-- Imagen Actual -->
               <div v-if="isEditingPortfolio && !portfolioFilePreview && portfolioForm.current_image_url" class="mb-2 w-full h-40 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
-                <img :src="portfolioForm.current_image_url" class="w-full h-full object-contain" />
+                <img :src="portfolioForm.current_image_url" class="w-full h-full object-contain" @error="handleImageError" />
               </div>
 
               <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors relative">
@@ -311,7 +311,7 @@
 
         <!-- Imagen Principal -->
         <div class="relative max-w-[90vw] max-h-[85vh]">
-            <img :src="currentLightboxImage.url" class="max-w-full max-h-[85vh] rounded-md shadow-2xl object-contain" />
+            <img :src="currentLightboxImage.url" class="max-w-full max-h-[85vh] rounded-md shadow-2xl object-contain" @error="handleImageError" />
             <p v-if="currentLightboxImage.title" class="text-center text-white mt-4 font-medium">{{ currentLightboxImage.title }}</p>
         </div>
         
@@ -338,6 +338,31 @@ const props = defineProps({
 // ================= PERMISOS =================
 const page = usePage();
 const can = (permission) => page.props.auth?.permissions?.includes(permission);
+
+// ================= MANEJADOR DE ERRORES DE IMAGEN (RETRY AUTOMÁTICO) =================
+const handleImageError = (e) => {
+    const img = e.target;
+    // Obtener número de reintentos actuales (máximo 3)
+    const currentRetries = parseInt(img.getAttribute('data-retries') || '0', 10);
+    
+    if (currentRetries < 3) {
+        img.setAttribute('data-retries', currentRetries + 1);
+        
+        // Esperar 1.5 segundos antes de intentar recargar
+        setTimeout(() => {
+            try {
+                // Generar URL con parámetro para evitar la caché fallida del navegador
+                const url = new URL(img.src);
+                url.searchParams.set('retry', Date.now());
+                img.src = url.toString();
+            } catch (err) {
+                // Fallback de string si la URL base causa error
+                const separator = img.src.includes('?') ? '&' : '?';
+                img.src = `${img.src.split('retry=')[0]}${separator}retry=${Date.now()}`;
+            }
+        }, 1500);
+    }
+};
 
 // ================= ESTADO Y LÓGICA: LIGHTBOX =================
 const showLightbox = ref(false);
