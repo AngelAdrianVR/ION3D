@@ -26,10 +26,10 @@ export default {
                 position: { x: 0, y: -1.1, z: 0 } // Posición original
             },
             {
-                name: 'Heart',
-                url: '/heart.glb',
-                scale: 7.5,                     // <--- MODIFICA TAMAÑO AQUÍ (Prueba valores como 0.05, 0.1, 1.0 dependiendo del modelo)
-                position: { x: 0, y: 0, z: 0 }  // <--- MODIFICA POSICIÓN AQUÍ { x, y, z }
+                name: 'akron',
+                url: '/Akron.glb',
+                scale: 0.008,                     // <--- MODIFICA TAMAÑO AQUÍ (Prueba valores como 0.05, 0.1, 1.0 dependiendo del modelo)
+                position: { x: 0, y: 0.5, z: 0 }  // <--- MODIFICA POSICIÓN AQUÍ { x, y, z }
             },
             {
                 name: 'Head',
@@ -38,15 +38,15 @@ export default {
                 position: { x: 0, y: 1, z: 0 }
             },
             {
-                name: 'Sofa',
-                url: '/sofa.glb',
-                scale: 2.0,                     // <--- MODIFICA TAMAÑO AQUÍ
-                position: { x: 0, y: 0, z: 0 }
+                name: 'Mujer',
+                url: '/Mujer_sentada.glb',
+                scale: 0.02,                     // <--- MODIFICA TAMAÑO AQUÍ
+                position: { x: 0, y: -0.5, z: 0 }
             }
         ];
         
         let currentModelIndex = 0;
-        const CHANGE_INTERVAL_MS = 3000; // 3 segundos por modelo
+        const CHANGE_INTERVAL_MS = 4000; // 3 segundos por modelo
 
         // Variables de control de animación
         let currentRotationSpeed = 0.15; 
@@ -58,7 +58,7 @@ export default {
             const loader = new GLTFLoader();
 
             // Guardamos la rotación actual para aplicarla al siguiente modelo y que no "salte" visualmente
-            const currentRotationY = modelGroup ? modelGroup.rotation.y : Math.PI * 4;
+            const currentRotationY = modelGroup ? modelGroup.rotation.y : (150 * Math.PI / 180);
 
             loader.load(
                 modelConfig.url,
@@ -140,7 +140,8 @@ export default {
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(width, height);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+            // Reducido de 1.5 a 1.1 para mejorar rendimiento sin perder demasiada nitidez
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.2));
             
             renderer.outputColorSpace = THREE.SRGBColorSpace;
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -164,8 +165,9 @@ export default {
             const mainLight = new THREE.DirectionalLight(0xffffff, 2.5);
             mainLight.position.set(5, 10, 7);
             mainLight.castShadow = true;
-            mainLight.shadow.mapSize.width = 1024;
-            mainLight.shadow.mapSize.height = 1024;
+            // Resolución de sombras reducida de 1024 a 512 para optimizar recursos gráficos
+            mainLight.shadow.mapSize.width = 512;
+            mainLight.shadow.mapSize.height = 512;
             scene.add(mainLight);
 
             const fillLight = new THREE.DirectionalLight(0xdbeafe, 1.8);

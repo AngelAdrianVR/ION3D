@@ -122,7 +122,7 @@ const handleSubmit = (e) => {
                             <!-- Tarjetas de Información de Contacto -->
                             <div class="space-y-6 pt-4">
                                 <!-- Ubicación -->
-                                <div class="flex items-start gap-5 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors group cursor-default">
+                                <!-- <div class="flex items-start gap-5 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors group cursor-default">
                                     <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4cc9f0] to-[#2f4b59] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                     </div>
@@ -131,7 +131,7 @@ const handleSubmit = (e) => {
                                         <p class="text-slate-400 text-sm mt-1">Av. Vallarta 2440, Arcos Vallarta<br>Guadalajara, Jalisco, MX.</p>
                                     </div>
                                 </div>
-                                
+                                 -->
                                 <!-- Correo / Teléfono -->
                                 <div class="flex items-start gap-5 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors group cursor-default">
                                     <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4cc9f0] to-[#2f4b59] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
