@@ -43,10 +43,10 @@ export default {
             // Definimos los items principales para usarlos en el menú móvil
             mainNavItems: [
                 { label: 'Inicio', href: '/inicio', icon: 'home' },
-                { label: 'Proceso', href: '/proceso', icon: 'cpu' },
-                { label: 'Servicios', href: '/servicios', icon: 'grid' },
-                { label: 'Productos', href: '/productos', icon: 'box' },
                 { label: 'Galería', href: '/portafolio', icon: 'image' },
+                { label: 'Proceso', href: '/proceso', icon: 'cpu' },
+                { label: 'Productos', href: '/productos', icon: 'box' },
+                { label: 'Servicios', href: '/servicios', icon: 'grid' },
                 { label: 'Contacto', href: '/contacto', icon: 'mail' },
             ]
         }
@@ -120,14 +120,14 @@ export default {
                             class="flex items-center gap-2 group relative shrink-0 transition-all duration-500"
                             :class="[isScrolled ? 'pl-0' : 'mr-auto']"
                         >
-                            <div class="relative size-10 p-1 bg-[#2f4b59] rounded-full flex items-center justify-center text-white overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                <img src="@/../../public/images/orion-logo-blanco.png" alt="">
+                            <div class="relative size-10 p-1 bg-white rounded-full flex items-center justify-center text-white overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                <img src="@/../../public/images/orion-logo-cromo.png" alt="">
                                 <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             </div>
                             <div class="flex flex-col leading-none transition-all duration-300" 
                                  :class="[isScrolled ? 'hidden lg:flex' : 'flex']">
                                 <span class="text-xl font-bold tracking-tight text-[#2f4b59]">
-                                    ORION
+                                    NODO
                                     <!-- <span class="text-slate-400">3D</span> -->
                                 </span>
                             </div>
@@ -138,16 +138,16 @@ export default {
                             <div class="flex items-center transition-all duration-300" 
                                  :class="[isScrolled ? 'gap-1' : 'gap-6 bg-white/50 px-6 py-2 rounded-full border border-white/10 backdrop-blur-sm shadow-sm']">
                                 
+                                <Link href="/portafolio"
+                                    class="relative px-4 py-2 text-sm font-medium transition-colors rounded-full hover:bg-[#2f4b59]/20"
+                                    :class="isActive('/portafolio') ? 'text-[#2f4b59] font-bold bg-gray-200/80' : 'text-slate-600 hover:text-[#2f4b59]'">
+                                    Galería
+                                </Link>
+
                                 <Link href="/proceso" 
                                     class="relative px-4 py-2 text-sm font-medium transition-colors rounded-full hover:bg-[#2f4b59]/20"
                                     :class="isActive('/proceso') ? 'text-[#2f4b59] font-bold bg-gray-200/80' : 'text-slate-600 hover:text-[#2f4b59]'">
                                     Proceso
-                                </Link>
-
-                                <Link href="/servicios"
-                                     class="relative px-4 py-2 text-sm font-medium transition-colors rounded-full hover:bg-[#2f4b59]/20"
-                                     :class="isActive('/servicios') ? 'text-[#2f4b59] font-bold bg-gray-200/80' : 'text-slate-600 hover:text-[#2f4b59]'">
-                                    Servicios
                                 </Link>
 
                                 <Link href="/productos"
@@ -156,11 +156,10 @@ export default {
                                     Productos
                                 </Link>
 
-                                <!-- GALERÍA (Sin Dropdown) -->
-                                <Link href="/portafolio"
-                                    class="relative px-4 py-2 text-sm font-medium transition-colors rounded-full hover:bg-[#2f4b59]/20"
-                                    :class="isActive('/portafolio') ? 'text-[#2f4b59] font-bold bg-gray-200/80' : 'text-slate-600 hover:text-[#2f4b59]'">
-                                    Galería
+                                <Link href="/servicios"
+                                     class="relative px-4 py-2 text-sm font-medium transition-colors rounded-full hover:bg-[#2f4b59]/20"
+                                     :class="isActive('/servicios') ? 'text-[#2f4b59] font-bold bg-gray-200/80' : 'text-slate-600 hover:text-[#2f4b59]'">
+                                    Servicios
                                 </Link>
                                 
                                  <Link href="/contacto" 
@@ -304,11 +303,11 @@ export default {
                             <!-- Columna 1: Marca -->
                             <div class="md:col-span-4 space-y-6">
                                 <div class="flex items-center gap-3">
-                                    <div @click="$inertia.visit(route('login'))" class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10 shadow-[0_0_15px_rgba(76,201,240,0.2)]">
-                                        <img src="@/../../public/images/orion-logo-blanco.png" alt="" class="w-6 h-6">
+                                    <div @click="$inertia.visit(route('login'))" class="w-10 h-10 bg-white/100 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10 shadow-[0_0_15px_rgba(76,201,240,0.2)]">
+                                        <img src="@/../../public/images/orion-logo-cromo.png" alt="" class="w-full">
                                     </div>
                                     <span class="text-2xl font-bold tracking-tight text-white">
-                                        ORION
+                                        NODO
                                         <!-- <span class="text-[#4cc9f0]">3D</span> -->
                                     </span>
                                 </div>
@@ -341,14 +340,44 @@ export default {
                             <div class="md:col-span-3 space-y-6">
                                 <h4 class="text-white font-bold uppercase tracking-wider text-xs border-b border-white/10 pb-2 inline-block">Servicios</h4>
                                 <ul class="space-y-3 text-sm text-slate-400">
-                                    <li><Link href="/servicios/escaneo-personas" class="hover:text-[#4cc9f0] transition-colors">Escaneo de Personas</Link></li>
-                                    <li><Link href="/servicios/impresion" class="hover:text-[#4cc9f0] transition-colors">Impresión Full Color</Link></li>
-                                    <li><Link href="/servicios/modelado" class="hover:text-[#4cc9f0] transition-colors">Modelado & Diseño</Link></li>
+                                    <li><Link href="#" class="hover:text-[#4cc9f0] transition-colors">Diagnóstico y análisis del espacio</Link></li>
+                                    <li><Link href="#" class="hover:text-[#4cc9f0] transition-colors">Diseño y co-creación</Link></li>
+                                    <li><Link href="#" class="hover:text-[#4cc9f0] transition-colors">Instalación del sistema</Link></li>
+                                    <li><Link href="#" class="hover:text-[#4cc9f0] transition-colors">Evolución del espacio</Link></li>
+                                    <li><Link href="#" class="hover:text-[#4cc9f0] transition-colors">Plataforma digital</Link></li>
                                 </ul>
                             </div>
 
-                            <!-- Columna 4: Contacto -->
+                            <!-- Productos -->
                             <div class="md:col-span-3 space-y-6">
+                                <h4 class="text-white font-bold uppercase tracking-wider text-xs border-b border-white/10 pb-2 inline-block">Productos</h4>
+                                <ul class="space-y-4 text-sm text-slate-400">
+                                    <li class="flex items-start gap-3">
+                                        <span>Sistema NODO</span>
+                                    </li>
+                                    <li class="flex items-center gap-3">
+                                        <span>Colecciones</span>
+                                    </li>
+                                    <li class="flex items-center gap-3">
+                                        <span>Accesorios</span>
+                                    </li>
+                                    <li class="flex items-center gap-3">
+                                        <span>Soluciones</span>
+                                    </li>
+                                    <li class="flex items-center gap-3">
+                                        <span>Plataforma digital</span>
+                                    </li>
+                                </ul>
+                                <figure class="mt-4 cursor-pointer">
+                                    <a class="flex justify-end items-center" href="https://app.dtw.com.mx/" target="_blank">
+                                        <p class="text-white text-xl">BY</p>
+                                        <img class="w-20 lg:w-[30%]" src="@/../../public/images/DTW_logo_blanco.png" alt="">
+                                    </a>
+                                </figure>
+                            </div>
+
+                            <!-- Columna 4: Contacto -->
+                            <!-- <div class="md:col-span-3 space-y-6">
                                 <h4 class="text-white font-bold uppercase tracking-wider text-xs border-b border-white/10 pb-2 inline-block">Contacto</h4>
                                 <ul class="space-y-4 text-sm text-slate-400">
                                     <li class="flex items-start gap-3">
@@ -370,7 +399,7 @@ export default {
                                     <img class="w-20 lg:w-[30%]" src="@/../../public/images/DTW_logo_blanco.png" alt="">
                                 </a>
                             </figure>
-                            </div>
+                            </div> -->
                         </div>
 
                         <!-- Bottom Footer -->

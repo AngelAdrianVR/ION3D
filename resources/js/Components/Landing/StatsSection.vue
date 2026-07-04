@@ -5,37 +5,37 @@ import { ref, onMounted, computed } from 'vue';
 const stats = ref([
   { 
     id: 1, 
-    label: 'Escaneos Realizados', 
-    targetValue: 200, 
+    label: 'Configura y reconfigura cuando lo necesites', 
+    targetValue: 100, 
     displayValue: 0, 
-    suffix: '+',
+    suffix: '% Modular',
     prefix: '',
     iconPath: 'M3.5 3.5c0-1.1.9-2 2-2h13c1.1 0 2 .9 2 2v13c0 1.1-.9 2-2 2h-13c-1.1 0-2-.9-2-2v-13z M7 7h10 M7 12h10 M7 17h6' // Icono estilo documento/scan
   },
   { 
     id: 2, 
-    label: 'Tiempo de Entrega promedio', 
-    targetValue: 48, 
+    label: 'Un mismo sistema, múltiples posibilidades', 
+    targetValue: '∞', 
     displayValue: 0, 
-    suffix: 'h', 
+    suffix: ' Config.', 
     prefix: '',
     iconPath: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M12 8v4' // Icono escudo/tiempo
   },
   { 
     id: 3, 
-    label: 'Resolución Texturas', 
-    targetValue: 16, 
+    label: 'Instala una vez, evoluciona siempre', 
+    targetValue: null, 
     displayValue: 0, 
-    suffix: 'K', 
+    suffix: ' Instalación única', 
     prefix: '',
     iconPath: 'M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.27 6.96L12 12.01l8.73-5.05 M12 22.08V12' // Cubo 3D
   },
   { 
     id: 4, 
-    label: 'Satisfacción', 
-    targetValue: 100, 
+    label: 'Sistema físico + plataforma digital', 
+    targetValue: 1, 
     displayValue: 0, 
-    suffix: '%', 
+    suffix: ' Ecosistema', 
     prefix: '',
     iconPath: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' // Estrella
   },

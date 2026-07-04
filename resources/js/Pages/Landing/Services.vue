@@ -113,7 +113,7 @@ const themeOverrides = {
                     <div class="text-center transition-all duration-1000 ease-out transform mb-10"
                          :class="showContent ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'">
                         <h1 class="text-4xl md:text-6xl font-black text-slate-800 mb-4 tracking-tight drop-shadow-sm">
-                            SOLUCIONES <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">ION3D</span>
+                            SOLUCIONES <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">NODO</span>
                         </h1>
                         <p class="text-slate-500 max-w-2xl mx-auto text-lg font-light">
                             Tecnología de escaneo e impresión llevada al siguiente nivel.
@@ -183,7 +183,7 @@ const themeOverrides = {
                                                     <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                                 </div>
                                                 <span class="text-slate-700 text-base md:text-lg border-b border-slate-100 pb-1 w-full group-hover:border-slate-300 transition-colors">
-                                                    {{ feature.value || feature }}
+                                                    {{ feature?.value || feature }}
                                                 </span>
                                             </li>
                                         </ul>

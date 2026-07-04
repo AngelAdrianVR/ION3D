@@ -23,7 +23,7 @@ class LandingController extends Controller
         $services = ServicePackage::where('is_active', true)
             ->with('media')
             ->orderBy('is_promo', 'desc') // Prioridad a promos
-            ->take(3) // Solo mostramos 3 en el home
+            ->take(4) // Solo mostramos 3 en el home
             ->get()
             ->map(function ($pkg) {
                 return [
@@ -82,7 +82,7 @@ class LandingController extends Controller
         // Recuperamos solo los paquetes activos
         $packages = ServicePackage::where('is_active', true)
             ->with('media')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'asc')
             ->get()
             ->map(function ($pkg) {
                 
