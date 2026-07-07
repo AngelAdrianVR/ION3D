@@ -63,7 +63,7 @@ onMounted(() => {
 
 <template>
     <AppLayoutLanding>
-        <Head title="Nuestro Proceso - ION3D" />
+        <Head title="Nuestro Proceso" />
 
         <!-- Contenedor Principal LIGHT MODE (Fondo blanco con luces suaves) -->
         <div class="min-h-screen bg-white text-slate-900 relative overflow-hidden font-sans selection:bg-[#4cc9f0] selection:text-white">

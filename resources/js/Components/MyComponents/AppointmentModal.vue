@@ -251,7 +251,7 @@ export default {
                     </div>
                     <div>
                         <h3 class="text-xl font-bold text-[#2f4b59]">Agendar Visita</h3>
-                        <p class="text-xs text-slate-500 font-medium uppercase tracking-wider">Estudio ION3D</p>
+                        <p class="text-xs text-slate-500 font-medium uppercase tracking-wider">Estudio ORION-NODO</p>
                     </div>
                 </div>
             </template>

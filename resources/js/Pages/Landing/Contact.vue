@@ -139,8 +139,8 @@ const handleSubmit = (e) => {
                                     </div>
                                     <div>
                                         <h3 class="font-bold text-lg text-white">Contacto Directo</h3>
-                                        <p class="text-slate-400 text-sm mt-1">hola@ion3d.com</p>
-                                        <p class="text-[#4cc9f0] font-bold text-sm mt-1">+52 (33) 4324 9116</p>
+                                        <!-- <p class="text-slate-400 text-sm mt-1">hola@ion3d.com</p> -->
+                                        <p class="text-[#4cc9f0] font-bold text-sm mt-1">+52 (33) 0000 0000</p>
                                     </div>
                                 </div>
                             </div>

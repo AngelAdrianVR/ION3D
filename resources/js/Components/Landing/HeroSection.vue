@@ -5,15 +5,15 @@ import { ref } from 'vue';
 import ImageCarousel from './ImageCarousel.vue';
 
 //images
-import image1 from '@/../../public/images/Evolución-_1_.webp';
-import image2 from '@/../../public/images/Evolución-_2_.webp';
-import image3 from '@/../../public/images/Evolución-_3_.webp';
-import image4 from '@/../../public/images/Evolución-_4_.webp';
-import image5 from '@/../../public/images/Evolución-_5_.webp';
-import image6 from '@/../../public/images/Evolución-_6_.webp';
-import image7 from '@/../../public/images/Evolución-_7_.webp';
-import image8 from '@/../../public/images/Evolución-_8_.webp';
-import image9 from '@/../../public/images/Evolución-_9_.webp';
+import image1 from '@/../../public/images/Evolucion-_1_.webp';
+import image2 from '@/../../public/images/Evolucion-_2_.webp';
+import image3 from '@/../../public/images/Evolucion-_3_.webp';
+import image4 from '@/../../public/images/Evolucion-_4_.webp';
+import image5 from '@/../../public/images/Evolucion-_5_.webp';
+import image6 from '@/../../public/images/Evolucion-_6_.webp';
+import image7 from '@/../../public/images/Evolucion-_7_.webp';
+import image8 from '@/../../public/images/Evolucion-_8_.webp';
+import image9 from '@/../../public/images/Evolucion-_9_.webp';
 
 
 export default {

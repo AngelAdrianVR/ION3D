@@ -1,23 +1,27 @@
 <script setup>
 import { ref, computed } from 'vue';
 
+//images
+import step1Image from '@/../../public/images/agendar cita.jpg';
+import step4Image from '@/../../public/images/evoluciona.webp';
+
 const activeStep = ref(0);
 
 // Datos actualizados con los nuevos pasos (3 y 4)
 const steps = [
   { 
     id: 1, 
-    title: 'Agendar Cita', 
+    title: 'Transforma tu espacio', 
     duration: 'Online', 
-    shortDesc: 'Reserva tu sesión fácilmente.',
+    shortDesc: 'Quiero transformar mi espacio',
     description: 'Selecciona el paquete ideal para ti y elige el horario que mejor te convenga en nuestro calendario en línea. Recibirás una confirmación inmediata.',
     techSpecs: ['Reserva 24/7', 'Asesoría Previa', 'Confirmación Instantánea'],
-    image: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&q=80&w=1000'
+    image: step1Image
   },
   { 
     id: 2, 
-    title: 'Sesión de Escaneo', 
-    duration: '30 min', 
+    title: 'Diseño y cotización', 
+    duration: '', 
     shortDesc: 'Asiste a nuestro estudio.',
     description: 'Ven a nuestra cabina fotogramétrica. Recomendamos usar ropa con texturas, patrones o colores mate. Evita el color negro absoluto, materiales brillantes o transparencias para una captura perfecta.',
     techSpecs: ['Evitar Ropa Negra', 'Sin Materiales Brillantes', 'Captura en 1/1000s'],
@@ -25,8 +29,8 @@ const steps = [
   },
   { 
     id: 3, 
-    title: 'Personaliza', 
-    duration: '1-2 Días', 
+    title: 'Agenda instalación', 
+    duration: '', 
     shortDesc: 'Hazlo único.',
     description: 'Aquí ocurre la magia digital. Puedes personalizar tu gemelo digital cambiando tu vestimenta, agregando accesorios únicos o integrando el modelo en escenas temáticas antes de la impresión.',
     techSpecs: ['Cambio de Ropa', 'Accesorios 3D', 'Escenas Virtuales'],
@@ -35,12 +39,12 @@ const steps = [
   },
   { 
     id: 4, 
-    title: 'Impresión 3D', 
+    title: 'Evoluciona', 
     duration: 'Entrega', 
     shortDesc: 'Recibe tu figura.',
     description: 'Una vez personalizado y aprobado, imprimimos tu figura. Te notificaremos cuando esté lista para que pases a recogerla al estudio o te la enviamos asegurada a tu domicilio.',
     techSpecs: ['Pickup en Estudio', 'Envío a Domicilio', 'Protección Premium'],
-    image: 'https://images.unsplash.com/photo-1631541909061-71e349d1f203?auto=format&fit=crop&q=80&w=1000'
+    image: step4Image
   },
 ];
 
