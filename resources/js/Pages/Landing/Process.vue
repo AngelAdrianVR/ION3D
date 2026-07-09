@@ -3,6 +3,9 @@ import AppLayoutLanding from '@/Layouts/AppLayoutLanding.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
 
+//images
+import image1 from '@/../../public/images/proceso-1.webp';
+
 // Datos actualizados con los nuevos pasos de Personalización e Impresión
 const steps = [
   { 
@@ -12,7 +15,7 @@ const steps = [
     duration: 'Online', 
     description: 'Antes de diseñar, queremos que descubras todo lo que es posible. Explora proyectos, temáticas, estilos, eventos y espacios creados con el ecosistema NODO para encontrar ideas que despierten tu creatividad. \n \n Aquí podrás: \n •  Explorar proyectos reales \n •  Descubrir diferentes estilos \n •  Conocer aplicaciones por industria \n •  Ver transformaciones Antes/Después \n •  Guardar ideas favoritas \n •  Inspirarte con tendencias y colecciones \n •  Arte y esculturas',
     specs: ['Reserva 24/7', 'Asesoría Previa', 'Confirmación Instantánea'],
-    image: '/images/proceso-1.webp'
+    image: image1
   },
   { 
     id: 2, 

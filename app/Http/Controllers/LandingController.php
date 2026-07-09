@@ -32,7 +32,8 @@ class LandingController extends Controller
                     'slug' => $pkg->slug ?? Str::slug($pkg->title),
                     'desc' => Str::limit($pkg->description, 120), // Truncar descripción
                     // Usamos la primera imagen como "ícono" o miniatura
-                    'image' => $pkg->getFirstMediaUrl('package_images') ?: null, 
+                    'image' => $pkg->getFirstMediaUrl('package_images') ?: null,
+                    'video_url' => $pkg->video_url,
                 ];
             });
 
@@ -117,6 +118,7 @@ class LandingController extends Controller
                     'features' => $pkg->features ?? [],
                     'prices' => $pricing,
                     'is_promo' => (bool) $pkg->is_promo,
+                    'video_url' => $pkg->video_url,
                     // Enviamos array completo de imágenes y fallback
                     'images' => count($images) > 0 ? $images : ['https://images.unsplash.com/photo-1631541909061-71e349d1f203?auto=format&fit=crop&q=80&w=1000'],
                     'image_fallback' => 'https://images.unsplash.com/photo-1631541909061-71e349d1f203?auto=format&fit=crop&q=80&w=1000'

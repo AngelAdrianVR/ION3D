@@ -21,6 +21,7 @@ class ServicePackage extends Model implements HasMedia
         'pricing_options', // Precios dinámicos con opciones adicionales
         'is_promo',
         'is_active',
+        'video_url',
     ];
 
     protected $casts = [
