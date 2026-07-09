@@ -36,11 +36,16 @@
                        </n-tag>
                     </div>
 
-                    <!-- Cover Image con onClick Lightbox -->
+                    <!-- Cover Image / Video con onClick Lightbox -->
                     <div class="w-full h-48 rounded-xl bg-gray-100 overflow-hidden mb-4 cursor-zoom-in relative" @click="openLightbox(pkg.images)">
-                        <img v-if="pkg.preview_image" :src="pkg.preview_image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" @error="handleImageError" />
+                        <video v-if="pkg.video_url" :src="pkg.video_url" autoplay loop muted playsinline class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"></video>
+                        <img v-else-if="pkg.preview_image" :src="pkg.preview_image" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" @error="handleImageError" />
                         <div v-else class="w-full h-full flex items-center justify-center text-gray-300 bg-gray-50">
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        </div>
+                        <!-- Badge de Video -->
+                        <div v-if="pkg.video_url" class="absolute top-2 left-2 bg-purple-600/80 backdrop-blur text-white text-xs px-2 py-1 rounded-md font-bold pointer-events-none flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> VIDEO
                         </div>
                         <div v-if="pkg.images && pkg.images.length > 1" class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md">
                             +{{ pkg.images.length - 1 }}
@@ -195,6 +200,34 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     <span v-if="packageForm.images?.length" class="text-green-600 font-medium">{{ packageForm.images.length }} nuevos archivos seleccionados</span>
                     <span v-else class="text-xs">Click para subir nuevas imágenes (Múltiple)</span>
+                  </div>
+              </div>
+            </div>
+
+            <!-- GESTIÓN DE VIDEO -->
+            <div class="col-span-2 mt-2 bg-purple-50/50 p-4 rounded-xl border border-purple-100">
+              <label class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                Video del Servicio (opcional)
+              </label>
+              
+              <!-- Video actual (si existe) -->
+              <div v-if="packageForm.video_url && !packageForm.remove_video" class="mb-3">
+                <div class="relative rounded-lg overflow-hidden border border-purple-200 bg-black">
+                  <video :src="packageForm.video_url" controls muted class="w-full max-h-40 object-contain"></video>
+                  <button type="button" @click="packageForm.remove_video = true" class="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 shadow-lg transition-transform hover:scale-110">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Input File Video -->
+              <div class="border-2 border-dashed border-purple-300 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:bg-purple-50 transition-colors relative">
+                  <input type="file" @change="handlePackageVideo" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="video/mp4,video/webm,video/ogg" />
+                  <div class="text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    <span v-if="packageForm.video" class="text-green-600 font-medium">{{ packageForm.video.name }} seleccionado</span>
+                    <span v-else class="text-xs">Click para subir video (MP4, WebM). Se reproducirá en bucle</span>
                   </div>
               </div>
             </div>
@@ -402,15 +435,26 @@ const packageForm = useForm({
   title: '',
   description: '',
   features: [''],
-  pricing_options: [{ label: '', price: 0 }], // NUEVO: Array para precios
+  pricing_options: [{ label: '', price: 0 }],
   is_active: true,
   is_promo: false,
-  images: [], // Archivos nuevos
-  existing_images: [], // Imágenes para mostrar y borrar
+  images: [], // Archivos nuevos de imagen
+  existing_images: [], // Imágenes existentes para mostrar y borrar
+  video: null, // Archivo nuevo de video
+  video_url: null, // URL del video existente (si ya tiene)
+  remove_video: false, // Flag para eliminar video existente
 });
 
 const handlePackageFiles = (e) => {
     packageForm.images = Array.from(e.target.files);
+};
+
+const handlePackageVideo = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        packageForm.video = file;
+        packageForm.remove_video = false;
+    }
 };
 
 const addPriceOption = () => {
@@ -461,14 +505,18 @@ const openPackageModal = (pkg = null) => {
         
     packageForm.is_active = Boolean(pkg.is_active);
     packageForm.is_promo = Boolean(pkg.is_promo);
-    packageForm.existing_images = pkg.images || []; 
+    packageForm.existing_images = pkg.images || [];
+    packageForm.video_url = pkg.video_url || null;
+    packageForm.remove_video = false;
   } else {
     // MODO CREACIÓN
     isEditingPackage.value = false;
-    packageForm.id = null; // IMPORTANTE: Resetear ID explícitamente
+    packageForm.id = null;
     packageForm.features = [''];
     packageForm.pricing_options = [{ label: '', price: 0 }];
     packageForm.existing_images = [];
+    packageForm.video_url = null;
+    packageForm.remove_video = false;
   }
   showPackageModal.value = true;
 };

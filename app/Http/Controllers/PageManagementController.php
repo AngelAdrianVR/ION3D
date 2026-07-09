@@ -77,15 +77,24 @@ class PageManagementController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'features' => 'nullable|array',
-            'pricing_options' => 'nullable|array', // Nuevo Array de objetos
+            'pricing_options' => 'nullable|array',
             'is_promo' => 'boolean',
             'is_active' => 'boolean',
             'images.*' => 'image|max:10240',
+            'video' => 'nullable|mimes:mp4,webm,ogg|max:51200',
         ]);
 
         // CORRECCIÓN: Usar función para generar slug único y evitar error 1062
         $validated['slug'] = $this->createUniqueSlug($validated['title']);
         $validated['price'] = 0; // Valor por defecto si usas opciones
+
+        // Manejar video: guardar en public/videos/packages/
+        if ($request->hasFile('video')) {
+            $videoFile = $request->file('video');
+            $videoName = time() . '_' . preg_replace('/[^A-Za-z0-9\.\-]/', '_', $videoFile->getClientOriginalName());
+            $videoFile->move(public_path('videos/packages'), $videoName);
+            $validated['video_url'] = '/videos/packages/' . $videoName;
+        }
 
         $package = ServicePackage::create($validated);
 
@@ -109,11 +118,32 @@ class PageManagementController extends Controller
             'is_promo' => 'boolean',
             'is_active' => 'boolean',
             'images.*' => 'nullable|image|max:10240',
+            'video' => 'nullable|mimes:mp4,webm,ogg|max:51200',
+            'remove_video' => 'nullable|boolean',
         ]);
 
         if ($package->title !== $validated['title']) {
             // CORRECCIÓN: Al actualizar, verificar unicidad ignorando el ID actual
             $validated['slug'] = $this->createUniqueSlug($validated['title'], $package->id);
+        }
+
+        // Manejar video: reemplazar o eliminar
+        if ($request->boolean('remove_video')) {
+            // Eliminar archivo físico del video anterior
+            if ($package->video_url && file_exists(public_path($package->video_url))) {
+                unlink(public_path($package->video_url));
+            }
+            $validated['video_url'] = null;
+        } elseif ($request->hasFile('video')) {
+            // Eliminar video anterior si existe
+            if ($package->video_url && file_exists(public_path($package->video_url))) {
+                unlink(public_path($package->video_url));
+            }
+            // Guardar nuevo video
+            $videoFile = $request->file('video');
+            $videoName = time() . '_' . preg_replace('/[^A-Za-z0-9\.\-]/', '_', $videoFile->getClientOriginalName());
+            $videoFile->move(public_path('videos/packages'), $videoName);
+            $validated['video_url'] = '/videos/packages/' . $videoName;
         }
 
         $package->update($validated);

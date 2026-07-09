@@ -15,45 +15,62 @@ const props = defineProps({
         <div class="container mx-auto px-6">
             <div class="text-center mb-16 max-w-2xl mx-auto">
                 <h2 class="text-sm font-bold tracking-widest text-[#4cc9f0] uppercase mb-2">Nuestras Capacidades</h2>
-                <h3 class="text-3xl md:text-4xl font-bold text-slate-900">Soluciones Integrales 3D</h3>
+                <h3 class="text-3xl md:text-4xl font-bold text-slate-900">Soluciones Integrales</h3>
             </div>
 
             <!-- Grid de Servicios -->
             <div class="grid md:grid-cols-3 gap-8">
                 <div v-for="(service, idx) in services" :key="service.id" 
-                     class="group p-8 rounded-3xl bg-slate-50 border border-slate-100 hover:border-[#4cc9f0]/30 hover:shadow-2xl hover:shadow-[#2f4b59]/10 transition-all duration-500 cursor-default relative overflow-hidden flex flex-col">
+                     class="group relative h-[400px] md:h-[450px] rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:shadow-[#2f4b59]/20 transition-all duration-500 cursor-pointer flex flex-col">
                     
-                    <!-- Fondo gradiente al hover -->
-                    <div class="absolute inset-0 bg-gradient-to-br from-white to-blue-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <!-- Video de fondo (ocupa toda la tarjeta, se reproduce en bucle) -->
+                    <video v-if="service.video_url" :src="service.video_url" autoplay loop muted playsinline
+                           class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"></video>
+                    
+                    <!-- Imagen de fondo (ocupa toda la tarjeta) -->
+                    <img v-else-if="service.image" :src="service.image" :alt="service.title"
+                         class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    
+                    <!-- Fondo fallback si no hay imagen ni video -->
+                    <div v-else class="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-900"></div>
 
-                    <!-- Icono / Imagen Miniatura -->
-                    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 border border-slate-100 overflow-hidden transition-all duration-300 relative z-10 text-[#2f4b59]">
-                        <!-- Si hay imagen en BD, la mostramos -->
-                        <img v-if="service.image" :src="service.image" :alt="service.title" class="w-full h-full object-cover" />
+                    <!-- Overlay de oscuridad: invisible en desktop hasta hover, siempre visible en mobile -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent
+                                opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                    <!-- Overlay sutil base (solo desktop, se desvanece al hover) -->
+                    <div class="absolute inset-0 bg-slate-900/10 hidden md:block group-hover:opacity-0 transition-opacity duration-500"></div>
+
+                    <!-- Contenido de texto -->
+                    <div class="relative z-10 flex flex-col justify-end h-full p-6 md:p-8">
                         
-                        <!-- Fallback: Icono genérico si no hay imagen -->
-                        <svg v-else class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                        </svg>
-                    </div>
+                        <!-- Info que se revela en hover (desktop) o siempre visible (mobile) -->
+                        <div class="transform translate-y-0 md:translate-y-8 md:group-hover:translate-y-0 transition-all duration-500
+                                    opacity-100 md:opacity-0 md:group-hover:opacity-100">
+                            <!-- Icono pequeño decorativo (si no hay imagen ni video) -->
+                            <div v-if="!service.image && !service.video_url" class="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center mb-4 text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                </svg>
+                            </div>
+                            
+                            <p class="text-white/80 text-sm leading-relaxed mb-4 line-clamp-2">
+                                {{ service.desc }}
+                            </p>
 
-                    <h4 class="text-xl font-bold text-slate-900 mb-3 relative z-10">{{ service.title }}</h4>
-                    <p class="text-slate-500 leading-relaxed mb-6 flex-grow relative z-10 group-hover:text-slate-600 transition-colors line-clamp-3">
-                        {{ service.desc }}
-                    </p>
+                            <Link :href="route('landing.services', service.slug)" 
+                                  class="inline-flex items-center text-sm font-bold text-[#4cc9f0] hover:text-white transition-colors gap-2">
+                                Ver detalles
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                            </Link>
+                        </div>
 
-                    <!-- Botón "Ver Detalles" (Solicitado) -->
-                    <div class="relative z-10 mt-auto">
-                        <Link :href="route('landing.services', service.slug)" 
-                              class="inline-flex items-center text-sm font-bold text-[#4cc9f0] hover:text-[#2f4b59] transition-colors gap-2">
-                            Ver detalles
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                        </Link>
-                    </div>
-
-                    <!-- Flecha decorativa fondo -->
-                    <div class="absolute bottom-6 right-6 opacity-0 group-hover:opacity-10 pointer-events-none transform translate-x-4 group-hover:translate-x-0 transition-all duration-500 text-[#4cc9f0]">
-                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        <!-- Título: siempre visible, en desktop sube ligeramente al hover -->
+                        <div class="transform md:group-hover:-translate-y-2 transition-all duration-500 mt-4 md:mt-0">
+                            <h4 class="text-xl md:text-2xl font-bold text-white drop-shadow-lg">
+                                {{ service.title }}
+                            </h4>
+                        </div>
                     </div>
                 </div>
             </div>
