@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 
 //images
-import step1Image from '@/../../public/images/agendar cita.jpg';
+import step1Image from '@/../../public/images/proceso-1.webp';
 import step4Image from '@/../../public/images/evoluciona.webp';
 
 const activeStep = ref(0);
@@ -14,7 +14,7 @@ const steps = [
     title: 'DESCUBRE TU ESPACIO', 
     duration: 'Online', 
     shortDesc: 'Quiero transformar mi espacio',
-    description: 'Selecciona el paquete ideal para ti y elige el horario que mejor te convenga en nuestro calendario en línea. Recibirás una confirmación inmediata.',
+    description: 'Antes de diseñar, queremos que descubras todo lo que es posible. Explora proyectos, temáticas, estilos, eventos y espacios creados con el ecosistema NODO para encontrar ideas que despierten tu creativiad. \n \n Aquí podrás: \n •  Explorar proyectos reales \n •  Descubir diferentes estilos \n •  Conocer aplicaciones por industria \n •  Ver transformaciones Antes/Después \n •  Guardar ideas favoritas \n •  Inspirarte con tendencias y colecciones \n •  Arte y esculturas',
     techSpecs: ['Reserva 24/7', 'Asesoría Previa', 'Confirmación Instantánea'],
     image: step1Image
   },
@@ -23,27 +23,26 @@ const steps = [
     title: 'Diseña TU ESPACIO', 
     duration: '', 
     shortDesc: 'Asiste a nuestro estudio.',
-    description: 'Ven a nuestra cabina fotogramétrica. Recomendamos usar ropa con texturas, patrones o colores mate. Evita el color negro absoluto, materiales brillantes o transparencias para una captura perfecta.',
-    techSpecs: ['Evitar Ropa Negra', 'Sin Materiales Brillantes', 'Captura en 1/1000s'],
-    image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=1000'
+    description: 'Ahora es momento de dar forma a tus ideas. \n Con ayuda de la plataforma digital podrás diseñar tu espacio, definir distribuciones, seleccionar materiales y visualizar el resultado antes de tomar una decisión. \n \n Aquí podrás: \n • Subir fotografias de tu espacio \n • Escanear o ingresar medidas \n • Configurar la distribución \n • Seleccionar NODOS y accesorios \n • Elegir materiales y acabados \n • Visualizar diferentes configuraciones \n • Calcular automáticamente los componentes necesarios \n • Conocer el presupuesto estimado \n • Guardar y modificar tu proyecto',
+    techSpecs: ['Inspírate', 'Crea sin límites', 'Diseñamos contigo'],
+    video: '/videos/Video del 2.mp4',
   },
   { 
     id: 3, 
     title: 'Hazlo realidad', 
     duration: '', 
     shortDesc: 'Hazlo único.',
-    description: 'Aquí ocurre la magia digital. Puedes personalizar tu gemelo digital cambiando tu vestimenta, agregando accesorios únicos o integrando el modelo en escenas temáticas antes de la impresión.',
-    techSpecs: ['Cambio de Ropa', 'Accesorios 3D', 'Escenas Virtuales'],
-    // Imagen sugerida: Edición digital / Software
-    image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=1000'
+    description: 'Con tu proyecto definido, sólo confirma tu configuración y deiseño, agenda la instalación y nosotros nos encargaremos de convertir tu diseño en un espacion real. \n \n Aquí podrás: \n • Confirmar tu diseño \n • Agendar una fecha de instalación \n • Realizar el pago \n • Dar seguimiento al proyecto \n • Recibir la instalación del sistema NODO',
+    techSpecs: ['Comienza La Transformación', 'Del Diseño a La Realidad', 'Agenda Tu Instalación'],
+    video: '/videos/Video del 3.mp4',
   },
   { 
     id: 4, 
     title: 'Evoluciona', 
     duration: 'Entrega', 
     shortDesc: 'Recibe tu figura.',
-    description: 'Una vez personalizado y aprobado, imprimimos tu figura. Te notificaremos cuando esté lista para que pases a recogerla al estudio o te la enviamos asegurada a tu domicilio.',
-    techSpecs: ['Pickup en Estudio', 'Envío a Domicilio', 'Protección Premium'],
+    description: 'El sistema NODO está diseñado para adaptarse a nuevas necesidades. \n Agrega nuevos componentes, reorganiza la distribución y crea nuevas experiencias sin reemplazar la infrastructura existente. \n \n Aquí podrás: \n • Hacer remodelaciones \n • Ampliar el sistema \n • Agregar nuevos NODOS \n • Incorporar accesorios y nuevos materiales \n • Cambiar distribuciones \n • Actualizar acabados \n • Crear nuevas configuraciones desde la plataforma',
+    techSpecs: ['Diseño Que Evoluciona', 'Renueva', 'Transforma De Nuevo'],
     image: step4Image
   },
 ];
@@ -125,16 +124,19 @@ const setActive = (index) => {
         </div>
 
         <!-- Panel de Detalles (Sección Dinámica con Imagen) -->
-        <div class="relative min-h-[400px] md:min-h-[350px]">
+        <div class="relative min-h-[900px] md:min-h-[600px]">
           <TransitionGroup name="fade" mode="out-in">
             <div v-for="(step, index) in steps" :key="step.id" v-show="activeStep === index"
                  class="absolute inset-0 w-full">
               
               <div class="bg-slate-800/60 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl h-full">
                 
-                <!-- Imagen del Paso (Nueva Sección) -->
+                <!-- Imagen / Video del Paso -->
                 <div class="w-full md:w-5/12 relative h-48 md:h-auto overflow-hidden group">
-                    <img :src="step.image" :alt="step.title" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <video v-if="step.video" :src="step.video" autoplay loop muted playsinline
+                           class="absolute inset-0 w-full h-full object-cover"></video>
+                    <img v-else :src="step.image" :alt="step.title"
+                         class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <!-- Gradiente Overlay para texto legible si fuera necesario -->
                     <div class="absolute inset-0 bg-gradient-to-r from-slate-900/10 to-slate-900/50 mix-blend-multiply"></div>
                     <div class="absolute top-4 left-4 bg-black/60 backdrop-blur text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
@@ -145,7 +147,7 @@ const setActive = (index) => {
                 <!-- Contenido de Texto -->
                 <div class="flex-1 p-8 md:p-10 flex flex-col justify-center text-center md:text-left">
                    <h5 class="text-2xl md:text-3xl font-bold text-white mb-4">{{ step.title }}</h5>
-                   <p class="text-slate-300 text-lg leading-relaxed mb-6">{{ step.description }}</p>
+                   <p class="text-slate-300 text-base leading-relaxed mb-6 description-text">{{ step.description }}</p>
                    
                    <!-- Specs Técnicas (Badges) -->
                    <div class="flex flex-wrap justify-center md:justify-start gap-2 mb-8">
@@ -157,8 +159,8 @@ const setActive = (index) => {
 
                     <!-- Botón de acción -->
                     <div class="flex justify-center md:justify-start">
-                        <button @click="$inertia.visit(route('landing.contact'))" class="px-8 py-3 bg-[#4cc9f0] hover:bg-[#3db5da] text-slate-900 rounded-xl text-sm font-bold transition-all shadow-lg shadow-[#4cc9f0]/20 flex items-center gap-2 group/btn">
-                            {{ index === 0 ? 'Agendar Ahora' : 'Más Información' }}
+                        <button @click="$inertia.visit(route('landing.portfolio'))" class="px-8 py-3 bg-[#4cc9f0] hover:bg-[#3db5da] text-slate-900 rounded-xl text-sm font-bold transition-all shadow-lg shadow-[#4cc9f0]/20 flex items-center gap-2 group/btn">
+                            {{ index === 0 ? 'Ir a Galería' : 'Más Información' }}
                             <svg class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                         </button>
                     </div>
@@ -189,5 +191,10 @@ const setActive = (index) => {
 .fade-leave-to {
   opacity: 0;
   transform: translateY(-20px);
+}
+
+.description-text {
+  /* Esto hace que el navegador respete los saltos de línea \n */
+  white-space: pre-line; 
 }
 </style>
