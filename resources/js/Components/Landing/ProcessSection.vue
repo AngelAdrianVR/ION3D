@@ -11,7 +11,7 @@ const activeStep = ref(0);
 const steps = [
   { 
     id: 1, 
-    title: 'Transforma tu espacio', 
+    title: 'DESCUBRE TU ESPACIO', 
     duration: 'Online', 
     shortDesc: 'Quiero transformar mi espacio',
     description: 'Selecciona el paquete ideal para ti y elige el horario que mejor te convenga en nuestro calendario en línea. Recibirás una confirmación inmediata.',
@@ -20,7 +20,7 @@ const steps = [
   },
   { 
     id: 2, 
-    title: 'Diseño y cotización', 
+    title: 'Diseña TU ESPACIO', 
     duration: '', 
     shortDesc: 'Asiste a nuestro estudio.',
     description: 'Ven a nuestra cabina fotogramétrica. Recomendamos usar ropa con texturas, patrones o colores mate. Evita el color negro absoluto, materiales brillantes o transparencias para una captura perfecta.',
@@ -29,7 +29,7 @@ const steps = [
   },
   { 
     id: 3, 
-    title: 'Agenda instalación', 
+    title: 'Hazlo realidad', 
     duration: '', 
     shortDesc: 'Hazlo único.',
     description: 'Aquí ocurre la magia digital. Puedes personalizar tu gemelo digital cambiando tu vestimenta, agregando accesorios únicos o integrando el modelo en escenas temáticas antes de la impresión.',
@@ -70,11 +70,11 @@ const setActive = (index) => {
       
       <!-- Cabecera -->
       <div class="text-center mb-16">
-        <h2 class="text-sm font-bold tracking-[0.2em] text-[#4cc9f0] uppercase mb-3">Tu camino al 3D</h2>
+        <h2 class="text-sm font-bold tracking-[0.2em] text-[#4cc9f0] uppercase mb-3">EL CAMINO HACIA TU NUEVO ESPACIO</h2>
         <h3 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-          Proceso de Creación
+          LA NUEVA FORMA DE TRANSFORMAR LOS ESPACIOS
         </h3>
-        <p class="text-slate-400 mt-4 max-w-lg mx-auto">Cuatro pasos simples para inmortalizar tu momento.</p>
+        <p class="text-slate-400 mt-4 max-w-lg mx-auto">Conoce cada etapa para convertir tu espacion en una experiencia única</p>
       </div>
 
       <!-- Sistema de Pasos (Stepper) -->

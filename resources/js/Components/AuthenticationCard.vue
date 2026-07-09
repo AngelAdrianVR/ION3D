@@ -58,10 +58,10 @@
                 <!-- Contenido sobre la imagen -->
                 <div class="relative z-10 text-center lg:text-left max-w-lg">
                     <h2 class="text-3xl lg:text-5xl font-bold mb-6 tracking-tight leading-tight">
-                        La nueva dimensión del <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300">Escaneo 3D</span>
+                        La nueva forma de <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-300">transformar espacios</span>
                     </h2>
                     <p class="text-lg text-gray-300 mb-8 font-light leading-relaxed">
-                        Precisión milimétrica, texturas realistas y tecnología de vanguardia para digitalizar el mundo físico.
+                        Creamos espacios que permiten adaptar, transformar y renovar un espacio conforme cambian las necesidades de los usuarios.
                     </p>
                     
                     <!-- Elemento decorativo flotante 3D simulado -->

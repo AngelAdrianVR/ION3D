@@ -112,7 +112,7 @@ export default {
                             'transition-all duration-500 ease-[cubic-bezier(0.25,0.8,0.25,1)] flex items-center',
                             isScrolled 
                                 ? 'w-[95%] md:w-auto bg-white/60 backdrop-blur-md border border-slate-200 shadow-2xl shadow-[#2f4b59]/10 rounded-full px-4 py-2 gap-2 justify-between md:justify-start' 
-                                : 'w-full max-w-7xl px-6 bg-transparent border-transparent gap-8 justify-between md:justify-start'
+                                : 'container mx-auto px-6 bg-transparent border-transparent gap-8 justify-between md:justify-start'
                         ]"
                     >
                         <!-- 1. LOGO -->
@@ -182,7 +182,7 @@ export default {
                                 <template #icon>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 </template>
-                                <span v-if="!isScrolled">Agendar Cita</span>
+                                <span v-if="!isScrolled">Vive la Experiencia NODO</span>
                                 <span v-else>Agendar</span>
                             </n-button>
                         </div>
@@ -311,8 +311,9 @@ export default {
                                         <!-- <span class="text-[#4cc9f0]">3D</span> -->
                                     </span>
                                 </div>
-                                <p class="text-slate-400 text-sm leading-relaxed max-w-sm">
-                                    Fusionamos tecnología de vanguardia para la digitalización humana, de la naturaleza y del arte para crear replicas físicas eternas
+                                <p class="text-slate-200 text-base leading-relaxed max-w-sm">
+                                    Diseñamos sistemas que permiten a los espacios transformarse sin perder su escencia. <br/>
+                                    Creemos que un espacio no debe limitarse a una sola función, sino adaptarse a quienes lo viven.
                                 </p>
                                 <div class="flex gap-4 pt-2">
                                     <!-- Social Icons Placeholders -->
@@ -369,7 +370,7 @@ export default {
                                     </li>
                                 </ul>
                                 <figure class="mt-4 cursor-pointer">
-                                    <a class="flex justify-end items-center" href="https://app.dtw.com.mx/" target="_blank">
+                                    <a class="flex justify-end items-center" href="https://dtw.com.mx/" target="_blank">
                                         <p class="text-white text-xl">BY</p>
                                         <img class="w-20 lg:w-[30%]" src="@/../../public/images/DTW_logo_blanco.png" alt="">
                                     </a>
@@ -394,7 +395,7 @@ export default {
                                     </li>
                                 </ul>
                             <figure class="mt-4 cursor-pointer">
-                                <a class="flex justify-end items-center" href="https://app.dtw.com.mx/" target="_blank">
+                                <a class="flex justify-end items-center" href="https://dtw.com.mx/" target="_blank">
                                     <p class="text-white text-xl">BY</p>
                                     <img class="w-20 lg:w-[30%]" src="@/../../public/images/DTW_logo_blanco.png" alt="">
                                 </a>

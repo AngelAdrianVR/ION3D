@@ -30,8 +30,8 @@ const stats = ref([
   { 
     id: 4, 
     label: 'Sistema físico + plataforma digital', 
-    displayValue: 1, 
-    suffix: ' Ecosistema', 
+    displayValue: null, 
+    suffix: ' Ecosistema NODO + Modula', 
     prefix: '',
     iconPath: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' // Estrella
   },
@@ -71,8 +71,8 @@ const stats = ref([
             </div>
 
             <!-- Número animado -->
-            <div class="flex items-baseline gap-1 mb-2">
-              <span class="text-4xl md:text-5xl font-black text-white tracking-tighter tabular-nums drop-shadow-lg">
+            <div class="flex flex-col items-baseline gap-1 mb-2">
+              <span class="text-4xl md:text-5xl font-black text-white tracking-tighter tabular-nums drop-shadow-lg mx-auto">
                 {{ stat.prefix }}{{ stat.displayValue }}
               </span>
               <span class="text-xl md:text-2xl font-bold text-[#4cc9f0]">{{ stat.suffix }}</span>

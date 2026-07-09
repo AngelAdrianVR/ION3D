@@ -75,17 +75,12 @@ export default {
             <div class="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:40px_40px] opacity-20"></div>
         </div>
 
-        <div class="container mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-12 items-center h-full">
+        <div class="container mx-auto px-4 relative z-10 grid lg:grid-cols-5 gap-7 items-center h-full">
             
             <!-- Texto con transiciones suaves controladas por isLoaded -->
-            <div class="space-y-10 text-center lg:text-left order-2 lg:order-1 transition-all duration-1000 transform"
+            <div class="space-y-10 text-center lg:text-left order-2 lg:order-1 lg:col-span-2 transition-all duration-1000 transform"
                  :class="[isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10']">
-                
-                <div class="inline-flex items-center gap-3 pl-1 pr-4 py-1.5 rounded-full bg-white border border-slate-100 shadow-sm">
-                    <span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white text-[10px] font-black tracking-tighter">PRO</span>
-                    <span class="text-slate-500 text-[11px] font-bold tracking-[0.2em] uppercase">Vanguardia en Digitalización 3D</span>
-                </div>
-                
+                                
                 <h1 class="text-6xl lg:text-8xl font-extrabold leading-[0.9] text-slate-900 tracking-tighter">
                     Diseña el espacio <br/>
                     <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
@@ -106,32 +101,17 @@ export default {
                         Explorar Galería
                     </n-button>
                 </div>
-
-                <div class="flex items-center justify-center lg:justify-start gap-10 pt-8 border-t border-slate-100 max-w-sm">
-                     <div class="group">
-                        <div class="text-[10px] font-bold text-slate-300 mb-1 group-hover:text-blue-500 transition-colors">LATENCIA</div>
-                        <div class="text-sm font-mono font-medium text-slate-500">0.02ms</div>
-                     </div>
-                     <div class="group">
-                        <div class="text-[10px] font-bold text-slate-300 mb-1 group-hover:text-blue-500 transition-colors">TOLERANCIA</div>
-                        <div class="text-sm font-mono font-medium text-slate-500">±0.01mm</div>
-                     </div>
-                     <div class="group">
-                        <div class="text-[10px] font-bold text-slate-300 mb-1 group-hover:text-blue-500 transition-colors">ESTADO</div>
-                        <div class="text-sm font-mono font-medium text-green-500">ONLINE</div>
-                     </div>
-                </div>
             </div>
 
             <!-- Contenedor del Carousel -->
-            <div class="relative flex items-center justify-center order-1 lg:order-2 h-[550px] lg:h-[700px]">
+            <div class="relative flex items-center justify-center order-1 lg:order-2 lg:col-span-3 h-[550px] lg:h-[700px]">
                 
                 <!-- Tarjeta Principal -->
-                <div class="relative w-full max-w-2xl h-full rounded-[3rem] overflow-hidden border border-white bg-white/40 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.06)] group transition-all duration-700 cursor-pointer"
+                <div class="relative w-full max-w-7xl h-full rounded-[3rem] overflow-hidden border border-white bg-white/40 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.06)] group transition-all duration-700 cursor-pointer"
                      :class="[isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95']">
                     
                     <!-- HUD Elements -->
-                    <!-- <div class="absolute inset-0 z-30 pointer-events-none p-10 flex flex-col justify-between">
+                    <div class="absolute inset-0 z-30 pointer-events-none p-10 flex flex-col justify-between">
                         <div class="flex justify-between items-start opacity-40 group-hover:opacity-100 transition-opacity duration-500">
                             <div class="space-y-1">
                                 <div class="w-8 h-[1px] bg-slate-400"></div>
@@ -157,10 +137,10 @@ export default {
                                 </svg>
                             </div>
                         </div>
-                    </div> -->
+                    </div>
 
                     <!-- Efecto de barrido de luz -->
-                    <div class="absolute inset-0 bg-gradient-to-t from-blue-300/20 via-transparent to-transparent z-20 pointer-events-none translate-y-full animate-scanner-elegant"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-blue-300/20 via-transparent to-transparent z-20 pointer-events-none translate-x-full animate-scanner-elegant"></div>
                     
                     <!-- Brillo de cristal -->
                     <div class="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none z-20"></div>
@@ -179,7 +159,13 @@ export default {
                 <!-- Adornos Geométricos -->
                 <div class="absolute -z-10 -bottom-10 -right-10 w-64 h-64 bg-slate-50 rounded-full mix-blend-multiply opacity-50"></div>
                 <div class="absolute -z-10 -top-5 -left-5 w-32 h-32 border border-slate-100 rounded-full animate-spin-very-slow"></div>
+
+                <div class="absolute -bottom-14 right-8 inline-flex items-center gap-3 pl-1 pr-4 py-1.5 rounded-full bg-white border border-slate-100 shadow-sm">
+                    <span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white text-[10px] font-black tracking-tighter">PRO</span>
+                    <span class="text-slate-500 text-[11px] font-bold tracking-[0.2em] uppercase">Vanguardia en Digitalización 3D</span>
+                </div>
             </div>
+            
         </div>
     </section>
 </template>
@@ -187,10 +173,10 @@ export default {
 <style scoped>
 /* Animación del escáner elegante */
 @keyframes scanner-elegant {
-    0% { transform: translateY(100%); opacity: 0; }
+    0% { transform: translateX(100%); opacity: 0; }
     20% { opacity: 0.4; }
     80% { opacity: 0.4; }
-    100% { transform: translateY(-100%); opacity: 0; }
+    100% { transform: translateX(-100%); opacity: 0; }
 }
 .animate-scanner-elegant {
     animation: scanner-elegant 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;

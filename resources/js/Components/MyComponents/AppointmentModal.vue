@@ -34,6 +34,7 @@ export default {
         const form = useForm({
             guest_name: '',
             guest_phone: '',
+            guest_count: 1,
             date: null,     
             start_time: null, 
             service_type: null 
@@ -204,6 +205,7 @@ export default {
             this.form.transform((data) => ({
                 guest_name: data.guest_name,
                 guest_phone: data.guest_phone,
+                guest_count: data.guest_count,
                 start_time: localDateString, 
                 internal_notes: `Servicio: ${data.service_type}`
             })).post(route('appointments.store'), {
@@ -258,16 +260,25 @@ export default {
             
             <div class="mt-2">
                 <p class="text-slate-600 mb-6 text-sm">
-                    Selecciona una fecha para ver la disponibilidad real.
+                    Selecciona una fecha para ver la disponibilidad.
                 </p>
 
                 <n-form ref="formRef" :model="form" label-placement="top" size="large">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <n-form-item label="Nombre Completo" path="guest_name" show-require-mark>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <n-form-item label="Nombre" path="guest_name" show-require-mark>
                             <n-input v-model:value="form.guest_name" placeholder="Ej. Juan Pérez" />
                         </n-form-item>
                         <n-form-item label="Teléfono / WhatsApp" path="guest_phone" show-require-mark>
                             <n-input v-model:value="form.guest_phone" placeholder="Ej. 55 1234 5678" />
+                        </n-form-item>
+                        <n-form-item label="Personas que asistirán" path="guest_count" show-require-mark>
+                            <n-input
+                                v-model:value="form.guest_count"
+                                type="number"
+                                :min="1"
+                                :max="20"
+                                placeholder="Ej. 2"
+                            />
                         </n-form-item>
                     </div>
 
