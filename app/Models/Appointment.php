@@ -18,11 +18,13 @@ class Appointment extends Model
         'status',
         'service_package_id',
         'internal_notes',
+        'guest_count',
     ];
 
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
+        'guest_count' => 'integer',
     ];
 
     // Relación: Puede pertenecer a un cliente (o ser null)

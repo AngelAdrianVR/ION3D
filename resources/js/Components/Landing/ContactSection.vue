@@ -54,7 +54,7 @@ const submitMessage = () => {
                         
                         <div class="text-sm text-slate-500">
                             <p>Zapopan, Jalisco, MX.</p>
-                            <p>contacto@ion3d.com</p>
+                            <!-- <p>contacto@ion3d.com</p> -->
                         </div>
                     </div>
 

@@ -7,39 +7,39 @@ import { onMounted, ref } from 'vue';
 const steps = [
   { 
     id: 1, 
-    title: 'Agendar Cita', 
-    subtitle: 'El primer paso',
-    duration: 'Online • 5 min', 
-    description: 'Selecciona el paquete ideal para ti y elige el horario que mejor te convenga en nuestro calendario en línea. Recibirás una confirmación inmediata con guía de vestimenta.',
+    title: 'DESCUBRE TU ESPACIO', 
+    subtitle: 'Quiero transformar mi espacio',
+    duration: 'Online', 
+    description: 'Antes de diseñar, queremos que descubras todo lo que es posible. Explora proyectos, temáticas, estilos, eventos y espacios creados con el ecosistema NODO para encontrar ideas que despierten tu creatividad. \n \n Aquí podrás: \n •  Explorar proyectos reales \n •  Descubrir diferentes estilos \n •  Conocer aplicaciones por industria \n •  Ver transformaciones Antes/Después \n •  Guardar ideas favoritas \n •  Inspirarte con tendencias y colecciones \n •  Arte y esculturas',
     specs: ['Reserva 24/7', 'Asesoría Previa', 'Confirmación Instantánea'],
-    image: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&q=80&w=1000'
+    image: '/images/proceso-1.webp'
   },
   { 
     id: 2, 
-    title: 'Sesión de Escaneo', 
-    subtitle: 'En el estudio',
-    duration: 'Presencial • 30 min', 
-    description: 'Ven a nuestra cabina fotogramétrica. 120 cámaras sincronizadas capturarán tu geometría en una fracción de segundo. Recomendamos usar ropa con texturas y evitar el negro absoluto.',
-    specs: ['Sin Ropa Negra', 'Sin Materiales Brillantes', 'Captura en 1/1000s'],
-    image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=1000'
+    title: 'Diseña TU ESPACIO', 
+    subtitle: 'Asiste a nuestro estudio.',
+    duration: '', 
+    description: 'Ahora es momento de dar forma a tus ideas. \n Con ayuda de la plataforma digital podrás diseñar tu espacio, definir distribuciones, seleccionar materiales y visualizar el resultado antes de tomar una decisión. \n \n Aquí podrás: \n • Subir fotografías de tu espacio \n • Escanear o ingresar medidas \n • Configurar la distribución \n • Seleccionar NODOS y accesorios \n • Elegir materiales y acabados \n • Visualizar diferentes configuraciones \n • Calcular automáticamente los componentes necesarios \n • Conocer el presupuesto estimado \n • Guardar y modificar tu proyecto',
+    specs: ['Inspírate', 'Crea sin límites', 'Diseñamos contigo'],
+    video: '/videos/Video del 2.mp4'
   },
   { 
     id: 3, 
-    title: 'Personaliza', 
-    subtitle: 'Edición Digital',
-    duration: 'Diseño • 1-2 Días', 
-    description: 'Antes de imprimir, tienes el control. Personaliza tu modelo 3D cambiando tu vestimenta, agregando accesorios únicos o situando tu figura en escenas temáticas para hacerla única.',
-    specs: ['Cambio de Vestuario', 'Accesorios Digitales', 'Escenas Virtuales'],
-    image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=1000'
+    title: 'Hazlo realidad', 
+    subtitle: 'Hazlo único.',
+    duration: '', 
+    description: 'Con tu proyecto definido, sólo confirma tu configuración y diseño, agenda la instalación y nosotros nos encargaremos de convertir tu diseño en un espacio real. \n \n Aquí podrás: \n • Confirmar tu diseño \n • Agendar una fecha de instalación \n • Realizar el pago \n • Dar seguimiento al proyecto \n • Recibir la instalación del sistema NODO',
+    specs: ['Comienza La Transformación', 'Del Diseño a La Realidad', 'Agenda Tu Instalación'],
+    video: '/videos/Video del 3.mp4'
   },
   { 
     id: 4, 
-    title: 'Impresión 3D', 
-    subtitle: 'Materialización',
-    duration: 'Producción • 3-5 Días', 
-    description: 'Una vez aprobado el diseño, imprimimos tu figura en alta definición. Recibirás una notificación cuando esté lista; puedes pasar por ella al estudio o pedir envío directo a tu domicilio.',
-    specs: ['Envío a Domicilio', 'Pickup en Estudio', 'Protección Premium'],
-    image: 'https://images.unsplash.com/photo-1631541909061-71e349d1f203?auto=format&fit=crop&q=80&w=1000'
+    title: 'Evoluciona', 
+    subtitle: 'Recibe tu figura.',
+    duration: 'Entrega', 
+    description: 'El sistema NODO está diseñado para adaptarse a nuevas necesidades. \n Agrega nuevos componentes, reorganiza la distribución y crea nuevas experiencias sin reemplazar la infraestructura existente. \n \n Aquí podrás: \n • Hacer remodelaciones \n • Ampliar el sistema \n • Agregar nuevos NODOS \n • Incorporar accesorios y nuevos materiales \n • Cambiar distribuciones \n • Actualizar acabados \n • Crear nuevas configuraciones desde la plataforma',
+    specs: ['Diseño Que Evoluciona', 'Renueva', 'Transforma De Nuevo'],
+    image: '/images/evoluciona.webp'
   },
 ];
 
@@ -63,7 +63,7 @@ onMounted(() => {
 
 <template>
     <AppLayoutLanding>
-        <Head title="Nuestro Proceso - ION3D" />
+        <Head title="Nuestro Proceso" />
 
         <!-- Contenedor Principal LIGHT MODE (Fondo blanco con luces suaves) -->
         <div class="min-h-screen bg-white text-slate-900 relative overflow-hidden font-sans selection:bg-[#4cc9f0] selection:text-white">
@@ -124,7 +124,7 @@ onMounted(() => {
                                 </h3>
                                 <p class="text-lg text-purple-600 mb-6 font-medium">{{ step.subtitle }}</p>
                                 
-                                <p class="text-slate-600 leading-relaxed text-lg mb-8">
+                                <p class="text-slate-600 leading-relaxed text-lg mb-8 description-text">
                                     {{ step.description }}
                                 </p>
 
@@ -151,8 +151,10 @@ onMounted(() => {
                             <div class="flex-1 w-full relative group/image perspective-1000">
                                 <div class="relative h-[300px] md:h-[400px] rounded-3xl overflow-hidden shadow-2xl shadow-slate-200/50 border border-slate-100 transform transition-transform duration-700 group-hover:scale-[1.02] group-hover:rotate-1">
                                     
-                                    <!-- Imagen -->
-                                    <img :src="step.image" :alt="step.title" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
+                                    <!-- Video / Imagen -->
+                                    <video v-if="step.video" :src="step.video" autoplay loop muted playsinline
+                                           class="absolute inset-0 w-full h-full object-cover"></video>
+                                    <img v-else :src="step.image" :alt="step.title" class="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
                                     
                                     <!-- Overlays (Ajustados para que no oscurezcan demasiado) -->
                                     <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent"></div>
@@ -242,5 +244,10 @@ onMounted(() => {
 
 .perspective-1000 {
     perspective: 1000px;
+}
+
+.description-text {
+  /* Esto hace que el navegador respete los saltos de línea \n */
+  white-space: pre-line; 
 }
 </style>

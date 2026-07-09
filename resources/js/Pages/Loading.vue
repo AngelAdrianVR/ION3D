@@ -4,7 +4,6 @@ import { router, Head } from '@inertiajs/vue3';
 
 // --- THREE.JS IMPORTS ---
 import * as THREE from 'https://esm.sh/three@0.160.0';
-import { GLTFLoader } from 'https://esm.sh/three@0.160.0/examples/jsm/loaders/GLTFLoader';
 
 const emit = defineEmits(['finished']);
 
@@ -16,25 +15,74 @@ const isHidden = ref(false);
 
 // Configuración
 const MINIMUM_TIME = 3000;
-const MODEL_URL = '/human_head.glb';
 
 // Variables Three.js
 let renderer, scene, camera, animationId;
-let modelGroup;
+let mainGroup, clock;
+let panels = [];
+let decorItems = [];
 
-// --- LÓGICA 3D ---
+// --- COLORES DE DECORACIÓN MODERNOS (paleta interiorismo) ---
+const PANEL_COLORS = [0xA8B5A2, 0xD4C5B9, 0xB8C5D6, 0xC9A89C, 0xA2B5C8, 0xD5CFC0];
+
+// --- POSICIONES EN GRID 2x3 ---
+const PANEL_GRID = [
+    { x: -1.1, y: 0.55 },
+    { x: 0, y: 0.55 },
+    { x: 1.1, y: 0.55 },
+    { x: -1.1, y: -0.55 },
+    { x: 0, y: -0.55 },
+    { x: 1.1, y: -0.55 },
+];
+
+// --- CREAR UN PANEL DECORATIVO ---
+function createPanel(colorHex, pos, index) {
+    const group = new THREE.Group();
+
+    // Cuerpo del panel
+    const geo = new THREE.BoxGeometry(0.9, 0.55, 0.04);
+    const mat = new THREE.MeshStandardMaterial({
+        color: colorHex,
+        roughness: 0.35,
+        metalness: 0.05,
+    });
+    const body = new THREE.Mesh(geo, mat);
+    group.add(body);
+
+    // Marco / borde sutil
+    const edgeGeo = new THREE.EdgesGeometry(geo);
+    const edgeMat = new THREE.LineBasicMaterial({
+        color: 0x999999,
+        transparent: true,
+        opacity: 0.3,
+    });
+    const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+    group.add(edges);
+
+    group.position.set(pos.x, pos.y, 0);
+
+    return {
+        group,
+        body,
+        targetIndex: index,
+        floatOffset: Math.random() * Math.PI * 2,
+    };
+}
+
+// --- INICIALIZAR THREE.JS ---
 const initThreeJS = () => {
     if (!containerRef.value) return;
 
+    clock = new THREE.Clock();
+
     // 1. Escena
     scene = new THREE.Scene();
-    // No seteamos color de fondo a la escena para que sea transparente y se vea el CSS
 
     // 2. Cámara
     const w = containerRef.value.clientWidth;
     const h = containerRef.value.clientHeight;
     camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    camera.position.set(0, 0, 4);
+    camera.position.set(0, 0.1, 4.5);
 
     // 3. Renderizador
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -42,81 +90,128 @@ const initThreeJS = () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    
+
     containerRef.value.appendChild(renderer.domElement);
 
-    // 4. Luces (Ajustadas para fondo claro)
-    // Luz ambiental más fuerte para que no se vea negro el objeto sólido
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); 
+    // 4. Iluminación
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    keyLight.position.set(2, 2, 5);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    keyLight.position.set(2, 3, 5);
     scene.add(keyLight);
 
-    // Luz de borde azul suave
-    const rimLight = new THREE.SpotLight(0x3b82f6, 3); // Azul estándar de Tailwind (blue-500)
-    rimLight.position.set(-2, 1, -2);
-    rimLight.lookAt(0, 0, 0);
+    const fillLight = new THREE.DirectionalLight(0xc8dce8, 1.0);
+    fillLight.position.set(-2, -1, 2);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.SpotLight(0x3b82f6, 2.5);
+    rimLight.position.set(-3, 1, -3);
     scene.add(rimLight);
 
-    // 5. Cargar Modelo
-    const loader = new GLTFLoader();
+    // 5. Grupo principal
+    mainGroup = new THREE.Group();
+    scene.add(mainGroup);
 
-    loader.load(
-        MODEL_URL,
-        (gltf) => {
-            const model = gltf.scene;
-            
-            // --- CAMBIO: ESCALA MÁS PEQUEÑA ---
-            model.scale.set(0.25, 0.25, 0.25);
+    // 6. Suelo — grid decorativo
+    const gridHelper = new THREE.GridHelper(4.5, 20, 0xd0d0d0, 0xeaeaea);
+    gridHelper.position.y = -1.4;
+    mainGroup.add(gridHelper);
 
-            // Centrado
-            const box = new THREE.Box3().setFromObject(model);
-            const center = box.getCenter(new THREE.Vector3());
-            model.position.x += (model.position.x - center.x);
-            model.position.y += (model.position.y - center.y);
-            model.position.z += (model.position.z - center.z);
+    // Plano de suelo semitransparente
+    const floorGeo = new THREE.PlaneGeometry(4.5, 4.5);
+    const floorMat = new THREE.MeshStandardMaterial({
+        color: 0xfafafa,
+        roughness: 1,
+        metalness: 0,
+        transparent: true,
+        opacity: 0.5,
+        side: THREE.DoubleSide,
+    });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -1.4;
+    mainGroup.add(floor);
 
-            // --- MATERIALES / TEXTURA ---
-            model.traverse((child) => {
-               if (child.isMesh) {
-                   // Para que se vea sólido y reaccione a la luz correctamente:
-                   child.material.needsUpdate = true;
-                   
-                   // OPCIONAL: Si el modelo original es muy oscuro, puedes forzar un color base claro:
-                   // child.material.color.set(0xe2e8f0); // Gris claro
-                   
-                   // --- MODO MALLA (WIREFRAME) ---
-                   // Descomenta el bloque de abajo para activar el modo "holograma/malla"
-                   /* child.material.wireframe = true; 
-                   child.material.color.set(0x3b82f6); // Azul
-                   child.material.transparent = true;
-                   child.material.opacity = 0.4;
-                   */
-               }
-            });
+    // 7. Crear paneles decorativos
+    PANEL_GRID.forEach((pos, i) => {
+        const panel = createPanel(PANEL_COLORS[i], pos, i);
+        mainGroup.add(panel.group);
+        panels.push(panel);
+    });
 
-            scene.add(model);
-            modelGroup = model;
-        },
-        (xhr) => {
-            if (xhr.lengthComputable) {
-                // Cálculo de carga real
-            }
-        },
-        (error) => {
-            console.error('Error cargando modelo', error);
-            loadingProgress.value = 100;
-        }
-    );
+    // 8. Pequeños elementos decorativos orbitantes
+    const decorColors = [0xE8C9A0, 0xB8C8D8, 0xC8D8C8, 0xE0D0C0];
+    for (let i = 0; i < 4; i++) {
+        const sphereGeo = new THREE.SphereGeometry(0.06, 16, 16);
+        const sphereMat = new THREE.MeshStandardMaterial({
+            color: decorColors[i],
+            roughness: 0.3,
+            metalness: 0.2,
+        });
+        const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+        sphere.userData = {
+            angle: (i / 4) * Math.PI * 2,
+            radius: 1.9 + Math.random() * 0.3,
+            speed: 0.25 + Math.random() * 0.2,
+            yBase: (Math.random() - 0.5) * 0.8,
+        };
+        mainGroup.add(sphere);
+        decorItems.push(sphere);
+    }
 
-    // 6. Animación Loop
+    // 9. Bucle de animación
+    let swapTimer = 0;
+    const SWAP_INTERVAL = 2.5;
+
     const animate = () => {
         animationId = requestAnimationFrame(animate);
-        if (modelGroup) {
-            modelGroup.rotation.y += 0.005; // Rotación un poco más lenta y elegante
+
+        const dt = Math.min(clock.getDelta(), 0.1);
+        const time = clock.elapsedTime;
+
+        // Rotación suave de todo el conjunto
+        mainGroup.rotation.y += dt * 0.18;
+
+        // --- INTERCAMBIO DE PANELES ---
+        swapTimer += dt;
+        if (swapTimer >= SWAP_INTERVAL) {
+            swapTimer = 0;
+            // Elegir dos paneles al azar para intercambiar
+            const i = Math.floor(Math.random() * panels.length);
+            let j = Math.floor(Math.random() * panels.length);
+            while (j === i) j = Math.floor(Math.random() * panels.length);
+
+            const temp = panels[i].targetIndex;
+            panels[i].targetIndex = panels[j].targetIndex;
+            panels[j].targetIndex = temp;
         }
+
+        // --- ACTUALIZAR POSICIONES DE PANELES (lerp) ---
+        const lerpFactor = 0.12;
+        panels.forEach(panel => {
+            const target = PANEL_GRID[panel.targetIndex];
+
+            panel.group.position.x += (target.x - panel.group.position.x) * lerpFactor;
+            panel.group.position.y += (target.y - panel.group.position.y) * lerpFactor;
+
+            // Micro-flotación vertical
+            const floatY = Math.sin(time * 1.8 + panel.floatOffset) * 0.025;
+            panel.group.position.y += floatY;
+
+            // Sutil balanceo
+            const rotZ = Math.sin(time * 1.2 + panel.floatOffset) * 0.04;
+            panel.group.rotation.z += (rotZ - panel.group.rotation.z) * 0.1;
+        });
+
+        // --- ACTUALIZAR ELEMENTOS DECORATIVOS ---
+        decorItems.forEach(item => {
+            item.userData.angle += dt * item.userData.speed;
+            item.position.x = Math.cos(item.userData.angle) * item.userData.radius;
+            item.position.z = Math.sin(item.userData.angle) * item.userData.radius * 0.35 - 0.1;
+            item.position.y = item.userData.yBase + Math.sin(time * 0.8 + item.userData.angle) * 0.15;
+        });
+
         renderer.render(scene, camera);
     };
     animate();
@@ -124,6 +219,7 @@ const initThreeJS = () => {
     window.addEventListener('resize', handleResize);
 };
 
+// --- REDIMENSIONAR ---
 const handleResize = () => {
     if (!containerRef.value || !camera || !renderer) return;
     const w = containerRef.value.clientWidth;
@@ -133,17 +229,17 @@ const handleResize = () => {
     renderer.setSize(w, h);
 };
 
-// --- CICLO DE VIDA ---
+// --- CICLO DE VIDA VUE ---
 onMounted(() => {
     initThreeJS();
 
     const startTime = performance.now();
-    const duration = MINIMUM_TIME; 
+    const duration = MINIMUM_TIME;
 
     const progressInterval = setInterval(() => {
         const elapsed = performance.now() - startTime;
         const p = Math.min((elapsed / duration) * 100, 100);
-        
+
         loadingProgress.value = Math.floor(p);
 
         if (p >= 100) {
@@ -160,14 +256,16 @@ const finishLoading = () => {
         setTimeout(() => {
             isHidden.value = true;
             router.visit('/inicio');
-        }, 1000); 
-    }, 500); 
+        }, 1000);
+    }, 500);
 };
 
 onBeforeUnmount(() => {
     window.removeEventListener('resize', handleResize);
     cancelAnimationFrame(animationId);
     if (renderer) renderer.dispose();
+    panels = [];
+    decorItems = [];
 });
 </script>
 
@@ -208,7 +306,7 @@ onBeforeUnmount(() => {
         <!-- --- TEXTO (Sin barra de progreso) --- -->
         <div class="relative z-20 mt-4 text-center">
             <h1 class="text-2xl font-bold tracking-widest mb-1 font-sans text-[#2f4b59]">
-                ORION
+                NODO
             </h1>
             
             <!-- Texto simple pulsante -->

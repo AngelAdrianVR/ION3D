@@ -1,102 +1,45 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref } from 'vue';
 
-// Datos de las estadísticas
+// Datos de las estadísticas — valores directos sin animación de conteo
 const stats = ref([
   { 
     id: 1, 
-    label: 'Escaneos Realizados', 
-    targetValue: 200, 
-    displayValue: 0, 
-    suffix: '+',
+    label: 'Configura y reconfigura cuando lo necesites', 
+    displayValue: 100, 
+    suffix: '% Modular',
     prefix: '',
     iconPath: 'M3.5 3.5c0-1.1.9-2 2-2h13c1.1 0 2 .9 2 2v13c0 1.1-.9 2-2 2h-13c-1.1 0-2-.9-2-2v-13z M7 7h10 M7 12h10 M7 17h6' // Icono estilo documento/scan
   },
   { 
     id: 2, 
-    label: 'Tiempo de Entrega promedio', 
-    targetValue: 48, 
-    displayValue: 0, 
-    suffix: 'h', 
+    label: 'Un mismo sistema, múltiples posibilidades', 
+    displayValue: '∞', 
+    suffix: ' Config.', 
     prefix: '',
     iconPath: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M12 8v4' // Icono escudo/tiempo
   },
   { 
     id: 3, 
-    label: 'Resolución Texturas', 
-    targetValue: 16, 
-    displayValue: 0, 
-    suffix: 'K', 
+    label: 'Instala una vez, evoluciona siempre', 
+    displayValue: 1, 
+    suffix: ' Instalación única', 
     prefix: '',
     iconPath: 'M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.27 6.96L12 12.01l8.73-5.05 M12 22.08V12' // Cubo 3D
   },
   { 
     id: 4, 
-    label: 'Satisfacción', 
-    targetValue: 100, 
-    displayValue: 0, 
-    suffix: '%', 
+    label: 'Sistema físico + plataforma digital', 
+    displayValue: null, 
+    suffix: ' Ecosistema NODO + Modula', 
     prefix: '',
     iconPath: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' // Estrella
   },
 ]);
-
-const sectionRef = ref(null);
-const hasAnimated = ref(false);
-
-// Función de animación suave
-const runAnimation = () => {
-  if (hasAnimated.value) return;
-  hasAnimated.value = true;
-
-  const duration = 2000; // Duración de la animación en ms
-  const frameDuration = 1000 / 60; // 60fps
-  const totalFrames = Math.round(duration / frameDuration);
-
-  stats.value.forEach(stat => {
-    let frame = 0;
-    const countTo = stat.targetValue;
-    
-    // Función de easing para que empiece rápido y termine lento
-    const easeOutQuad = t => t * (2 - t);
-
-    const counter = setInterval(() => {
-      frame++;
-      const progress = easeOutQuad(frame / totalFrames);
-      const currentCount = Math.round(countTo * progress);
-
-      if (parseInt(stat.displayValue) !== currentCount) {
-        stat.displayValue = currentCount;
-      }
-
-      if (frame === totalFrames) {
-        clearInterval(counter);
-        stat.displayValue = countTo; // Asegurar valor final exacto
-      }
-    }, frameDuration);
-  });
-};
-
-// Intersection Observer para detectar cuando la sección es visible
-onMounted(() => {
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        runAnimation();
-        // Opcional: dejar de observar si solo queremos que anime una vez
-        // observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.3 }); // Se activa cuando el 30% del componente es visible
-
-  if (sectionRef.value) {
-    observer.observe(sectionRef.value);
-  }
-});
 </script>
 
 <template>
-  <section ref="sectionRef" class="py-20 bg-slate-900 relative overflow-hidden group">
+  <section class="py-20 bg-slate-900 relative overflow-hidden group">
     
     <!-- Elementos de fondo decorativos (Grid y Glow) -->
     <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
@@ -128,8 +71,8 @@ onMounted(() => {
             </div>
 
             <!-- Número animado -->
-            <div class="flex items-baseline gap-1 mb-2">
-              <span class="text-4xl md:text-5xl font-black text-white tracking-tighter tabular-nums drop-shadow-lg">
+            <div class="flex flex-col items-baseline gap-1 mb-2">
+              <span class="text-4xl md:text-5xl font-black text-white tracking-tighter tabular-nums drop-shadow-lg mx-auto">
                 {{ stat.prefix }}{{ stat.displayValue }}
               </span>
               <span class="text-xl md:text-2xl font-bold text-[#4cc9f0]">{{ stat.suffix }}</span>

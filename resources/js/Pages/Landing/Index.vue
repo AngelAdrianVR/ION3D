@@ -28,7 +28,7 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Inicio - ION3D" />
+    <Head title="Inicio" />
     
     <AppLayoutLanding>
         <!-- Sección 1: Hero (Impacto Visual) -->
