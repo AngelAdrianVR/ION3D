@@ -1,6 +1,6 @@
 <script setup>
 import AppLayoutLanding from '@/Layouts/AppLayoutLanding.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { 
     NInput, 
     NButton, 
@@ -100,7 +100,7 @@ const handleSubmit = (e) => {
                 </div>
 
                 <!-- 2. CONTENIDO PRINCIPAL -->
-                <div class="relative z-10 max-w-7xl mx-auto px-6 pt-32 md:pt-40 pb-20">
+                <div class="relative z-10 max-w-7xl mx-auto px-6 pt-12 md:pt-32 pb-20">
                     
                     <div class="grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
                         
@@ -112,15 +112,15 @@ const handleSubmit = (e) => {
                                 <h2 class="text-[#4cc9f0] font-bold tracking-widest uppercase text-sm mb-2">Contáctanos</h2>
                                 <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-6">
                                     Hagamos realidad <br/>
-                                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">tu visión digital.</span>
+                                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">tu proyecto con MODULA</span>
                                 </h1>
                                 <p class="text-slate-300 text-lg leading-relaxed">
-                                    Ya sea para escaneo 3D, impresión o desarrollo de activos digitales, nuestro equipo está listo para asesorarte.
+                                    Agenda una demostración y descubre como MODULA puede optimizar la gestión, el diseño y la transformación de tus espacios.
                                 </p>
                             </div>
 
                             <!-- Tarjetas de Información de Contacto -->
-                            <div class="space-y-6 pt-4">
+                            <div class="space-y-1 pt-4">
                                 <!-- Ubicación -->
                                 <!-- <div class="flex items-start gap-5 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors group cursor-default">
                                     <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4cc9f0] to-[#2f4b59] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
@@ -132,17 +132,26 @@ const handleSubmit = (e) => {
                                     </div>
                                 </div>
                                  -->
-                                <!-- Correo / Teléfono -->
-                                <div class="flex items-start gap-5 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors group cursor-default">
+                                <!-- Botón para paquete MODULA -->
+                                <Link :href="route('landing.services')" class="flex items-start gap-5 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors group cursor-pointer">
+                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4cc9f0] to-[#2f4b59] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0l-4-4m4 4l-4 4"/></svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-lg text-white">Paquete MODULA</h3>
+                                        <p class="text-[#4cc9f0] font-bold text-sm mt-1">Ver paquete MODULA →</p>
+                                    </div>
+                                </Link>
+                                <!-- <div class="flex items-start gap-5 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors group cursor-default">
                                     <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#4cc9f0] to-[#2f4b59] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                                     </div>
                                     <div>
                                         <h3 class="font-bold text-lg text-white">Contacto Directo</h3>
-                                        <!-- <p class="text-slate-400 text-sm mt-1">hola@ion3d.com</p> -->
+                                        <p class="text-slate-400 text-sm mt-1">hola@ion3d.com</p>
                                         <p class="text-[#4cc9f0] font-bold text-sm mt-1">+52 (33) 0000 0000</p>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
 
                         </div>
