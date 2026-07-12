@@ -88,11 +88,11 @@ onMounted(() => {
                         Workflow Digital
                     </div>
                     <h1 class="text-5xl md:text-7xl font-black tracking-tight text-slate-900 mb-6">
-                        De la Realidad <br />
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#0ea5e9] to-purple-600">al Metaverso</span>
+                        Del Entorno Digital <br />
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#0ea5e9] to-purple-600">al Espacio Físico</span>
                     </h1>
                     <p class="text-xl text-slate-600 max-w-2xl mx-auto font-light leading-relaxed">
-                        Un proceso de 4 pasos diseñado para capturar la esencia del momento con precisión milimétrica y personalización total.
+                        Explora, diseña y materializa espacios que podrán adaptarse y transformarse junto con las personas que lo viven.
                     </p>
                 </div>
 
@@ -188,14 +188,17 @@ onMounted(() => {
                         <!-- Grid decorativo -->
                         <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20"></div>
 
-                        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 relative z-10">¿Listo para inmortalizarte?</h2>
+                        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 relative z-10">Diseña hoy. Transforma mañana.</h2>
                         <p class="text-slate-300 text-lg mb-10 max-w-xl mx-auto relative z-10">
-                            La tecnología del futuro está al alcance de tus manos. Agenda hoy y sé parte de la revolución digital.
+                            Convierte tus ideas en proyectos reales. <br>
+                            Diseña, colabora y planifica cada detalle antes de llevar tu proyecto al espacio físico. <br>
+                            Coordina cada etapa del proyecto mediante una plataforma que conecta inspiración , diseño, colaboración e instalación en un solo lugar.
+
                         </p>
                         
                         <div class="relative z-10 flex flex-col sm:flex-row gap-4 justify-center">
                             <Link :href="route('landing.contact')" class="px-10 py-4 bg-[#4cc9f0] hover:bg-white text-slate-900 font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(76,201,240,0.4)] hover:shadow-[0_0_40px_rgba(255,255,255,0.6)] transform hover:-translate-y-1">
-                                Agendar Cita Ahora
+                                Comienza a diseñar
                             </Link>
                             <Link :href="route('landing.services')" class="px-10 py-4 bg-transparent border border-white/20 hover:border-white text-white font-bold rounded-xl transition-all hover:bg-white/5">
                                 Ver Paquetes

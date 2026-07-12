@@ -6,8 +6,8 @@ const stats = ref([
   { 
     id: 1, 
     label: 'Configura y reconfigura cuando lo necesites', 
-    displayValue: 100, 
-    suffix: '% Modular',
+    displayValue: 100 + '%', 
+    suffix: 'Modular',
     prefix: '',
     iconPath: 'M3.5 3.5c0-1.1.9-2 2-2h13c1.1 0 2 .9 2 2v13c0 1.1-.9 2-2 2h-13c-1.1 0-2-.9-2-2v-13z M7 7h10 M7 12h10 M7 17h6' // Icono estilo documento/scan
   },
@@ -30,8 +30,8 @@ const stats = ref([
   { 
     id: 4, 
     label: 'Sistema físico + plataforma digital', 
-    displayValue: null, 
-    suffix: ' Ecosistema NODO + Modula', 
+    displayValue: 'Ecosistema NODO', 
+    suffix: '+ Modula', 
     prefix: '',
     iconPath: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' // Estrella
   },
@@ -75,7 +75,7 @@ const stats = ref([
               <span class="text-4xl md:text-5xl font-black text-white tracking-tighter tabular-nums drop-shadow-lg mx-auto">
                 {{ stat.prefix }}{{ stat.displayValue }}
               </span>
-              <span class="text-xl md:text-2xl font-bold text-[#4cc9f0]">{{ stat.suffix }}</span>
+              <span class="text-xl md:text-2xl font-bold text-[#4cc9f0] text-center mx-auto">{{ stat.suffix }}</span>
             </div>
 
             <!-- Etiqueta -->

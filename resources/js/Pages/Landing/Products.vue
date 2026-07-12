@@ -60,11 +60,11 @@ const formatCurrency = (amount) => {
                     <div class="relative z-10 max-w-7xl mx-auto px-6 text-center">
                         <h2 class="text-[#4cc9f0] font-bold tracking-widest uppercase text-sm mb-3">Catálogo</h2>
                         <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-6">
-                            Hardware y Materiales <br />
-                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">para Digitalización 3D</span>
+                            Todo lo que Necesitas <br />
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">Para Transformar tu Espacio</span>
                         </h1>
                         <p class="text-slate-300 text-lg max-w-2xl mx-auto">
-                            Equipamiento de alta gama y consumibles seleccionados por nuestros expertos para tus proyectos de escaneo e impresión.
+                            Explora una colección de productos diseñados para trabajar como un solo sistema y crear espacios únicos que evolucionan contigo.
                         </p>
                     </div>
                 </div>
@@ -174,8 +174,8 @@ const formatCurrency = (amount) => {
                         
                         <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                             <div class="text-white">
-                                <h3 class="text-2xl md:text-3xl font-bold mb-2">¿Buscas algo específico?</h3>
-                                <p class="text-slate-300">Podemos conseguir hardware especializado bajo pedido.</p>
+                                <h3 class="text-2xl md:text-3xl font-bold mb-2">Comenzar mi proyecto.</h3>
+                                <p class="text-slate-300">Nuestro equipo te guiará paso a paso y te acompañaremos en cada etapa para diseñar, instalar y evolucionar.</p>
                             </div>
                             <Link href="/contacto">
                                 <n-button type="primary" size="large" class="!bg-[#4cc9f0] !text-[#0f172a] !font-bold !rounded-xl !h-12 !px-8 hover:!bg-white hover:!text-[#2f4b59]">
