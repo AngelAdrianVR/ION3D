@@ -139,23 +139,29 @@ class LandingController extends Controller
         // Usamos paginate(25) en lugar de get()
         $products = Product::where('is_active', true)
             ->orderBy('created_at', 'desc')
-            ->paginate(25) // Paginación de 25 elementos
+            ->paginate(25)
             ->through(function ($product) { 
-                // Usamos through() para transformar la colección sin perder la data de paginación
                 
-                // Lógica de imagen
-                $imgUrl = null; 
-                $imgUrl = $product->getFirstMediaUrl('product_image'); 
+                // Obtener todas las imágenes
+                $images = $product->getMedia('product_images')->map(fn($m) => [
+                    'id' => $m->id,
+                    'url' => $m->getUrl(),
+                ])->values();
+
+                // Fallback si no hay imágenes
+                $firstImage = $images->first() ? $images->first()['url'] : null;
 
                 return [
                     'id' => $product->id,
                     'sku' => $product->sku,
                     'name' => $product->name,
-                    'description' => Str::limit($product->description, 100),
+                    'description' => $product->description,
                     'price' => (float) $product->sale_price,
                     'stock' => (int) $product->stock_quantity,
                     'alert_threshold' => (int) $product->alert_threshold,
-                    'image' => $imgUrl ?: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&q=80&w=1000',
+                    'image' => $firstImage,
+                    'images' => $images,           // Todas las imágenes
+                    'video_url' => $product->video_url, // Video
                     'is_low_stock' => $product->stock_quantity <= $product->alert_threshold && $product->stock_quantity > 0,
                     'is_out_of_stock' => $product->stock_quantity <= 0,
                 ];

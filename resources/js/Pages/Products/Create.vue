@@ -45,40 +45,100 @@
               class="grid grid-cols-1 md:grid-cols-12 gap-8"
             >
               
-              <!-- COLUMNA IZQUIERDA: Imagen (md:col-span-4) -->
-              <div class="md:col-span-4 space-y-4">
-                  <label class="text-gray-500 font-semibold text-xs uppercase tracking-wider ml-1">Imagen del Producto</label>
+              <!-- COLUMNA IZQUIERDA: Imágenes y Video (md:col-span-4) -->
+              <div class="md:col-span-4 space-y-6">
                   
-                  <div class="relative group">
+                  <!-- Sección: Imágenes -->
+                  <div>
+                      <label class="text-gray-500 font-semibold text-xs uppercase tracking-wider ml-1">Imágenes del Producto</label>
+                      <p class="text-gray-400 text-xs ml-1 mb-3">Puedes subir varias imágenes. La primera será la principal.</p>
+                      
+                      <!-- Grid de Previsualización de imágenes seleccionadas -->
+                      <div v-if="imagePreviews.length > 0" class="grid grid-cols-3 gap-2 mb-3">
+                          <div 
+                              v-for="(preview, index) in imagePreviews" 
+                              :key="index"
+                              class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-100"
+                          >
+                              <img :src="preview" class="w-full h-full object-cover" />
+                              <button 
+                                  @click="removeImage(index)"
+                                  class="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                                  title="Quitar imagen"
+                              >
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                              </button>
+                          </div>
+                      </div>
+
+                      <!-- Botón para agregar imágenes -->
                       <div 
-                        class="w-full aspect-square rounded-3xl border-2 border-dashed border-gray-300 hover:border-indigo-400 bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative"
-                        @click="triggerFileInput"
+                        class="w-full aspect-video rounded-2xl border-2 border-dashed border-gray-300 hover:border-indigo-400 bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all"
+                        @click="triggerImageInput"
                       >
-                          <!-- Previsualización -->
-                          <img v-if="previewUrl" :src="previewUrl" class="w-full h-full object-cover" />
-                          
-                          <!-- Placeholder -->
-                          <div v-else class="text-center p-6 transition-opacity group-hover:opacity-75">
-                              <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm mx-auto mb-3">
-                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          <div class="text-center p-4 transition-opacity">
+                              <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm mx-auto mb-2">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                   </svg>
                               </div>
-                              <p class="text-sm font-medium text-gray-600">Subir imagen</p>
-                              <p class="text-xs text-gray-400 mt-1">PNG, JPG hasta 2MB</p>
-                          </div>
-
-                          <!-- Overlay Hover -->
-                          <div v-if="previewUrl" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <span class="text-white font-medium text-sm bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">Cambiar</span>
+                              <p class="text-sm font-medium text-gray-600">Agregar imágenes</p>
+                              <p class="text-xs text-gray-400 mt-1">PNG, JPG hasta 5MB c/u</p>
                           </div>
                       </div>
                       <input 
                         type="file" 
-                        ref="fileInputRef" 
+                        ref="imageInputRef" 
                         class="hidden" 
                         accept="image/*"
-                        @change="handleFileChange"
+                        multiple
+                        @change="handleImagesChange"
+                      />
+                  </div>
+
+                  <!-- Sección: Video -->
+                  <div>
+                      <label class="text-gray-500 font-semibold text-xs uppercase tracking-wider ml-1">Video del Producto</label>
+                      <p class="text-gray-400 text-xs ml-1 mb-3">Opcional. Formatos: MP4, MOV, WebM (máx. 50MB).</p>
+                      
+                      <!-- Previsualización del video -->
+                      <div v-if="videoPreviewUrl" class="relative group rounded-2xl overflow-hidden border border-gray-200 mb-3">
+                          <video :src="videoPreviewUrl" class="w-full aspect-video object-cover" controls></video>
+                          <button 
+                              @click="removeVideo"
+                              class="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                              title="Quitar video"
+                          >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                          </button>
+                      </div>
+
+                      <!-- Botón para agregar video -->
+                      <div 
+                        v-if="!videoPreviewUrl"
+                        class="w-full aspect-video rounded-2xl border-2 border-dashed border-gray-300 hover:border-purple-400 bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all"
+                        @click="triggerVideoInput"
+                      >
+                          <div class="text-center p-4 transition-opacity">
+                              <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm mx-auto mb-2">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                              </div>
+                              <p class="text-sm font-medium text-gray-600">Agregar video</p>
+                              <p class="text-xs text-gray-400 mt-1">MP4, MOV, WebM</p>
+                          </div>
+                      </div>
+                      <input 
+                        type="file" 
+                        ref="videoInputRef" 
+                        class="hidden" 
+                        accept="video/mp4,video/mov,video/ogg,video/quicktime,video/webm"
+                        @change="handleVideoChange"
                       />
                   </div>
               </div>
@@ -109,7 +169,9 @@
                       v-model:value="form.sku" 
                       placeholder="Ej. AUD-001" 
                       class="ios-input-transition"
+                      :status="form.errors.sku ? 'error' : undefined"
                     />
+                    <div v-if="form.errors.sku" class="text-red-500 text-xs mt-1 ml-1">{{ form.errors.sku }}</div>
                   </n-form-item>
 
                   <!-- Estado (Activo/Inactivo) -->
@@ -258,12 +320,15 @@ const form = useForm({
   stock_quantity: 0,
   alert_threshold: 5,
   is_active: 1,
-  image: null, // Campo para el archivo
+  images: [],    // Array de Files para imágenes múltiples
+  video: null,   // File único para video
 });
 
 const formRef = ref(null);
-const fileInputRef = ref(null);
-const previewUrl = ref(null);
+const imageInputRef = ref(null);
+const videoInputRef = ref(null);
+const imagePreviews = ref([]);   // URLs para preview de imágenes
+const videoPreviewUrl = ref(null); // URL para preview de video
 
 const rules = {
   name: { required: true, message: 'El nombre es requerido', trigger: 'blur' },
@@ -283,17 +348,48 @@ const formatCurrency = (value) => {
     return value.toLocaleString('en-US'); // Formato simple 1,000.00
 };
 
-// Manejo de Imagen
-const triggerFileInput = () => {
-    fileInputRef.value.click();
+// Manejo de Imágenes (múltiples)
+const triggerImageInput = () => {
+    imageInputRef.value.click();
 };
 
-const handleFileChange = (event) => {
+const handleImagesChange = (event) => {
+    const files = Array.from(event.target.files);
+    files.forEach(file => {
+        form.images.push(file);
+        imagePreviews.value.push(URL.createObjectURL(file));
+    });
+    // Resetear el input para permitir re-seleccionar los mismos archivos
+    event.target.value = '';
+};
+
+const removeImage = (index) => {
+    form.images.splice(index, 1);
+    URL.revokeObjectURL(imagePreviews.value[index]);
+    imagePreviews.value.splice(index, 1);
+};
+
+// Manejo de Video
+const triggerVideoInput = () => {
+    videoInputRef.value.click();
+};
+
+const handleVideoChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-        form.image = file;
-        previewUrl.value = URL.createObjectURL(file);
+        form.video = file;
+        videoPreviewUrl.value = URL.createObjectURL(file);
     }
+    event.target.value = '';
+};
+
+const removeVideo = () => {
+    form.video = null;
+    if (videoPreviewUrl.value) {
+        URL.revokeObjectURL(videoPreviewUrl.value);
+        videoPreviewUrl.value = null;
+    }
+    if (videoInputRef.value) videoInputRef.value.value = '';
 };
 
 const submit = (e) => {

@@ -78,15 +78,17 @@
             <!-- SECCIÓN SUPERIOR: DETALLES PRODUCTO -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 
-                <!-- Columna 1: Imagen (1/3) -->
-                <div class="md:col-span-1">
+                <!-- Columna 1: Galería de Imágenes y Video (1/3) -->
+                <div class="md:col-span-1 space-y-4">
+                    
+                    <!-- Imagen Principal (seleccionada) -->
                     <div 
                         class="aspect-square rounded-3xl bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative group cursor-zoom-in"
                         @click="openImageModal"
                     >
                          <img 
-                            v-if="product.image_url"
-                            :src="product.image_url" 
+                            v-if="selectedImage"
+                            :src="selectedImage" 
                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
                             alt="Producto"
                         />
@@ -97,10 +99,35 @@
                             <span class="text-sm font-medium opacity-75">Sin imagen</span>
                         </div>
                         
-                        <!-- Overlay Hint -->
-                        <div v-if="product.image_url" class="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div v-if="selectedImage" class="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                             Ver imagen completa
                         </div>
+                    </div>
+
+                    <!-- Miniaturas de todas las imágenes -->
+                    <div v-if="product.images && product.images.length > 0" class="flex gap-2 overflow-x-auto pb-1">
+                        <div 
+                            v-for="(img, index) in product.images" 
+                            :key="img.id"
+                            @click="selectedImage = img.url"
+                            class="w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 cursor-pointer transition-all hover:scale-105"
+                            :class="selectedImage === img.url ? 'border-indigo-500 shadow-md' : 'border-gray-200 hover:border-gray-300'"
+                        >
+                            <img :src="img.url" class="w-full h-full object-cover" alt="Miniatura" />
+                        </div>
+                    </div>
+
+                    <!-- Reproductor de Video -->
+                    <div v-if="product.video_url" class="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+                        <video 
+                            :src="product.video_url" 
+                            class="w-full aspect-video object-cover" 
+                            controls 
+                            preload="metadata"
+                            controlsList="nodownload"
+                        >
+                            Tu navegador no soporta la reproducción de video.
+                        </video>
                     </div>
                 </div>
 
@@ -268,7 +295,7 @@
     <!-- Visualizador de Imagen -->
     <n-modal v-model:show="showImageModal" transform-origin="center">
         <div class="bg-transparent p-0 outline-none flex justify-center items-center" style="max-height: 90vh; max-width: 90vw;">
-            <img v-if="product.image_url" :src="product.image_url" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl border-4 border-white/20" alt="Vista previa">
+            <img v-if="selectedImage" :src="selectedImage" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl border-4 border-white/20" alt="Vista previa">
         </div>
     </n-modal>
 
@@ -412,6 +439,13 @@ const showDeleteModal = ref(false);
 const showMovementModal = ref(false);
 const filterDate = ref(props.filters.date || Date.now());
 
+// Imagen seleccionada para vista principal y modal
+const selectedImage = ref(
+    props.product.images && props.product.images.length > 0 
+        ? props.product.images[0].url 
+        : null
+);
+
 // Formulario Movimiento
 const movementForm = useForm({
     product_id: props.product.id,
@@ -512,7 +546,7 @@ const deleteProduct = () => {
 };
 
 const openImageModal = () => {
-    if (props.product.image_url) showImageModal.value = true;
+    if (selectedImage.value) showImageModal.value = true;
 };
 
 // Tema

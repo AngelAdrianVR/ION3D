@@ -73,13 +73,20 @@
                     class="relative h-20 w-20 rounded-xl overflow-hidden shadow-sm flex-shrink-0 bg-gray-100 cursor-zoom-in"
                     @click.stop="openImageModal(product.image_url)"
                   >
-                    <img 
+                    <n-avatar
                         v-if="product.image_url"
-                        :src="product.image_url" 
-                        class="h-full w-full object-cover" 
-                        alt="Producto"
-                        @error="handleImageError"
-                    />
+                        :src="product.image_url"
+                        shape="square"
+                        :size="80"
+                        object-fit="cover"
+                        class="h-full w-full"
+                    >
+                        <template #fallback>
+                            <div class="h-full w-full flex items-center justify-center text-gray-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            </div>
+                        </template>
+                    </n-avatar>
                     <div v-else class="h-full w-full flex items-center justify-center text-gray-300">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     </div>
@@ -185,7 +192,7 @@
           <!-- Modal Visualizador de Imagen -->
           <n-modal v-model:show="showImageModal" transform-origin="center">
             <div class="bg-transparent p-0 outline-none flex justify-center items-center" style="max-height: 90vh; max-width: 90vw;">
-                <img :src="selectedImage" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl border-4 border-white/20" alt="Vista previa" @error="handleImageError">
+                <img :src="selectedImage" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl border-4 border-white/20" alt="Vista previa">
             </div>
           </n-modal>
 
@@ -196,7 +203,7 @@
 </template>
 
 <script setup>
-import { ref, watch, h } from 'vue';
+import { ref, watch, h, reactive } from 'vue';
 import { router, Link, usePage } from '@inertiajs/vue3'; // Importar usePage
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { 
@@ -226,37 +233,45 @@ const productToDelete = ref(null);
 const showImageModal = ref(false);
 const selectedImage = ref('');
 
-// UTILIDADES
+// --- SISTEMA DE REINTENTO DE IMÁGENES (Reactivo) ---
+// Mapea product.id → { retries: number, timestamp: number }
+const imageRetries = reactive({});
+const MAX_RETRIES = 5;
+const RETRY_DELAYS = [500, 1000, 2000, 4000, 8000]; // backoff exponencial
+
+// Obtiene la URL con cache-busting según los reintentos
+const getImageUrl = (product, baseUrl) => {
+    if (!baseUrl) return null;
+    const state = imageRetries[product.id];
+    if (state && state.retries >= MAX_RETRIES) return null; // rendirse, mostrar placeholder
+    const sep = baseUrl.includes('?') ? '&' : '?';
+    const ts = (state && state.timestamp) ? state.timestamp : 0;
+    const retries = (state && state.retries) ? state.retries : 0;
+    return `${baseUrl}${sep}_retry=${retries}&_t=${ts}`;
+};
+
+// Manejador de error de imagen
+const handleImageError = (product, event) => {
+    const state = imageRetries[product.id] || { retries: 0, timestamp: 0 };
+    if (state.retries < MAX_RETRIES) {
+        const delay = RETRY_DELAYS[state.retries] || 8000;
+        const newState = {
+            retries: state.retries + 1,
+            timestamp: Date.now(), // solo se genera en el error, no en cada render
+        };
+        setTimeout(() => {
+            imageRetries[product.id] = newState;
+        }, delay);
+    } else {
+        imageRetries[product.id] = { retries: MAX_RETRIES, timestamp: state.timestamp };
+    }
+};
+
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('es-MX', {
         style: 'currency',
         currency: 'MXN'
     }).format(value);
-};
-
-// MANEJADOR DE ERRORES DE IMAGEN (RETRY AUTOMÁTICO)
-const handleImageError = (e) => {
-    const img = e.target;
-    // Obtener número de reintentos actuales (máximo 3)
-    const currentRetries = parseInt(img.getAttribute('data-retries') || '0', 10);
-    
-    if (currentRetries < 3) {
-        img.setAttribute('data-retries', currentRetries + 1);
-        
-        // Esperar 1.5 segundos antes de intentar recargar
-        setTimeout(() => {
-            try {
-                // Generar URL con parámetro para evitar la caché fallida del navegador
-                const url = new URL(img.src);
-                url.searchParams.set('retry', Date.now());
-                img.src = url.toString();
-            } catch (err) {
-                // Fallback de string si la URL base causa error
-                const separator = img.src.includes('?') ? '&' : '?';
-                img.src = `${img.src.split('retry=')[0]}${separator}retry=${Date.now()}`;
-            }
-        }, 1500);
-    }
 };
 
 // Componentes SVG Render Functions para usar dentro de h()
@@ -285,13 +300,24 @@ const columns = [
             class: 'h-12 w-12 rounded-lg bg-gray-100 border border-gray-100 flex-shrink-0 cursor-zoom-in overflow-hidden relative group',
             onClick: (e) => { e.stopPropagation(); openImageModal(row.image_url); }
         }, [
-            row.image_url 
-                ? h('img', { 
+            row.image_url
+                ? h(NAvatar, { 
                     src: row.image_url, 
-                    class: 'h-full w-full object-cover transition-transform duration-500 group-hover:scale-110',
-                    onError: handleImageError // <-- Aplicado en el render de la tabla
+                    shape: 'square',
+                    size: 48,
+                    objectFit: 'cover',
+                    class: 'transition-transform duration-500 group-hover:scale-110',
+                    fallback: () => h('div', { class: 'h-full w-full flex items-center justify-center text-gray-300' }, [
+                        h('svg', { xmlns: 'http://www.w3.org/2000/svg', class: 'h-5 w-5', fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' }, [
+                          h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' })
+                        ])
+                    ])
                   })
-                : h('div', { class: 'h-full w-full flex items-center justify-center text-gray-300' }, h(IconEye))
+                : h('div', { class: 'h-full w-full flex items-center justify-center text-gray-300' }, [
+                    h('svg', { xmlns: 'http://www.w3.org/2000/svg', class: 'h-5 w-5', fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' }, [
+                      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' })
+                    ])
+                  ])
         ]),
         h('div', { class: 'flex flex-col' }, [
             h('span', { class: 'font-bold text-gray-900 text-sm' }, row.name),
