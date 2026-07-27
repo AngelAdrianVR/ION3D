@@ -32,9 +32,34 @@ class Product extends Model implements HasMedia
         return $this->hasMany(InventoryMovement::class);
     }
 
-    // Colección para la foto del producto
+    // Colecciones de medios
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('product_image')->singleFile();
+        // Múltiples imágenes (ilimitadas)
+        $this->addMediaCollection('product_images');
+        // Un solo video
+        $this->addMediaCollection('product_video')->singleFile();
+    }
+
+    /**
+     * Obtener todas las imágenes del producto.
+     */
+    public function getImagesAttribute()
+    {
+        return $this->getMedia('product_images')->map(function ($media) {
+            return [
+                'id' => $media->id,
+                'url' => $media->getUrl(),
+                'name' => $media->file_name,
+            ];
+        });
+    }
+
+    /**
+     * Obtener la URL del video del producto.
+     */
+    public function getVideoUrlAttribute()
+    {
+        return $this->getFirstMediaUrl('product_video');
     }
 }

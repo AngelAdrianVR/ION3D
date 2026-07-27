@@ -23,7 +23,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use App\Models\ServicePackage; 
+use App\Models\ServicePackage;
+use Illuminate\Support\Facades\Artisan;
 
 // PAGINAS PÚBLICAS ===============================================================================
 // ================================================================================================
@@ -109,6 +110,7 @@ Route::middleware([
 
     // Inventario (Productos)
     Route::put('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
+    Route::delete('products/{product}/media/{media}', [ProductController::class, 'deleteMedia'])->name('products.media.destroy');
     Route::resource('products', ProductController::class);
     Route::post('/inventory-movements', [InventoryMovementController::class, 'store'])->name('inventory-movements.store');
 
@@ -206,3 +208,20 @@ Route::delete('/media/{media}', function (Media $media) {
         return response()->json(['error' => 'Error al eliminar el archivo.'], 500);
     }
 })->name('media.delete-file');
+
+
+// ============== COMANDOS ARTISAN ==============
+Route::get('/clear-cache', function () {
+    Artisan::call('cache:clear');
+    Artisan::call('route:clear');
+    Artisan::call('config:clear');
+    Artisan::call('view:clear');
+
+    return 'Cache, config, route y view limpiados correctamente ✔️';
+});
+
+
+Route::get('/storage-link', function () {
+    Artisan::call('storage:link');
+    return 'The storage link has been created.';
+});

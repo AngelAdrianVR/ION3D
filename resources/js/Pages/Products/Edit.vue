@@ -45,47 +45,110 @@
               class="grid grid-cols-1 md:grid-cols-12 gap-8"
             >
               
-              <!-- COLUMNA IZQUIERDA: Imagen (md:col-span-4) -->
-              <div class="md:col-span-4 space-y-4">
-                  <label class="text-gray-500 font-semibold text-xs uppercase tracking-wider ml-1">Imagen del Producto</label>
+              <!-- COLUMNA IZQUIERDA: Imágenes y Video (md:col-span-4) -->
+              <div class="md:col-span-4 space-y-6">
                   
-                  <div class="relative group">
+                  <!-- Sección: Imágenes -->
+                  <div>
+                      <label class="text-gray-500 font-semibold text-xs uppercase tracking-wider ml-1">Imágenes del Producto</label>
+                      <p class="text-gray-400 text-xs ml-1 mb-3">Galería de imágenes. Puedes eliminar o agregar más.</p>
+                      
+                      <!-- Grid de imágenes existentes + nuevas -->
+                      <div v-if="allImagePreviews.length > 0" class="grid grid-cols-3 gap-2 mb-3">
+                          <div 
+                              v-for="(img, index) in allImagePreviews" 
+                              :key="img.key"
+                              class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-100"
+                          >
+                              <img :src="img.url" class="w-full h-full object-cover" />
+                              
+                              <!-- Overlay con botón eliminar -->
+                              <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button 
+                                      @click="removeImageByIndex(index)"
+                                      class="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-colors"
+                                      title="Eliminar imagen"
+                                  >
+                                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+
+                      <!-- Mensaje si no hay imágenes -->
+                      <div v-else class="text-center py-4 text-gray-400 text-sm bg-gray-50 rounded-2xl mb-3">
+                          No hay imágenes. Agrega la primera.
+                      </div>
+
+                      <!-- Botón para agregar más imágenes -->
                       <div 
-                        class="w-full aspect-square rounded-3xl border-2 border-dashed border-gray-300 hover:border-indigo-400 bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative"
-                        @click="triggerFileInput"
+                        class="w-full aspect-video rounded-2xl border-2 border-dashed border-gray-300 hover:border-indigo-400 bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all"
+                        @click="triggerImageInput"
                       >
-                          <!-- Previsualización (Nueva o Existente) -->
-                          <img v-if="previewUrl" :src="previewUrl" class="w-full h-full object-cover" />
-                          
-                          <!-- Placeholder si no hay imagen ni nueva ni vieja -->
-                          <div v-else class="text-center p-6 transition-opacity group-hover:opacity-75">
-                              <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm mx-auto mb-3">
-                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          <div class="text-center p-4 transition-opacity">
+                              <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm mx-auto mb-2">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                   </svg>
                               </div>
-                              <p class="text-sm font-medium text-gray-600">Subir imagen</p>
-                              <p class="text-xs text-gray-400 mt-1">PNG, JPG hasta 2MB</p>
-                          </div>
-
-                          <!-- Overlay Hover -->
-                          <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <span class="text-white font-medium text-sm bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">Cambiar</span>
+                              <p class="text-sm font-medium text-gray-600">Agregar imágenes</p>
+                              <p class="text-xs text-gray-400 mt-1">PNG, JPG hasta 5MB c/u</p>
                           </div>
                       </div>
                       <input 
                         type="file" 
-                        ref="fileInputRef" 
+                        ref="imageInputRef" 
                         class="hidden" 
                         accept="image/*"
-                        @change="handleFileChange"
+                        multiple
+                        @change="handleImagesChange"
                       />
                   </div>
-                  
-                  <div v-if="previewUrl && previewUrl !== product.image_url" class="text-center">
-                    <button @click="restoreOriginalImage" class="text-xs text-red-500 hover:underline">
-                        Cancelar cambio de imagen
-                    </button>
+
+                  <!-- Sección: Video -->
+                  <div>
+                      <label class="text-gray-500 font-semibold text-xs uppercase tracking-wider ml-1">Video del Producto</label>
+                      <p class="text-gray-400 text-xs ml-1 mb-3">Opcional. Formatos: MP4, MOV, WebM (máx. 50MB).</p>
+                      
+                      <!-- Video existente o preview nuevo -->
+                      <div v-if="videoPreviewUrl" class="relative group rounded-2xl overflow-hidden border border-gray-200 mb-3">
+                          <video :src="videoPreviewUrl" class="w-full aspect-video object-cover" controls></video>
+                          <button 
+                              @click="removeVideo"
+                              class="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-600"
+                              title="Eliminar video"
+                          >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                          </button>
+                      </div>
+
+                      <!-- Botón para agregar/reemplazar video -->
+                      <div 
+                        v-if="!videoPreviewUrl"
+                        class="w-full aspect-video rounded-2xl border-2 border-dashed border-gray-300 hover:border-purple-400 bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all"
+                        @click="triggerVideoInput"
+                      >
+                          <div class="text-center p-4 transition-opacity">
+                              <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm mx-auto mb-2">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                              </div>
+                              <p class="text-sm font-medium text-gray-600">Agregar video</p>
+                              <p class="text-xs text-gray-400 mt-1">MP4, MOV, WebM</p>
+                          </div>
+                      </div>
+                      <input 
+                        type="file" 
+                        ref="videoInputRef" 
+                        class="hidden" 
+                        accept="video/mp4,video/mov,video/ogg,video/quicktime,video/webm"
+                        @change="handleVideoChange"
+                      />
                   </div>
               </div>
 
@@ -115,7 +178,9 @@
                       v-model:value="form.sku" 
                       placeholder="Ej. AUD-001" 
                       class="ios-input-transition"
+                      :status="form.errors.sku ? 'error' : undefined"
                     />
+                    <div v-if="form.errors.sku" class="text-red-500 text-xs mt-1 ml-1">{{ form.errors.sku }}</div>
                   </n-form-item>
 
                   <!-- Estado (Activo/Inactivo) -->
@@ -246,7 +311,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Back from '@/Components/MyComponents/Back.vue';
@@ -263,7 +328,7 @@ const props = defineProps({
 });
 
 const form = useForm({
-  _method: 'PUT', // Truco para enviar archivos con PUT en Laravel
+  _method: 'PUT',
   name: props.product.name,
   sku: props.product.sku,
   description: props.product.description,
@@ -272,12 +337,46 @@ const form = useForm({
   stock_quantity: Number(props.product.stock_quantity),
   alert_threshold: Number(props.product.alert_threshold),
   is_active: props.product.is_active ? 1 : 0,
-  image: null,
+  images: [],           // Nuevas imágenes a subir (Files)
+  delete_image_ids: [], // IDs de imágenes existentes a eliminar
+  video: null,          // Nuevo video a subir (File)
+  delete_video: false,  // Flag para eliminar video existente
 });
 
 const formRef = ref(null);
-const fileInputRef = ref(null);
-const previewUrl = ref(props.product.image_url);
+const imageInputRef = ref(null);
+const videoInputRef = ref(null);
+
+// --- Estado de imágenes ---
+// Lista combinada: imágenes existentes del servidor + nuevas previews locales
+const existingImages = ref(
+    (props.product.images || []).map(img => ({
+        id: img.id,
+        url: img.url,
+        name: img.name,
+        isExisting: true,
+        deleted: false, // marcado para eliminar
+        key: 'existing-' + img.id,
+    }))
+);
+const newImagePreviews = ref([]); // { url, key }
+
+// Preview combinado (existente no eliminadas + nuevas)
+const allImagePreviews = computed(() => {
+    const existing = existingImages.value.filter(img => !img.deleted);
+    return [...existing, ...newImagePreviews.value];
+});
+
+// --- Estado de video ---
+const existingVideoUrl = ref(props.product.video_url || null);
+const newVideoPreviewUrl = ref(null);
+const videoMarkedForDeletion = ref(false);
+
+const videoPreviewUrl = computed(() => {
+    if (videoMarkedForDeletion.value) return null;
+    if (newVideoPreviewUrl.value) return newVideoPreviewUrl.value;
+    return existingVideoUrl.value;
+});
 
 const rules = {
   name: { required: true, message: 'El nombre es requerido', trigger: 'blur' },
@@ -297,24 +396,69 @@ const formatCurrency = (value) => {
     return value.toLocaleString('en-US'); 
 };
 
-// Manejo de Imagen
-const triggerFileInput = () => {
-    fileInputRef.value.click();
+// Manejo de Imágenes
+const triggerImageInput = () => {
+    imageInputRef.value.click();
 };
 
-const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        form.image = file;
-        previewUrl.value = URL.createObjectURL(file);
+const handleImagesChange = (event) => {
+    const files = Array.from(event.target.files);
+    files.forEach((file, i) => {
+        form.images.push(file);
+        newImagePreviews.value.push({
+            url: URL.createObjectURL(file),
+            key: 'new-' + Date.now() + '-' + i,
+        });
+    });
+    event.target.value = '';
+};
+
+const removeImageByIndex = (index) => {
+    const existingFiltered = existingImages.value.filter(img => !img.deleted);
+    if (index < existingFiltered.length) {
+        // Es una imagen existente → marcarla para eliminar
+        const img = existingFiltered[index];
+        const realIndex = existingImages.value.findIndex(ei => ei.id === img.id);
+        existingImages.value[realIndex].deleted = true;
+        form.delete_image_ids.push(img.id);
+    } else {
+        // Es una nueva preview → quitarla
+        const newIndex = index - existingFiltered.length;
+        form.images.splice(newIndex, 1);
+        URL.revokeObjectURL(newImagePreviews.value[newIndex].url);
+        newImagePreviews.value.splice(newIndex, 1);
     }
 };
 
-const restoreOriginalImage = () => {
-    form.image = null;
-    previewUrl.value = props.product.image_url;
-    if(fileInputRef.value) fileInputRef.value.value = null;
-}
+// Manejo de Video
+const triggerVideoInput = () => {
+    videoInputRef.value.click();
+};
+
+const handleVideoChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        form.video = file;
+        form.delete_video = false;
+        videoMarkedForDeletion.value = false;
+        newVideoPreviewUrl.value = URL.createObjectURL(file);
+    }
+    event.target.value = '';
+};
+
+const removeVideo = () => {
+    if (newVideoPreviewUrl.value) {
+        // Se está quitando un video recién seleccionado
+        URL.revokeObjectURL(newVideoPreviewUrl.value);
+        newVideoPreviewUrl.value = null;
+        form.video = null;
+    }
+    if (existingVideoUrl.value && !videoMarkedForDeletion.value) {
+        // Se está marcando el video existente para eliminar
+        videoMarkedForDeletion.value = true;
+        form.delete_video = true;
+    }
+};
 
 const submit = (e) => {
   e.preventDefault();

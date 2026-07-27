@@ -35,7 +35,11 @@ class PosController extends Controller
             ->where('is_active', true)
             ->get()
             ->map(function ($p) {
-                $img = $p->getFirstMediaUrl('product_image', 'thumb') ?: $p->getFirstMediaUrl();
+                // Intentar nueva colección primero, luego la antigua (legacy)
+                $img = $p->getFirstMediaUrl('product_images');
+                if (!$img) {
+                    $img = $p->getFirstMediaUrl('product_image');
+                }
                 
                 return [
                     'id' => $p->id,
